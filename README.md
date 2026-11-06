@@ -20,6 +20,7 @@ you), says what you gained after each step, and says what comes next while somet
 | Mode | When | What it means |
 |---|---|---|
 | live | `broker/demo-agent.mjs` answers on `:8792` (or at `?agent=https://…`) | Requests go through the real Broker. With a Ledger connected, holds happen on the device; without one, a button on the page stands in and every record says so |
+| live, hosted | no AI tool on this device, and `live.json` names one | The same, through the hosted copy (`Dockerfile`, `tools/hosted-start.sh`). It has no USB and no wallet key: a Ledger is connected from the browser, or the page's button stands in |
 | preview | no AI tool reachable | Answers recorded from the real Broker and 0G (`scenes.json`) are replayed. The bottom bar says so. Nothing is sent |
 
 The dark bar at the bottom is the demo's remote control: it makes the AI tool do something *now* (keys `1` `2` `3` `5`, `R` to start over).

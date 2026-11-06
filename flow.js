@@ -236,6 +236,17 @@ const connectRow = () => { const ways = (mode === 'live' && window.Ledger && Led
 
 const boot = () => `<div class="frame loading" data-view="boot"><div class="nav"><div class="logo">${lamp('awake', 30)}<b>tomoshibi</b></div></div><div class="body"><div class="l"><div class="hero m-awake"><div class="c flick">${lamp('awake', 150)}</div><div class="say">Loading<span class="dots"><i>.</i><i>.</i><i>.</i></span></div></div><div class="sk w70"></div><div class="sk w90"></div><div class="sk w50"></div></div><div class="r"><div class="card"><div class="sk w40"></div><div class="sk"></div><div class="sk"></div><div class="sk w60"></div></div></div></div></div>`
 
+/** Is a Ledger there? If not, this browser can connect to one (USB on a computer, Bluetooth on a phone). */
+function ledgerLine() {
+  if (mode !== 'live') return ''
+  if (hasDevice()) return '<div class="ledgerline ok"><em>✓</em>Your Ledger is connected, with TOMOSHIBI open.</div>'
+  const ways = (window.Ledger && Ledger.ways) || []
+  if (dev.on) return `<div class="ledgerline"><em>!</em>${dev.app === 'locked' ? 'Unlock your Ledger.' : 'Open TOMOSHIBI on your Ledger.'}</div>`
+  return `<div class="ledgerline"><em>!</em><div>No Ledger found yet.${ways.length ? ' Plug it in, unlock it, open TOMOSHIBI, then connect it to this browser:' : ' This browser cannot reach one (use Chrome on a computer).'}
+    ${ways.length ? `<div class="connect">${ways.includes('usb') ? '<button class="ghost" data-act="connect:usb">Connect by USB</button>' : ''}${ways.includes('bluetooth') ? '<button class="ghost" data-act="connect:bluetooth">Connect by Bluetooth</button>' : ''}</div>` : ''}
+    <small>Without a Ledger, a button on this page stands in, and every record says so.</small>${dev.error ? `<div class="err">${esc(dev.error)}</div>` : ''}</div></div>`
+}
+
 // ── TOMOSHIBI: the views ──
 function vWelcome() {
   cur = 'welcome'
@@ -261,7 +272,7 @@ function vChoose(st) {
     right: `<div class="card">${kv('Key', 'Stripe')}${kv('Goes to', 'api.stripe.com')}${kv('Can', 'Work with your orders')}<div class="kv"><span>Ends</span><select id="ends">${CHO.map((x, i) => `<option value="${i}" ${i === ui.choice ? 'selected' : ''}>${choLabel(x)}</option>`).join('')}</select></div>
       <div class="sentence">${TOOL} may <b>work with your orders</b> on <b>Stripe</b>, up to <b>${c.uses} times</b>, until <b>${untilDay(c.days)}</b>. <b>Anything that moves money still needs your hand.</b></div>
       ${st.lendDeclined ? '<div class="err">Nothing was signed, so nothing started. You can try again.</div>' : ''}${ui.err ? `<div class="err">${esc(ui.err)}</div>` : ''}
-      <button data-act="lend">Continue on my Ledger →</button></div>` })
+      <button data-act="lend">Continue on my Ledger →</button>${ledgerLine()}</div>` })
 }
 function vHold(st) {
   cur = 'hold'
