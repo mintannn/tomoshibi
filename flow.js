@@ -312,7 +312,7 @@ function vHome(st) {
   }
   if (d === 'STOPPED') {
     cur = 'noverdict'
-    return frame({ tabs: 1, now: 'No verdict, so nothing ran', why: 'I never guess. No answer means no action.', bg: '#ECEAFB',
+    return frame({ tabs: 1, now: 'No verdict, so nothing ran', why: 'I never guess. No answer means no action.', gainLabel: 'NOTHING WAS CHARGED', gain: 'I would rather stop than guess with your money.', bg: '#ECEAFB',
       left: hero('guard', 'I stopped. No guessing.', 'No answer,<br>so nothing ran.', '0G could not be reached, so nobody judged this request. I do not make up a verdict in its place.'),
       right: `<div class="card">${tag('NO VERDICT', 'no')}${kv('What', esc(c.what))}<small>Nothing ran, and no use was spent.</small><div class="two">${ok}${recLink(c)}</div></div>` })
   }
@@ -506,6 +506,6 @@ async function init() {
   paint()
 }
 // For looking at the page's own state from the console when something does not move.
-window.tomoshibi = { get events() { return all }, get ui() { return ui }, get mode() { return mode }, get epoch() { return epoch }, reduce, paint }
+window.tomoshibi = { get events() { return all }, get ui() { return ui }, get mode() { return mode }, get epoch() { return epoch }, get lights() { return lights }, set lights(v) { lights = v }, reduce, paint }
 init()
 })()

@@ -1,6 +1,34 @@
 # Tomoshibi — the screens people see
 
-Three static pages. No build step, no web fonts, no trackers, no third-party requests.
+Static pages. No build step, no web fonts, no trackers, no third-party requests.
+
+## Start here: `app.html`
+
+**The app.** One page with two surfaces, shown as two tabs: the AI tool's chat, and TOMOSHIBI.
+
+1. The AI tool asks you to put a key into a `.env` file. You answer "use TOMOSHIBI" instead.
+2. TOMOSHIBI opens: leave the key (once) → choose what the tool may do → **continue on your Ledger**.
+   The Ledger is never drawn inside the page. The page says to pick up the device, and waits.
+3. A light is lit. After that TOMOSHIBI stays out of sight: an ordinary request simply goes through,
+   a request that moves money waits for another hold, a request outside the range is stopped.
+4. *Activity* is the week in three numbers. *Lights* lets other people see the light you lit
+   (World confirms you are one real person). One light, two verbs: **lit** by the hold, **shown** through World.
+
+Every TOMOSHIBI screen carries a bar with **NOW** (what is happening) and **WHY IT MATTERS** (what it gives
+you), says what you gained after each step, and says what comes next while something is on its way.
+
+| Mode | When | What it means |
+|---|---|---|
+| live | `broker/demo-agent.mjs` answers on `:8792` (or at `?agent=https://…`) | Requests go through the real Broker. With a Ledger connected, holds happen on the device; without one, a button on the page stands in and every record says so |
+| preview | no AI tool reachable | Answers recorded from the real Broker and 0G (`scenes.json`) are replayed. The bottom bar says so. Nothing is sent |
+
+The dark bar at the bottom is the demo's remote control: it makes the AI tool do something *now* (keys `1` `2` `3` `5`, `R` to start over).
+In real life the tool does these on its own. `start.html` opens `app.html`; the earlier pages below are kept.
+
+`window.tomoshibi` in the console shows the page's own state. `node tools/shots.mjs` renders `assets/tomoshibi-cover.png`
+and `assets/shots/*.png` from these screens (sample data, real screens).
+
+## The earlier pages
 
 | Page | What it is |
 |---|---|
