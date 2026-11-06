@@ -1,6 +1,6 @@
 // The four steps of using Tomoshibi, shown at the top of every page so a person always
 // knows where they are and which thing is in their hand at that moment.
-//   journey('lend', ['choose'])  ->  step 2 is current, step 1 is done
+//   journey('woken', ['lend'])  ->  step 2 is current, step 1 is done
 'use strict'
 ;(function () {
   const ICON = {
@@ -9,10 +9,10 @@
     phone: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
   }
   const STEPS = [
-    { k: 'choose', t: 'Choose a tool', s: 'See which AI tools the people you know really use.', on: 'On your computer', icon: 'pc', href: 'index.html' },
-    { k: 'lend', t: 'Lend it a key', s: 'Plug in your Ledger. Read the range, hold the button.', on: 'On your Ledger', icon: 'ledger', href: 'gate.html' },
-    { k: 'work', t: 'Let it work', s: 'It uses the key without holding it. You are asked only when it matters.', on: 'Ledger stays on your desk', icon: 'ledger', href: 'gate.html' },
-    { k: 'light', t: 'Your light goes on', s: 'One real person, really using it. The next person sees it in step 1.', on: 'On your phone · World', icon: 'phone', href: 'index.html', q: 'light=1' },
+    { k: 'lend', t: 'Lend, don’t paste', s: 'You choose the range on your Ledger. The tool never gets the key.', on: 'Computer + Ledger, once', icon: 'ledger', href: 'gate.html' },
+    { k: 'woken', t: 'Woken only when money moves', s: 'Most days nobody asks you anything.', on: 'Ledger, on your desk', icon: 'ledger', href: 'gate.html' },
+    { k: 'stopped', t: 'Stopped while you did nothing', s: 'A hijacked tool cannot use a key it never held.', on: 'Ledger, then your phone', icon: 'phone', href: 'gate.html' },
+    { k: 'light', t: 'Your light', s: 'A real person, really using it. Reviews can be bought; this cannot.', on: 'Phone · World', icon: 'phone', href: 'index.html', q: 'light=1' },
   ]
   // Keep ?broker= and ?agent= when moving between pages.
   const keep = (extra) => { const q = new URLSearchParams(location.search), o = new URLSearchParams(extra || ''); for (const k of ['broker', 'agent', 'bridge']) if (q.get(k)) o.set(k, q.get(k)); const s = o.toString(); return s ? '?' + s : '' }

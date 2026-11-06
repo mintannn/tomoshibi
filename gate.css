@@ -95,3 +95,16 @@
 
 .promise { margin: -6px 0 0; font-size: 13.5px; color: var(--muted); border-left: 2px solid var(--flame); padding-left: 10px; }
 .verdict .meta b { color: var(--text); font-weight: 600; }
+
+/* What the tool does next: three moments of one tool's week. */
+.story { border: 1px dashed var(--line); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.story p { margin: 0; font-size: 13px; color: var(--muted); }
+.story > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 700px) { .story > div { grid-template-columns: 1fr; } }
+.story button { text-align: left; background: #ffffff08; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: pointer; display: grid; gap: 1px; }
+.story button:hover:not(:disabled) { border-color: var(--flame); }
+.story button:disabled { opacity: .45; cursor: default; }
+.story button span { font: 600 11px var(--mono); color: var(--flame-2); letter-spacing: .04em; }
+.story button b { font-size: 15px; } .story button small { color: var(--muted); font-size: 12.5px; }
+.story button.done { border-color: #2f6b52; }
+.card .name.human { font: 700 20px var(--sans); }

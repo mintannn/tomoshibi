@@ -111,8 +111,8 @@ function nowCard(st) {
   if (!c) {
     el.className = 'now'
     el.innerHTML = st.lent
-      ? `<div class="quiet">${FLAME}<b>All quiet.</b><p>billing-assistant can use <code>stripe-live</code> within the range you signed.<br>You will only be asked when something is heavy.</p></div>`
-      : `<div class="quiet">${FLAME}<b>billing-assistant wants to use your Stripe key.</b><p>Do not paste the key into it. Lend it instead: a range, signed on your Ledger.<br>The tool never gets the key itself, and an AI on this computer cannot press that button.</p><ol class="first"><li class="${mode === 'live' && agent.device ? 'ok' : ''}">Plug in your Ledger and open Tomoshibi</li><li>Press <b>Lend</b>, read the range on the device, hold the button</li><li>Leave the Ledger on your desk. It stays quiet until you are needed</li></ol></div>`
+      ? `<div class="quiet">${FLAME}<b>All quiet.</b><p>billing-assistant can use your shop’s payment key inside the range you signed.<br>You will only be asked when money moves.</p></div>`
+      : `<div class="quiet">${FLAME}<b>billing-assistant wants your shop’s payment key.</b><p>Do not paste the key into it. Lend it instead: a range, signed on your Ledger.<br>The tool never gets the key itself, and an AI on this computer cannot press that button.</p><ol class="first"><li class="${mode === 'live' && agent.device ? 'ok' : ''}">Plug in your Ledger and open Tomoshibi</li><li>Press <b>Lend</b>, read the range on the device, hold the button</li><li>Leave the Ledger on your desk. It stays quiet until you are needed</li></ol></div>`
     return
   }
   const last = final(c), b = last?.response, zg = b?.zg || {}
@@ -140,7 +140,7 @@ function trail(st) {
 }
 function keyCard(st) {
   const r = agent?.range || { key: 'stripe-live', target: 'api.stripe.com', scope: '* /v1', uses: 10 }
-  $('keyCard').innerHTML = `<h2>Your key</h2><div class="name">${esc(r.key)}</div>` + (st.lent
+  $('keyCard').innerHTML = `<h2>Your key</h2><div class="name human">Your shop’s payment key</div><code>${esc(r.key)}</code>` + (st.lent
     ? `<dl><dt>Lent to</dt><dd>billing-assistant <code>v1.0.0</code></dd><dt>May reach</dt><dd><code>${esc(r.target)}</code></dd><dt>May do</dt><dd><code>${esc(r.scope)}</code></dd><dt>Uses left</dt><dd>${esc(st.lent.left)} of ${esc(st.lent.uses)}</dd><dt>Signed by</dt><dd>${st.lent.device ? `your Ledger <code>${esc(short(st.lent.holder))}</code>` : '<span class="warnt">a software key (no Ledger)</span>'}</dd></dl>
        <div class="meter"><i style="width:${Math.max(0, Math.min(100, (st.lent.left / st.lent.uses) * 100))}%"></i></div>`
     : `<p class="sub">Not lent to anyone.${st.lendDeclined ? ' You declined on the device: nothing was signed.' : ''}</p><button class="btn primary" id="lendBtn" ${st.asking ? 'disabled' : ''}>Lend to billing-assistant</button>`)
@@ -181,9 +181,26 @@ function lightCard(st) {
     ? `<p class="sub">You really use this tool: ${st.uses} request${st.uses === 1 ? '' : 's'} on record${st.byHand ? ', lent by hand on your Ledger' : ''}. You can let the people who know you see that.</p><a class="btn primary" href="${esc(href)}">Show that you use it →</a><p class="sub">That is a different question, asked once, by World: are you one real person?</p>`
     : `<p class="sub">Once the tool has really worked with your key, you can show the people who know you that you use it.</p>`)
 }
+// What the tool does next. In real life it does these on its own; here a button makes each one happen now.
+function storyBar(st) {
+  const el = $('story'); if (!el) return
+  const busy = Boolean(st.asking) || st.cards.some((c) => !final(c))
+  const done = (id) => st.cards.some((c) => c.id === id)
+  const b = (id, n, t, s) => `<button data-id="${id}" class="${done(id) ? 'done' : ''}" ${!st.lent || busy ? 'disabled' : ''}><span>${n}</span><b>${t}</b><small>${s}</small></button>`
+  el.innerHTML = `<p>${st.lent ? 'The tool is at work. What does it do next?' : 'Lend the key first. Then the tool can start work.'}</p><div>` +
+    b('usual', 'A normal morning', 'It checks who hasn’t paid', 'Reading only') +
+    b('heavy', 'A customer returns a bag', 'It tries to refund $62', 'Money leaves your account') +
+    b('denied-host', 'That night', 'The tool is hijacked', 'It tries your key somewhere else') + '</div>'
+  el.querySelectorAll('button').forEach((x) => (x.onclick = () => src().post('/run', { id: x.dataset.id })))
+}
 function render() {
   const st = reduce(); nowCard(st); trail(st); keyCard(st); ledgerCard(st); lightCard(st)
-  journey(!st.lent ? 'lend' : 'work', ['choose', ...(st.lent ? ['lend'] : [])])
+  // Which of the three scenes are we in? It follows what has actually happened.
+  const lastCard = st.cards[st.cards.length - 1], lastDec = lastCard && final(lastCard)?.response.decision
+  const blocked = st.cards.some((c) => final(c)?.response.decision === 'DENIED')
+  const scene = !st.lent ? 'lend' : lastDec === 'DENIED' ? 'stopped' : 'woken'
+  journey(scene, [...(st.lent ? ['lend'] : []), ...(blocked && scene !== 'stopped' ? ['stopped'] : []), ...(scene === 'stopped' ? ['woken'] : [])])
+  storyBar(st)
 }
 
 async function init() {
@@ -201,7 +218,7 @@ async function init() {
     $('banner').hidden = false
     $('banner').innerHTML = REC ? `Replay. Nothing is sent from this page. These are the answers the real Broker and 0G (<code>${esc(REC.model || '')}</code>) gave at ${esc(REC.recordedAt)}. Run it live with <code>broker/demo-agent.mjs</code>.` : 'No agent is running and no recording was found.'
   }
-  $('foot').innerHTML = 'The AI tool is its own process. To make it ask from here: <kbd>1</kbd> routine · <kbd>2</kbd> heavy · <kbd>3</kbd> taken over · <kbd>4</kbd> disguised · <kbd>5</kbd> 0G unreachable · <kbd>L</kbd> lend · <kbd>R</kbd> reset'
+  $('foot').innerHTML = 'The AI tool is its own process (<code>broker/demo-agent.mjs</code>). The buttons above stand in for it doing its job. Also <kbd>4</kbd> a disguised address · <kbd>5</kbd> 0G unreachable · <kbd>R</kbd> start over'
   render()
 }
 const KEYS = { 1: 'usual', 2: 'heavy', 3: 'denied-host', 4: 'denied-sneak', 5: 'stopped' }

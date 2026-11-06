@@ -348,4 +348,4 @@ refresh(); setInterval(refresh, 3000)
 // Arriving from the keys page to name yourself: open the tool you just used.
 const wantLight = new URLSearchParams(location.search).get('light') === '1'
 if (wantLight) { selected = CATALOG[0]; setMode('mine'); setTimeout(() => { paintSheet(); $('sheet').scrollIntoView({ block: 'nearest' }) }, 600) }
-journey(wantLight ? 'light' : 'choose', wantLight ? ['choose', 'lend', 'work'] : store.people.some((p) => p.tie === 'me') ? ['lend', 'work', 'light'] : [])
+journey('light', store.used && Object.keys(store.used).length ? ['lend', 'woken'] : [])
