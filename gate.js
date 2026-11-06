@@ -109,7 +109,7 @@ function nowCard(st) {
     el.className = 'now'
     el.innerHTML = st.lent
       ? `<div class="quiet">${FLAME}<b>All quiet.</b><p>billing-assistant can use <code>stripe-live</code> within the range you signed.<br>You will only be asked when something is heavy.</p></div>`
-      : `<div class="quiet">${FLAME}<b>No tool can use your key.</b><p>Lend it within a range, on your Ledger. The tool never gets the key itself.</p></div>`
+      : `<div class="quiet">${FLAME}<b>billing-assistant wants to use your Stripe key.</b><p>Do not paste the key into it. Lend it instead: a range, signed on your Ledger.<br>The tool never gets the key itself, and an AI on this computer cannot press that button.</p><ol class="first"><li class="${mode === 'live' && agent.device ? 'ok' : ''}">Plug in your Ledger and open Tomoshibi</li><li>Press <b>Lend</b>, read the range on the device, hold the button</li><li>Leave the Ledger on your desk. It stays quiet until you are needed</li></ol></div>`
     return
   }
   const last = final(c), b = last?.response, zg = b?.zg || {}
@@ -172,7 +172,10 @@ function lightCard(st) {
     ${mode !== 'live' ? '<p class="sub">Lighting needs a live Broker.</p>' : ''}`
   $('lightBtn').onclick = () => lightIt()
 }
-function render() { const st = reduce(); nowCard(st); trail(st); keyCard(st); ledgerCard(st); lightCard(st) }
+function render() {
+  const st = reduce(); nowCard(st); trail(st); keyCard(st); ledgerCard(st); lightCard(st)
+  journey(!st.lent ? 'lend' : person ? 'light' : st.uses > 0 && !st.asking && lighting ? 'light' : 'work', ['choose', ...(st.lent ? ['lend'] : []), ...(person ? ['work', 'light'] : [])])
+}
 
 async function lightIt() {
   if (mode !== 'live' || lighting) return
@@ -190,7 +193,7 @@ async function lightIt() {
       person = { nullifier: o.nullifier, simulated: Boolean(o.world?.simulated || b.simulated) }
       if (o.nullifier) try { const list = JSON.parse(localStorage.getItem('tomoshibi.people') || '[]').filter((p) => p.id !== o.nullifier); list.push({ name: 'You', id: o.nullifier, tie: 'me' }); localStorage.setItem('tomoshibi.people', JSON.stringify(list)) } catch {}
       lighting = false; render()
-      w().innerHTML = `<p class="done">${o.decision === 'STAR' ? 'Your light is lit.' : 'You had already lit this version.'}</p><a class="btn" href="${esc($('navSky').getAttribute('href'))}">See it in the sky →</a>`
+      w().innerHTML = `<p class="done">${o.decision === 'STAR' ? 'Your light is lit.' : 'You had already lit this version.'}</p><a class="btn primary" href="${esc($('navSky').getAttribute('href'))}">See what others now see →</a>`
     } else {
       w().innerHTML = `<p class="note warn">${esc({ human_denied: 'You said no on your phone. Nothing was lit.', proof_expired: 'No one confirmed in time. Nothing was lit.' }[o.reason] || o.message || o.reason)}</p>`
     }
@@ -201,7 +204,7 @@ async function init() {
   try { agent = await (await fetch(AGENT + '/health', { signal: AbortSignal.timeout(2500) })).json(); if (agent.ok && agent.brokerUp) mode = 'live' } catch {}
   if (mode === 'replay') for (const u of ['../ui/scenes.json', 'scenes.json']) { if (REC) break; try { const r = await fetch(u, { cache: 'no-store' }); if (r.ok) REC = await r.json() } catch {} }
   const broker = qs.get('broker') || (mode === 'live' ? agent.broker : '')
-  if (broker) $('navSky').href = 'index.html?broker=' + encodeURIComponent(broker)
+  $('navSky').href = 'index.html' + (broker ? '?broker=' + encodeURIComponent(broker) : '')
   if (mode === 'live') {
     $('chipZg').textContent = agent.simulated ? '0G simulated' : `0G live · ${agent.model || ''}`; $('chipZg').className = 'chip ' + (agent.simulated ? 'warn' : 'live')
     if (agent.simulated) { $('banner').hidden = false; $('banner').textContent = 'The Broker is in simulated mode: 0G is not being asked. Judgements here come from a stand-in.' }

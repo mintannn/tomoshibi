@@ -90,3 +90,18 @@ details summary { cursor: pointer; font-weight: 600; }
 .carry #qr { line-height: 0; background: #fff; padding: 6px; border-radius: 10px; }
 .carry code { word-break: break-all; }
 @media (max-width: 560px) { .carry { grid-template-columns: 1fr; justify-items: start; } }
+
+/* the four steps, on every page */
+.journey { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; counter-reset: j; }
+@media (max-width: 860px) { .journey { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.journey a { height: 100%; display: grid; grid-template-columns: 26px minmax(0, 1fr); grid-template-rows: auto auto; gap: 4px 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; text-decoration: none; color: var(--muted); background: #ffffff05; }
+.journey .jn { grid-row: 1 / 3; width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; font: 600 12px var(--mono); }
+.journey .jt b { display: block; color: var(--text); font-size: 15px; opacity: .75; }
+.journey .jt span { display: block; font-size: 12.5px; line-height: 1.4; }
+.journey .jon { grid-column: 2; display: flex; align-items: center; gap: 6px; font: 600 11px var(--mono); letter-spacing: .02em; }
+.journey .jon svg { width: 15px; height: 15px; flex: none; }
+.journey li.cur a { border-color: var(--flame); background: #f0a73b14; color: var(--text); box-shadow: 0 0 30px #f0a73b1f; }
+.journey li.cur .jn { border-color: var(--flame); background: var(--flame); color: #201400; }
+.journey li.cur .jt b { opacity: 1; } .journey li.cur .jon { color: var(--flame-2); }
+.journey li.done .jn { border-color: #2f6b52; color: var(--ok); }
+a.btn { display: inline-block; text-decoration: none; color: var(--text); } a.btn.primary { color: #201400; }

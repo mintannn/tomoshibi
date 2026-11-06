@@ -4,9 +4,18 @@ Three static pages. No build step, no web fonts, no trackers, no third-party req
 
 | Page | What it is |
 |---|---|
-| `gate.html` | **The gate.** An AI tool asks to use a key it does not hold. Three checks, one verdict, and the Ledger in your hand. Ends with World: one real person, one light. Live when `broker/demo-agent.mjs` runs next to a Broker; otherwise it replays `scenes.json`, recorded from the real Broker and 0G, and says so. |
+| `gate.html` | **Your keys.** The console: lend a key to an AI tool on your Ledger, watch each request pass the gate (range, 0G's judgement, your hand), then light your light with World. It shows what the tool process (`broker/demo-agent.mjs`) reports. With no agent it replays `scenes.json`, recorded from the real Broker and 0G, and says so. |
 | `index.html` | **The sky.** Every light is an AI tool. *Everyone* shows what a star count shows. *People I know* keeps only the tools that someone you know has lit. |
 | `trace.html?thread=0x…` | **The record** of one request, top to bottom, with a QR to open the same record on a phone. |
+
+## The journey (the bar at the top of every page)
+
+| | Step | Where |
+|---|---|---|
+| 1 | **Choose a tool** — see which tools the people you know really use | computer |
+| 2 | **Lend it a key** — plug in the Ledger, read the range, hold the button | Ledger |
+| 3 | **Let it work** — it uses the key without holding it; you are asked only when it matters | Ledger, on the desk |
+| 4 | **Your light goes on** — one real person, really using it; the next person sees it in step 1 | phone, World |
 
 ## Run it
 
@@ -23,7 +32,7 @@ Open `http://localhost:8790/`. To point at a Broker somewhere else, add `?broker
 cd broker && node demo-agent.mjs        # the AI tool, on :8792. Add the bridge and a Ledger and it signs on the device
 ```
 
-Open `http://localhost:8790/gate.html`. Space moves the story forward. `scenes.json` is a copy of
+Open `http://localhost:8790/gate.html`. The tool asks when you press 1–5 in its terminal (or on the page). `scenes.json` is a copy of
 `ui/scenes.json` so the hosted page has a recording to replay.
 
 ## Where each thing comes from

@@ -12,11 +12,12 @@
       <svg viewBox="0 0 120 152" aria-hidden="true"><rect x="31" y="96" width="58" height="48" rx="19" fill="#27407a"/><path d="M60 10 C62.2 10 63.8 12.2 64.8 14.8 C70.5 28 90 49 90 68 A30 30 0 1 1 30 68 C30 49 49.5 28 55.2 14.8 C56.2 12.2 57.8 10 60 10 Z" fill="#f0a73b"/><path d="M60 46 C61.3 46 62.2 47.2 62.8 48.6 C65.6 55 75 65.5 75 75 A15 15 0 1 1 45 75 C45 65.5 54.4 55 57.2 48.6 C57.8 47.2 58.7 46 60 46 Z" fill="#ffd98a"/></svg>
       TOMOSHIBI
     </div>
-    <nav class="tabs"><a href="gate.html" aria-current="page">Your keys</a><a href="index.html" id="navSky">Whose light</a></nav>
+    <a id="navSky" href="index.html" hidden></a>
     <span class="spacer"></span>
     <span class="chip" id="chipLedger">Ledger …</span>
     <span class="chip" id="chipZg">0G …</span>
   </div>
+  <ol class="journey" id="journey"></ol>
   <p class="banner" id="banner" hidden></p>
 
   <div class="console">
@@ -38,6 +39,7 @@
   <p class="foot" id="foot"></p>
 </div>
 
+<script src="journey.js"></script>
 <script src="qr.js"></script>
 <script src="gate.js"></script>
 </html>

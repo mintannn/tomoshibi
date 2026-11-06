@@ -242,11 +242,10 @@ function paintSheet() {
     ${human && !st.pressed ? `<p class="note">The Broker checks the first one today. It does not yet tie a light to a Ledger approval or to recorded use${pressedHere ? '; the second dot is on only because this browser itself received the signed permit from your Ledger' : ', so those two stay dark here rather than pretending'}.</p>` : ''}
     ${st.noWho ? '<p class="note warn">This Broker reports how many lights, but not whose. Update the Broker to see people you know.</p>' : ''}
     <div class="actions">
-      <button class="btn primary" id="lightIt">Show that I use this</button>
+      ${s.name === 'billing-assistant' ? `<a class="btn primary" href="gate.html${journeyKeep()}">Use this tool: lend it a key →</a>` : '<button class="btn" disabled>Not installed on this computer</button>'}
       <button class="btn" id="changeIt">Demo: the tool changes</button>
     </div>
     <div id="flow">${lastNote[s.name] || ''}</div>`
-  $('lightIt').onclick = () => vouch(s)
   $('changeIt').onclick = () => bump(s)
 }
 
@@ -330,3 +329,5 @@ $('addPerson').addEventListener('submit', (e) => {
 
 size(); paintPeople(); paintCaption(); requestAnimationFrame(frame)
 refresh(); setInterval(refresh, 3000)
+
+journey('choose', store.people.some((p) => p.tie === 'me') ? ['lend', 'work', 'light'] : [])
