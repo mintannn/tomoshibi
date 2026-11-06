@@ -35,8 +35,8 @@ function lamp(m = 'awake', s = 120) {
 
 // ── what the page remembers (this browser tab only) ──
 const mem = { get(k, d) { try { const v = sessionStorage.getItem('tomo.' + k); return v === null ? d : JSON.parse(v) } catch { return d } }, set(k, v) { try { sessionStorage.setItem('tomo.' + k, JSON.stringify(v)) } catch {} } }
-const KEEP = ['surface', 'chat', 'onb', 'ackLit', 'choice', 'opened', 'gain']
-const fresh = () => ({ surface: 'ai', chat: 0, onb: 'welcome', ackLit: false, choice: 0, opened: false, gain: null, tab: 'home', pending: null, busy: null, seenRid: null, world: null, lightsMode: 'all', friend: 0, err: null })
+const KEEP = ['surface', 'chat', 'onb', 'ackLit', 'choice', 'opened', 'gain', 'api', 'keyMode']
+const fresh = () => ({ api: 'stripe', keyMode: null, surface: 'ai', chat: 0, onb: 'welcome', ackLit: false, choice: 0, opened: false, gain: null, tab: 'home', pending: null, busy: null, seenRid: null, world: null, lightsMode: 'all', friend: 0, err: null })
 let ui = fresh(); for (const k of KEEP) ui[k] = mem.get(k, ui[k])
 const save = () => { for (const k of KEEP) mem.set(k, ui[k]) }
 const CHO = [{ uses: 20, days: 7 }, { uses: 10, days: 1 }, { uses: 50, days: 30 }]
@@ -118,7 +118,7 @@ function reduce() {
   const card = (rid) => st.cards.find((c) => c.rid === rid)
   for (const e of all) {
     if (e.type === 'request') st.cards.push({ ...e, verdicts: [] })
-    else if (e.type === 'verdict') { const c = card(e.rid); if (c) { c.verdicts.push(e); c.declined = false } if (st.lent && !e.pressed && typeof e.response.remaining === 'number') st.lent.left = e.response.remaining }
+    else if (e.type === 'verdict') { const c = card(e.rid); if (c) { c.verdicts.push(e); c.declined = false; if (e.service) c.service = e.service } if (st.lent && !e.pressed && typeof e.response.remaining === 'number') st.lent.left = e.response.remaining }
     else if (e.type === 'asking') { st.asking = e; st.lendDeclined = false; st.waitingDevice = false }
     else if (e.type === 'waiting-device') st.waitingDevice = true
     else if (e.type === 'signed') { st.asking = null; st.waitingDevice = false; if (e.why === 'lend') st.lent = { holder: e.holder, device: e.device, uses: e.uses, left: e.uses, at: e.at, lines: e.lines } }
@@ -251,7 +251,7 @@ function frame(o) {
     + (o.strip || '') + '</div>'
 }
 /** When no Ledger is connected: a button on this page stands in for it, and says so. */
-const softHold = (label) => `<div class="softhold"><b>No Ledger connected.</b> This button stands in, and the record says so.<div class="two"><button class="holdbtn" data-hold="1"><i></i>${label}</button><button class="ghost" data-act="soft-no">Not now</button></div></div>`
+const softHold = (label) => `<div class="softhold">${MOCK}<b>No Ledger connected.</b> This button stands in, and the record says so.<div class="two"><button class="holdbtn" data-hold="1"><i></i>${label}</button><button class="ghost" data-act="soft-no">Not now</button></div></div>`
 const connectRow = () => { const ways = (mode === 'live' && window.appAgentIsRemote && window.Ledger && Ledger.ways) || []; if (!ways.length || dev.on || hasDevice()) return dev.on && dev.app !== 'Tomoshibi' ? `<p class="connectmsg">${dev.app === 'locked' ? 'Unlock your Ledger.' : 'Open TOMOSHIBI on your Ledger.'}</p>` : ''
   return `<div class="connect">${ways.includes('usb') ? '<button class="ghost" data-act="connect:usb">Connect by USB</button>' : ''}${ways.includes('bluetooth') ? '<button class="ghost" data-act="connect:bluetooth">Connect by Bluetooth</button>' : ''}</div>${dev.error ? `<div class="err">${esc(dev.error)}</div>` : ''}` }
 
@@ -273,13 +273,23 @@ function ledgerLine() {
 // call is put through. Only the Ledger can add a row, and only the Ledger can approve a heavy call.
 const BUILT = 'billing-assistant'
 const LABEL = () => agent?.range?.key || 'stripe-live'
-// The APIs TOMOSHIBI can put a call through to. The tool reports the Broker's list; this is the same list for a preview.
-const APIS = () => agent?.apis || [{ id: 'stripe', name: 'Stripe', target: 'api.stripe.com', keyHint: 'sk_live_…', where: 'https://dashboard.stripe.com/apikeys', ready: true }, { id: 'model', name: 'Model API', ready: false }, { id: 'mail', name: 'Mail', ready: false }]
-const API = () => APIS().find((a) => a.ready) || APIS()[0]
+// The services TOMOSHIBI can put a call through to. The tool reports the Broker's list (broker/src/apis.js); this is
+// the same list for a preview. Only Stripe is wired; the others are there to be chosen and say "not supported yet".
+const APIS = () => agent?.apis || [{ id: 'stripe', name: 'Stripe', label: 'stripe-live', target: 'api.stripe.com', keyHint: 'sk_test_…', ready: true }, { id: 'anthropic', name: 'Anthropic', label: 'model-main', target: 'api.anthropic.com', keyHint: 'sk-ant-…', ready: false }, { id: 'openai', name: 'OpenAI', label: 'openai-main', target: 'api.openai.com', keyHint: 'sk-…', ready: false },
+  { id: 'resend', name: 'Resend', label: 'resend-tx', target: 'api.resend.com', keyHint: 're_…', ready: false }, { id: 'github', name: 'GitHub', label: 'github-bot', target: 'api.github.com', keyHint: 'ghp_…', ready: false }, { id: 'slack', name: 'Slack', label: 'slack-bot', target: 'slack.com', keyHint: 'xoxb-…', ready: false }]
+const API = () => APIS().find((a) => a.ready) || APIS()[0]                 // the row that exists: Stripe
+const PICK = () => APIS().find((a) => a.id === ui.api) || API()            // what is chosen in the list
+// What is not real is said where it is shown. A key can only be parked next to a Broker on this computer.
+const MOCK = '<i class="mock">MOCK</i>'
+const MOCK_KEY = 'mock-key-not-a-real-key'
+const canPark = () => mode === 'live' && !window.appAgentIsRemote && agent?.canPark === true
+const stripeReal = () => mode === 'live' && Boolean(agent?.stripe)
 const left = (st) => (typeof st.lent?.left === 'number' ? st.lent.left : st.lent?.uses)
 /** The switchboard's table: one row per label. The key column is never shown. */
 const table = (st) => `<div class="tbl"><div class="th"><span>LABEL</span><span>GOES TO</span><span>UNTIL</span><span>KEY</span></div><div class="tr"><b>${esc(LABEL())}</b><span>${esc(API().target)}</span><span>${untilDay(CHO[ui.choice].days)} · ${left(st)} left</span><span>sk_••••</span></div></div>`
-const wire = (n) => `<div class="pipe"><span>${BUILT}</span><i>label</i><b>TOMOSHIBI</b><i>key</i><span>Stripe</span><em>${n ? `× ${n}` : ''}</em></div>`
+const wire = (n, sv) => `<div class="pipe"><span>${BUILT}</span><i>label</i><b>TOMOSHIBI</b><i>key</i><span>${sv?.live ? 'Stripe <u>test mode</u>' : MOCK + 'Stripe'}</span><em>${n ? `× ${n}` : ''}</em></div>`
+/** What the service answered, in one line: real (Stripe test mode) or the stand-in. */
+const said = (sv) => (!sv ? '' : sv.live ? `<small class="said">Stripe answered <b>${esc(sv.status)}</b>: ${esc(sv.text)}</small>` : `<small class="said">${MOCK}Stripe is a stand-in here: no key is parked.</small>`)
 
 function vWelcome() {
   cur = 'welcome'
@@ -290,15 +300,18 @@ function vWelcome() {
 }
 function vKey(st) {
   cur = 'key'
-  const a = API(), c = CHO[ui.choice]
-  return frame({ steps: 0, now: 'ADD A ROW', why: 'Your tool gets a label. Never the key.',
-    left: hero('awake', 'Which API?', 'Park the key<br>once.', 'No .env. No copies.'),
-    right: `<div class="card"><div class="apis">${APIS().map((x) => `<span class="${x.id === a.id ? 'on' : ''} ${x.ready ? '' : 'off'}">${esc(x.name)}${x.ready ? '' : '<i>not yet</i>'}</span>`).join('')}</div>
-      <label class="inp"><input id="keyIn" type="password" placeholder="${esc(a.keyHint || 'the key')}" autocomplete="off" spellcheck="false"></label>
-      ${kv('Label', `<code>${esc(LABEL())}</code>`)}${kv('Goes to', `${esc(a.target)} <i class="fixed">fixed</i>`)}<div class="kv"><span>Until</span><select id="ends">${CHO.map((x, i) => `<option value="${i}" ${i === ui.choice ? 'selected' : ''}>${x.days} day${x.days === 1 ? '' : 's'} · ${x.uses} calls</option>`).join('')}</select></div>
+  const a = PICK(), can = canPark()
+  const opts = APIS().map((x) => `<option value="${x.id}" ${x.id === a.id ? 'selected' : ''}>${esc(x.name)}${x.ready ? '' : ' (not supported yet)'}</option>`).join('')
+  const row = `${kv('Label', `<code>${esc(a.label || '')}</code>`)}${kv('Goes to', `${esc(a.target || '')} <i class="fixed">fixed</i>`)}`
+  const body = !a.ready ? `${row}<div class="notyet"><b>${esc(a.name)} is not supported yet.</b> Only Stripe works today.</div><button disabled>Approve on my Ledger →</button>`
+    : `<label class="inp"><input id="keyIn" type="password" placeholder="${esc(a.keyHint || 'the key')}" autocomplete="off" spellcheck="false"></label>
+      ${row}<div class="kv"><span>Until</span><select id="ends">${CHO.map((x, i) => `<option value="${i}" ${i === ui.choice ? 'selected' : ''}>${x.days} day${x.days === 1 ? '' : 's'} · ${x.uses} calls</option>`).join('')}</select></div>
       ${st.lendDeclined ? '<div class="err">Nothing was signed. Try again.</div>' : ''}${ui.err ? `<div class="err">${esc(ui.err)}</div>` : ''}
       <button data-act="park" disabled>Approve on my Ledger →</button>${ledgerLine()}
-      <small>Demo: the key field sends and stores nothing. <button class="link" data-act="key-test">Use a test key</button></small></div>` })
+      <small>${can ? 'A Stripe <b>test-mode</b> key (<code>sk_test_…</code>) goes to your Broker on this computer, in memory only. Live keys are refused.' : `${MOCK}This copy takes no keys: nothing is sent or stored.`} <button class="link" data-act="key-test">No key? Use a mock key</button></small>`
+  return frame({ steps: 0, now: 'ADD A ROW', why: 'Your tool gets a label. Never the key.',
+    left: hero('awake', 'Which API?', 'Park the key<br>once.', 'No .env. No copies.'),
+    right: `<div class="card"><div class="kv"><span>API</span><select id="api">${opts}</select></div>${body}</div>` })
 }
 function vHold(st) {
   cur = 'hold'
@@ -324,7 +337,8 @@ POST <b>tomoshibi</b>/use
     url: "https://${esc(API().target)}/v1/invoices",
     keyRef: <b>${esc(LABEL())}</b> } }   <i>// the label</i>
 <i>// → Stripe's answer, passed back</i></pre>
-      <button data-act="back-ai">Back to the AI ↗</button>${st.lent.device ? '' : '<small>Signed by a software key: no Ledger was connected.</small>'}</div>` })
+      ${stripeReal() ? `<small class="said">Stripe <b>test mode</b>: calls are real.${agent.seed ? ` Test data made: ${agent.seed.payment ? '1 paid order' : 'no paid order'}, ${agent.seed.invoices} unpaid invoice${agent.seed.invoices === 1 ? '' : 's'}.` : ''}</small>` : `<small class="said">${MOCK}No key is parked, so Stripe is a stand-in.</small>`}
+      <button data-act="back-ai">Back to the AI ↗</button>${st.lent.device ? '' : `<small>${MOCK}Signed by a software key: no Ledger was connected.</small>`}</div>` })
 }
 const shownMine = () => Boolean(me() && lights.who.includes(me())) || ui.world?.step === 'done'
 const nudge = (st) => (st.uses && !shownMine() ? `<div class="card nudge">${lamp('happy', 46)}<div><b>It works. Light the tool you built?</b></div><button data-act="tab:lights">Light it →</button></div>` : '')
@@ -368,7 +382,7 @@ function vHome(st) {
     const m = money(c)
     return frame({ tabs: 1, now: 'APPROVED ONCE', why: 'One hold. It goes out once.', gain: 'trust that heavy calls wait for you.', bg: '#EAF7EF',
       left: hero('happy', 'Done. Once.', m ? `${esc(m.amount)} refunded.<br>Once.` : 'Done. Once.'),
-      right: `<div class="card">${tag('BY HAND', 'hand')}${kv('What', esc(c.what))}${zg(c)}<div class="two"><button data-act="open-ai">Back to the AI ↗</button>${ok}</div>${recLink(c)}</div>${nudge(st)}` })
+      right: `<div class="card">${tag('BY HAND', 'hand')}${kv('What', esc(c.what))}${said(c.service)}${zg(c)}<div class="two"><button data-act="open-ai">Back to the AI ↗</button>${ok}</div>${recLink(c)}</div>${nudge(st)}` })
   }
   if (d === 'DECLINED') {
     cur = 'refused'
@@ -380,7 +394,7 @@ function vHome(st) {
   const n = through.length
   return frame({ tabs: 1, now: 'SWITCHBOARD', why: 'Routine calls go through. You are not asked.', bg: '#EAF7EF',
     left: hero('asleep', 'zzz…', 'All quiet.', n ? `${n} call${n === 1 ? '' : 's'} put through. You were not asked.` : 'No calls yet.'),
-    right: `<div class="card">${table(st)}${n ? wire(n) + `<small>${esc(through[n - 1].what)}</small>` + zg(through[n - 1]) : '<small>No calls yet.</small>'}</div>${nudge(st) || '<div class="card soft">A heavy call comes to your Ledger. Nothing else does.</div>'}` })
+    right: `<div class="card">${table(st)}${n ? wire(n, through[n - 1].service) + `<small>${esc(through[n - 1].what)}</small>` + said(through[n - 1].service) + zg(through[n - 1]) : '<small>No calls yet.</small>'}</div>${nudge(st) || '<div class="card soft">A heavy call comes to your Ledger. Nothing else does.</div>'}` })
 }
 function vActivity(st) {
   cur = 'activity'
@@ -402,13 +416,13 @@ function vLights(st) {
   const name = `${BUILT} ${agent?.version || '1.0.0'}`, w = ui.world
   if (ui.friend === 1) {
     cur = 'friend'
-    return frame({ tabs: 1, who: 'Arjun', now: 'LIGHTS · SAMPLE', why: 'People choose a tool by who built it and who really runs it.',
+    return frame({ tabs: 1, who: 'Arjun', now: `${MOCK}LIGHTS · what someone else sees`, why: 'People choose a tool by who built it and who really runs it.',
       left: hero('awake', 'Someone you know!', 'Built and run<br>by Priya.', 'She runs it with her own key.'),
       right: `<div class="card"><div class="cardh2"><b>Tools for unpaid invoices</b>${tgl('known')}</div><div class="tool"><b>invoice-wizard 2.3</b><span>212 lights</span><em>nobody you know</em></div><div class="tool pick"><b>${name}</b><span>14 lights · built by Priya</span><em>${lamp('happy', 30)} Priya</em></div><div class="tool"><b>pay-helper 0.9</b><span>3 lights</span><em>nobody you know</em></div><button data-act="friend:2">Use it with TOMOSHIBI →</button></div>` })
   }
   if (ui.friend === 2) {
     cur = 'ending'
-    return frame({ tabs: 1, now: 'LIGHTS · SAMPLE', why: 'Every light on your tool is trust in you.', gainLabel: 'BECAUSE OF YOU', gain: 'one more builder skips the .env file.',
+    return frame({ tabs: 1, now: `${MOCK}LIGHTS · later`, why: 'Every light on your tool is trust in you.', gainLabel: 'BECAUSE OF YOU', gain: 'one more builder skips the .env file.',
       left: hero('happy', 'Look who’s here!', 'Arjun chose it<br>because of you.'),
       right: `<div class="card"><div class="cardh2"><b>${name}</b>${tgl('known')}</div>${field(['You', 'Arjun'], 0)}<small>15 lights · 2 you know</small>${trust(15)}</div>` })
   }
@@ -482,12 +496,12 @@ function chat(st) {
   if (st.lent) M.push(['bot', `Connected. <code>${BUILT}</code> calls Stripe by the label <code>${esc(LABEL())}</code>. I never saw your key. Starting on the unpaid invoices.`])
   for (const c of st.cards.slice(-8)) {
     const d = dec(c)
-    const state = d === 'checking' ? '<span class="state wait">TOMOSHIBI is weighing it <span class="typing"><i></i><i></i><i></i></span></span>' : d === 'ALLOWED' ? '<span class="state ok">Done. TOMOSHIBI put it through.</span>'
-      : d === 'NEEDS' ? '<span class="state wait">Waiting: a heavy call needs your approval. <button class="link" data-act="open-tomo">Open TOMOSHIBI ↗</button></span>' : d === 'BYHAND' ? '<span class="state ok">Sent once, because you approved it.</span>'
+    const state = d === 'checking' ? '<span class="state wait">TOMOSHIBI is weighing it <span class="typing"><i></i><i></i><i></i></span></span>' : d === 'ALLOWED' ? `<span class="state ok">Done. TOMOSHIBI put it through.${c.service?.live ? ` Stripe: ${esc(c.service.text)}.` : ''}</span>`
+      : d === 'NEEDS' ? '<span class="state wait">Waiting: a heavy call needs your approval. <button class="link" data-act="open-tomo">Open TOMOSHIBI ↗</button></span>' : d === 'BYHAND' ? `<span class="state ok">Sent once, because you approved it.${c.service?.live ? ` Stripe: ${esc(c.service.text)}.` : ''}</span>`
       : d === 'DECLINED' ? '<span class="state bad">Not sent. You said no.</span>' : d === 'DENIED' ? '<span class="state bad">Refused. My label does not go there.</span>' : '<span class="state bad">No verdict from 0G, so nothing ran.</span>'
     M.push(['bot', `${esc(c.what)}…${state}`])
   }
-  return `<div class="frame ai" data-view="${cur}"><div class="aibody"><div class="aihd"><span class="bot"></span>${TOOL} <small>helping you build ${BUILT}</small></div>${(chatNext = M.length, M).map(([c, t], i) => `<div class="m ${c} ${i >= chatSeen ? 'new' : ''}">${t}</div>`).join('')}${extra}<div class="aiin">Message ${TOOL}…</div>
+  return `<div class="frame ai" data-view="${cur}"><div class="aibody"><div class="aihd"><span class="bot"></span>${TOOL} <small>helping you build ${BUILT}</small><span class="sp"></span>${MOCK}<small>scripted chat</small></div>${(chatNext = M.length, M).map(([c, t], i) => `<div class="m ${c} ${i >= chatSeen ? 'new' : ''}">${t}</div>`).join('')}${extra}<div class="aiin">Message ${TOOL}…</div>
     <div class="foot">A demo AI. Its first messages are scripted; every call the tool makes after that is real.</div></div></div>`
 }
 
@@ -524,7 +538,7 @@ function paint() {
   const chip = (t, k) => `<span class="chip ${k}">${t}</span>`
   const demo = `<b>DEMO</b><span>Make the tool call now:</span>${b('usual', 'Routine call')}${b('heavy', 'Heavy call')}${b('denied-host', 'Wrong destination')}${mode === 'live' && agent?.deaf ? b('stopped', '0G unreachable') : ''}
     <button data-act="friend:${ui.friend === 0 ? 1 : 0}">${ui.friend ? 'Back to Priya' : 'Later: someone chooses'}</button><span class="sp"></span>`
-    + (mode === 'live' ? chip(agent.simulated ? '0G simulated' : `0G live${agent.model ? ' · ' + esc(agent.model) : ''}`, agent.simulated ? 'warn' : 'live') + chip(hasDevice() ? 'Ledger connected' : 'no Ledger', hasDevice() ? 'live' : 'warn') + chip(agent.worldSimulated ? 'World simulated' : 'World live', agent.worldSimulated ? 'warn' : 'live') + chip(agent.execute ? 'Stripe: real calls' : 'Stripe: stand-in', '') + (zgUsed(st) ? chip(zgUsed(st), 'live') : '') + (agent.storage ? chip('0G Storage on', 'live') : '')
+    + (mode === 'live' ? chip(agent.simulated ? 'MOCK · 0G simulated' : `0G live${agent.model ? ' · ' + esc(agent.model) : ''}`, agent.simulated ? 'warn' : 'live') + chip(hasDevice() ? 'Ledger connected' : 'MOCK · no Ledger', hasDevice() ? 'live' : 'warn') + chip(agent.worldSimulated ? 'MOCK · World simulated' : 'World live', agent.worldSimulated ? 'warn' : 'live') + chip(agent.stripe ? `Stripe: ${esc(agent.stripe)} mode, real calls` : 'MOCK · Stripe stand-in', agent.stripe ? 'live' : 'warn') + (zgUsed(st) ? chip(zgUsed(st), 'live') : '') + (agent.storage ? chip('0G Storage on', 'live') : '')
       : mode === 'preview' ? chip('PREVIEW · recorded answers, nothing is sent', 'warn') + (ui.connect ? '<input id="agentIn" placeholder="https://… address of your TOMOSHIBI" autocomplete="off" spellcheck="false"><button data-act="connect-live">Connect</button>' : '<button data-act="connect-open">Connect to a live TOMOSHIBI</button>') : chip('starting…', ''))
     + (mode === 'live' && window.appAgentIsRemote ? `<button data-act="disconnect">Disconnect (${esc(new URL(AGENT).hostname.split('.')[0])}…)</button>` : '')
     + (ui.confirmReset ? '<span class="chip warn">Reset for everyone?</span><button data-act="reset">Yes, start over</button><button data-act="reset-no">No</button>' : '<button data-act="reset">Start over</button>') + (st.error ? `<span class="chip warn">${esc(st.error)}</span>` : '')
@@ -545,9 +559,14 @@ const ACT = {
   'open-tomo': () => { ui.surface = 'tomo'; ui.opened = true; if (ui.chat === 0) ui.chat = 1 },
   'open-ai': () => { ui.surface = 'ai' },
   onb: (a) => { ui.onb = a },
-  'key-test': () => { const i = $('keyIn'); if (i) { i.value = 'sk_test_demo_not_a_real_key'; i.dispatchEvent(new Event('input', { bubbles: true })) } return false },
+  'key-test': () => { const i = $('keyIn'); if (i) { i.value = MOCK_KEY; i.dispatchEvent(new Event('input', { bubbles: true })) } return false },
   // The key field is cleared and nothing is sent: this demo keeps no real key. Then the row goes to the Ledger.
-  park: () => { const i = $('keyIn'); if (!i || !i.value.trim()) return false; i.value = ''; ACT.lend() },
+  park: () => { const i = $('keyIn'), v = i ? i.value.trim() : ''; if (!v) return false; i.value = ''; ui.err = null
+    if (v === MOCK_KEY || !canPark()) { ui.keyMode = 'mock'; ACT.lend(); return }
+    // A real test-mode key goes to the Broker on this computer, and nowhere else. The Broker asks Stripe if it is good.
+    ui.busy = { steps: 0, now: 'ADD A ROW', why: 'Your tool gets a label. Never the key.', h: 'Checking<br>the key.', doing: 'Asking Stripe if this key is good', next: 'Then: approve on your Ledger.' }
+    fetch(agent.broker + '/keys', { method: 'POST', body: JSON.stringify({ label: LABEL(), key: v, seed: true }) }).then((r) => r.json()).catch(() => ({ ok: false, error: 'The Broker did not answer.' }))
+      .then((o) => { ui.busy = null; if (o.ok) { ui.keyMode = 'test'; ACT.lend() } else ui.err = o.error || 'The key was not accepted.'; save(); paint() }) },
   lend: () => { ui.pending = 'lend'; ui.err = null; ui.gain = null; src().post('/lend', CHO[ui.choice]); setTimeout(() => { if (ui.pending === 'lend') { ui.pending = null; ui.err = `${TOOL} did not answer. Try again.`; paint() } }, 15000) },
   'soft-no': () => { src().post('/hold', { ok: false }) },
   'back-ai': () => { ui.ackLit = true; ui.surface = 'ai' },
@@ -569,7 +588,7 @@ document.addEventListener('click', (e) => {
   const [act, arg] = t.dataset.act.split(':'); if (!ACT[act]) return
   if (ACT[act](arg) !== false) { save(); paint() }
 })
-document.addEventListener('change', (e) => { if (e.target.id === 'ends') { ui.choice = Number(e.target.value); save(); paint() } })
+document.addEventListener('change', (e) => { if (e.target.id === 'ends') { ui.choice = Number(e.target.value); save(); paint() } else if (e.target.id === 'api') { ui.api = e.target.value; ui.err = null; save(); paint() } })
 document.addEventListener('input', (e) => { if (e.target.id === 'keyIn') { const b = document.querySelector('[data-act="park"]'); if (b) b.disabled = !e.target.value.trim() } })
 // The stand-in for the Ledger: a real hold, a little over a second.
 let ht = null
@@ -588,7 +607,7 @@ function goLive(h) {
   agent = h; mode = 'live'
   const loop = async () => { if (!liveOn) return; await live.poll().catch(() => {}); setTimeout(loop, 400) }
   loop()
-  setInterval(async () => { if (!liveOn) return; const n = await probeAgent(6000); if (!n) return; const ch = n.device !== agent.device || n.lent !== agent.lent; agent = n; if (ch) paint() }, 3000)
+  setInterval(async () => { if (!liveOn) return; const n = await probeAgent(6000); if (!n) return; const ch = n.device !== agent.device || n.lent !== agent.lent || n.stripe !== agent.stripe; agent = n; if (ch) paint() }, 3000)
   refreshLights()
 }
 async function init() {

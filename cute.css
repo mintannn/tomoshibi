@@ -240,3 +240,10 @@ pre.code{margin:0;background:var(--ink);color:#f3efe7;border-radius:14px;padding
 .trust{display:flex;align-items:center;gap:10px;background:var(--peach);border:2.5px solid var(--ink);border-radius:14px;padding:8px 12px}.trust i{display:block;font-style:normal;font-size:10px;font-weight:800;letter-spacing:.1em;color:#a8410a}.trust b{font-size:15px}
 .seal{font-size:11.5px;font-weight:700;color:#17694a;margin-left:auto;white-space:nowrap}.seal.off{color:#a39c8d;font-weight:600}.li .seal+.rec{margin-left:8px}
 @media (prefers-reduced-motion: reduce){.readlist .now em{animation:none}}
+
+/* what is not real says so */
+.mock{font-style:normal;font-size:9.5px;font-weight:800;letter-spacing:.1em;background:#111;color:#FFF05A;border-radius:6px;padding:2px 6px;margin-right:6px;vertical-align:1.5px;white-space:nowrap}
+.vbar i .mock{background:#FFF05A;color:#111;margin-right:7px}.aihd .sp{flex:1}.aihd .mock+small{margin-left:0}
+.notyet{background:#f3eee6;border:2.5px dashed #cfc6b6;border-radius:12px;padding:10px 12px;font-size:13.5px;color:#6b6580}.notyet b{color:var(--ink)}
+.said{display:block}.said b{color:var(--ink)}.pipe u{text-decoration:none;font-size:10px;font-weight:800;color:var(--ok);margin-left:3px}.pipe .mock{display:inline;font-size:9.5px;color:#FFF05A;margin-right:5px}.pipe .mock::after{content:none}
+.kv select#api{max-width:210px}

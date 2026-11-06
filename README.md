@@ -19,8 +19,16 @@ The person is a builder who is tired of keeping API keys in `.env` files (see `d
    tool she built (World confirms one real person; the Broker's trail confirms she really ran it), and where the lights
    add up to her name as a builder.
 
-What is drawn but not built: the chat is scripted, and the key field sends and stores nothing (the call to Stripe is a
-stand-in while `EXECUTE=0`). Lights are counted per tool version; "your name as a builder" shows this tool's count.
+**What is real, and what is a mock.** Whatever is not real carries a `MOCK` tag where it is shown.
+
+- The chat is scripted (`MOCK`).
+- The key: next to a Broker on the same computer, a Stripe **test-mode** key (`sk_test_…`) is really parked. It goes to the
+  Broker (`POST /keys`), Stripe is asked whether it is good, and it stays in memory only. A live key is refused. The Broker
+  then makes a little test data in that test account (one paid order, two unpaid invoices), so the calls have something
+  real to read and to refund, and the page shows what Stripe answered. With the mock key, or on the hosted copy, nothing
+  is sent and Stripe is a stand-in (`MOCK`).
+- Lights are counted per tool version; "your name as a builder" shows this tool's count. The two screens of what someone
+  else sees are a mock.
 
 Every TOMOSHIBI screen says one thing: a bar under the name states the value in a few words, the headline states the
 moment. After each step a green line says what you gained; while something is on its way the screen says what comes next.

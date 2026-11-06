@@ -14,8 +14,11 @@ Only the services on this list can be reached. A label goes to one service and n
 | Service | Label | Goes to | Status |
 |---|---|---|---|
 | Stripe | `stripe-live` | `api.stripe.com` | works |
-| Model API | `model-main` | | not yet |
-| Mail | | | not yet |
+| Anthropic | `model-main` | `api.anthropic.com` | not supported yet |
+| OpenAI | `openai-main` | `api.openai.com` | not supported yet |
+| Resend | `resend-tx` | `api.resend.com` | not supported yet |
+| GitHub | `github-bot` | `api.github.com` | not supported yet |
+| Slack | `slack-bot` | `slack.com` | not supported yet |
 
 ## What the owner does, once per key
 
@@ -52,6 +55,7 @@ Every call, put through or refused, is written to the owner's trail with its rea
 
 - Only the services listed above. This is not a proxy for every API.
 - The Broker runs on the owner's own machine. It is the one place that holds the key.
-- In the public demo, the call to Stripe is a stand-in: no real key is stored and no real call is made.
+- Today only Stripe **test-mode** keys (`sk_test_…`) are accepted, and a live key is refused. With a test key parked,
+  the call to Stripe is real. With none (the public demo), Stripe is a stand-in and the page says MOCK.
 
 Source: https://github.com/kou-uni/ethglobal-mumbai
