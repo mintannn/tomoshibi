@@ -84,3 +84,9 @@ details summary { cursor: pointer; font-weight: 600; }
 .tag.sim { color: var(--danger); border-color: #7a3a36; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 @media (max-width: 480px) { .kv { grid-template-columns: 1fr; gap: 0; } .kv dd { margin-bottom: 8px; } }
+
+/* the QR on the record page */
+.carry { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: center; }
+.carry #qr { line-height: 0; background: #fff; padding: 6px; border-radius: 10px; }
+.carry code { word-break: break-all; }
+@media (max-width: 560px) { .carry { grid-template-columns: 1fr; justify-items: start; } }

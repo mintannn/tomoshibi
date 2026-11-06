@@ -5,7 +5,7 @@ Two static pages. No build step, no web fonts, no trackers, no third-party reque
 | Page | What it is |
 |---|---|
 | `index.html` | **The sky.** Every light is an AI tool. *Everyone* shows what a star count shows. *People I know* keeps only the tools that someone you know has lit. |
-| `trace.html?thread=0x…` | **The record** of one request, top to bottom. This is where a QR points. |
+| `trace.html?thread=0x…` | **The record** of one request, top to bottom, with a QR to open the same record on a phone. |
 
 ## Run it
 
@@ -34,5 +34,7 @@ Open `http://localhost:8790/`. To point at a Broker somewhere else, add `?broker
   manifest. Here a button bumps the version to show the lights going out.
 - **The record is read from the Broker**, which is a point of trust. Only the 0G Storage root and
   transaction can be checked without it.
-- **No QR yet.** The record opens from a link.
+- **The QR works on one network only.** The record page shows a QR for itself (`qr.js`, written
+  here, no library). A phone can follow it only if it can reach this computer and the Broker:
+  open the page by the computer's network address, or add `&lan=<address>`.
 - If the Broker cannot be reached, the sky shows sample data and says so in the header.

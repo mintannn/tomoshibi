@@ -88,6 +88,28 @@ async function load() {
     $('empty').textContent = `Could not read the record from ${BROKER}. If you opened this on a phone, the Broker has to be reachable from the phone.`
   }
 }
+// The QR points at this same page. A phone cannot follow "localhost", so the link is rebuilt with
+// an address the phone can reach: the one this page was opened with, or ?lan=<address>.
+function carry() {
+  if (!thread) return
+  const local = (h) => h === 'localhost' || h === '127.0.0.1' || h === '[::1]'
+  const lan = qs.get('lan') || (local(location.hostname) ? '' : location.hostname)
+  const page = new URL(location.href), broker = new URL(BROKER)
+  if (lan) { page.hostname = lan; if (local(broker.hostname)) broker.hostname = lan }
+  page.search = ''
+  page.searchParams.set('thread', thread)
+  page.searchParams.set('broker', broker.origin)
+  const link = page.toString()
+  $('carry').hidden = false
+  try { $('qr').innerHTML = qrSvg(link, 200) } catch (e) { $('qr').textContent = e.message }
+  const stuck = local(page.hostname) || local(broker.hostname)
+  $('carryNote').className = stuck ? 'note warn' : 'note'
+  $('carryNote').innerHTML = stuck
+    ? `This link says <code>${esc(page.hostname)}</code>, which a phone cannot reach. Open this page by this computer's network address, or add <code>&amp;lan=192.168.x.x</code> to the address bar.`
+    : `<code>${esc(link)}</code><br>The phone has to be on the same network as this computer.`
+}
+carry()
+
 $('open').addEventListener('submit', (e) => {
   e.preventDefault()
   const u = new URL(location.href); u.searchParams.set('thread', $('t').value.trim()); location.href = u.toString()

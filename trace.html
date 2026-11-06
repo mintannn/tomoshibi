@@ -22,11 +22,21 @@
     <p class="sub" id="empty" hidden>No record for this request.</p>
   </section>
 
+  <section class="sheet carry" id="carry" hidden>
+    <div id="qr"></div>
+    <div>
+      <h2>Take this record with you</h2>
+      <p class="sub">Scan it with your own phone. The same record opens there, read from the same Broker.</p>
+      <p class="note" id="carryNote"></p>
+    </div>
+  </section>
+
   <form class="form" id="open">
     <input id="t" placeholder="Request id (0x…)" aria-label="Request id">
     <button class="btn" type="submit">Open</button>
   </form>
 </div>
 
+<script src="qr.js"></script>
 <script src="trace.js"></script>
 </html>
