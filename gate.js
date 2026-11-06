@@ -23,7 +23,10 @@ const WHY = {
   ZG_UNREACHABLE: '0G gave no answer. No judgement is made up in its place: nothing ran, and no use was spent.',
   ESCALATED: '0G read the content and judged it heavy. A standing permission is not enough. Hold the button on your Ledger to let this one request through.',
 }
-const ALLOWED_TEXT = 'The Broker used the key on the tool’s behalf. The tool got the result. It never held the key.'
+// With execution switched off (the demo), no call leaves the Broker and no real key exists anywhere. Say so.
+const allowedText = () => (mode === 'live' && agent.execute
+  ? 'The Broker used the key on the tool’s behalf. The tool got the result. It never held the key.'
+  : 'Let through. In this demo the Broker stops here: execution is switched off, so nothing is sent to the API and no real key is loaded. The tool never holds the key either way.')
 
 let mode = 'replay', agent = null, REC = null
 let all = [], epoch = null, seenVerdicts = new Set()
@@ -116,7 +119,7 @@ function nowCard(st) {
   const dec = !b ? '' : c.declined ? 'STOPPED' : b.decision
   const fresh = last && !seenVerdicts.has(last.n); if (last) seenVerdicts.add(last.n)
   const word = !b ? 'Checking…' : c.declined ? 'Not let through' : WORD[b.decision] || b.decision
-  const text = !b ? '' : c.declined ? 'You declined on the device. The key was not used.' : b.decision === 'ALLOWED' ? ALLOWED_TEXT : WHY[b.reason] || b.message || ''
+  const text = !b ? '' : c.declined ? 'You declined on the device. The key was not used.' : b.decision === 'ALLOWED' ? allowedText() : WHY[b.reason] || b.message || ''
   const meta = !b ? '' : [`<b>${esc(c.declined ? 'DECLINED' : b.decision)}</b>`, zg.requestId ? `0G request id ${esc(zg.requestId)}` : '', zg.reason && !zg.simulated ? `0G: ${esc(zg.reason)}` : '', `${esc(last.ms)} ms`, b.violation ? 'recorded against the tool' : '',
     b.decision === 'DENIED' && c.showedOnDevice ? 'shown on your Ledger' : ''].filter(Boolean).join(' · ')
   el.className = `now ${dec} ${fresh ? 'fresh' : ''}`
