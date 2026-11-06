@@ -206,7 +206,8 @@ async function init() {
 }
 const KEYS = { 1: 'usual', 2: 'heavy', 3: 'denied-host', 4: 'denied-sneak', 5: 'stopped' }
 document.addEventListener('keydown', (e) => {
-  if (e.target.closest?.('input,textarea') || e.metaKey || e.ctrlKey) return
+  // A held key repeats. One press is one request.
+  if (e.repeat || e.target.closest?.('input,textarea') || e.metaKey || e.ctrlKey || e.altKey) return
   if (KEYS[e.key]) src().post('/run', { id: KEYS[e.key] })
   else if (e.key === 'l' || e.key === 'L') src().post('/lend')
   else if (e.key === 'r' || e.key === 'R') src().post('/reset')
