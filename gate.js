@@ -79,8 +79,9 @@ function reduce() {
     if (e.type === 'request') st.cards.push({ ...e, verdicts: [] })
     else if (e.type === 'verdict') { const c = card(e.rid); if (c) { c.verdicts.push(e); c.declined = false } if (st.lent && !e.pressed && typeof e.response.remaining === 'number') st.lent.left = e.response.remaining }
     else if (e.type === 'asking') { st.asking = e; st.lendDeclined = false }
-    else if (e.type === 'signed') { st.asking = null; if (e.device) st.byHand = true; if (e.why === 'lend') st.lent = { holder: e.holder, device: e.device, uses: e.uses, left: e.uses } }
-    else if (e.type === 'declined') { st.asking = null; const c = card(e.rid); if (c) c.declined = true; else st.lendDeclined = true }
+    else if (e.type === 'waiting-device') st.waitingDevice = true
+    else if (e.type === 'signed') { st.asking = null; st.waitingDevice = false; if (e.device) st.byHand = true; if (e.why === 'lend') st.lent = { holder: e.holder, device: e.device, uses: e.uses, left: e.uses } }
+    else if (e.type === 'declined') { st.asking = null; st.waitingDevice = false; const c = card(e.rid); if (c) c.declined = true; else st.lendDeclined = true }
     else if (e.type === 'device') { const c = card(e.rid); if (c) c.showedOnDevice = e.ok }
     else if (e.type === 'error') st.error = e
     if (e.type !== 'error') st.error = st.error && e.n === st.error.n ? st.error : (e.type === 'request' ? null : st.error)
@@ -148,7 +149,8 @@ function ledgerCard(st) {
   el.className = 'card ' + (a ? 'ask' : blocked ? 'blk' : '')
   const head = '<h2>Your Ledger</h2>'
   if (a) {
-    el.innerHTML = head + `<div class="led ask"><i></i>${dev ? 'Asking you now' : 'Waiting for approval'}</div>
+    if (a.device) st.waitingDevice = false
+    el.innerHTML = head + `<div class="led ask"><i></i>${a.device ? 'Asking you now' : 'Waiting for approval'}</div>
       <p class="sub">${a.why === 'lend' ? 'Lend the key within this range?' : 'Let this one request through, once?'}</p>
       <div class="onscreen">${a.lines.map((l) => `<span>${esc(l)}</span>`).join('')}</div>` +
       (a.device ? '<p class="sub">Read it on the device, then hold the button. Nothing on this computer can press it for you.</p>'
@@ -157,6 +159,7 @@ function ledgerCard(st) {
     if (h) { let t; const up = () => { clearTimeout(t); h.classList.remove('down') }
       h.onpointerdown = () => { h.classList.add('down'); t = setTimeout(() => { up(); src().post('/hold', { ok: true }) }, 1150) }
       h.onpointerup = up; h.onpointerleave = up; $('noBtn').onclick = () => src().post('/hold', { ok: false }) }
+  } else if (st.waitingDevice) { el.className = 'card ask'; el.innerHTML = head + '<div class="led ask"><i></i>Looking for your Ledger…</div><p class="sub">This key was lent on your Ledger, so only your Ledger can let this through. Check the cable and that Tomoshibi is open.</p>'
   } else if (blocked) el.innerHTML = head + '<div class="led blk"><i></i>Showing BLOCKED</div><p class="sub">The refusal is on the device in your hand, where a program on this computer cannot draw.</p>'
   else el.innerHTML = head + (dev ? '<div class="led ok"><i></i>Connected · quiet</div><p class="sub">It wakes only when you are needed.</p>'
     : `<div class="led"><i></i>Not connected</div><p class="sub">${mode === 'live' ? 'Plug in the Ledger and open Tomoshibi. Until then a software key signs, and every record says so.' : 'This is a replay. In the live console, approvals happen on a Ledger Flex.'}</p>`)
