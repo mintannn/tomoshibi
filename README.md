@@ -1,6 +1,7 @@
 # Tomoshibi — the screens people see
 
-Static pages. No build step, no web fonts, no trackers, no third-party requests.
+Static pages. No build step, no web fonts, no trackers. The only other host the app talks to is its own back end
+(the address in `live.json`, or the AI tool on this computer); the links to Stripe and to World App are opened by the person.
 
 ## Start here: `app.html`
 
