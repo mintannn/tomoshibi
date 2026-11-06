@@ -105,3 +105,6 @@ details summary { cursor: pointer; font-weight: 600; }
 .journey li.cur .jt b { opacity: 1; } .journey li.cur .jon { color: var(--flame-2); }
 .journey li.done .jn { border-color: #2f6b52; color: var(--ok); }
 a.btn { display: inline-block; text-decoration: none; color: var(--text); } a.btn.primary { color: #201400; }
+
+.worldrow { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.worldrow .qrbox { line-height: 0; background: #fff; padding: 6px; border-radius: 10px; }

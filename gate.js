@@ -27,7 +27,6 @@ const ALLOWED_TEXT = 'The Broker used the key on the tool’s behalf. The tool g
 
 let mode = 'replay', agent = null, REC = null
 let all = [], epoch = null, seenVerdicts = new Set()
-let person = null, lighting = false
 
 // ── where events come from ──
 const live = {
@@ -99,7 +98,7 @@ function steps(c) {
   if (b.decision === 'DENIED') return li('stop', 'Range', 'Outside what you signed', 'Stopped here.') + li('skip', '0G', 'Never shown', 'The content did not leave.') + li('skip', 'Your hand', 'Not asked', 'It never reached you.')
   const range = li('pass', 'Range', 'Inside what you signed', 'Destination, action, key, expiry, uses.')
   if (b.decision === 'STOPPED') return range + li('stop', '0G', 'No answer', 'So no judgement was made.') + li('skip', 'Your hand', '—', '')
-  const weigh = li('pass', '0G', tier ? tier[0].toUpperCase() + tier.slice(1) : '—', zg.simulated ? 'Simulated: 0G was not asked.' : 'Read inside a sealed enclave.')
+  const weigh = li('pass', '0G', tier ? tier[0].toUpperCase() + tier.slice(1) : '—', zg.simulated ? 'Simulated: 0G was not asked.' : `Read inside a sealed enclave (TEE).${zg.requestId ? ' request id ' + zg.requestId : ''}`)
   if (b.decision === 'ALLOWED') return range + weigh + li('skip', 'Your hand', 'Not needed', 'Routine requests do not wake you.')
   const pressed = last.pressed
   return range + weigh + (pressed ? li('pass', 'Your hand', 'You held the button', 'One permission, one use.') : c.declined ? li('stop', 'Your hand', 'You declined', 'The key was not used.') : li('wait', 'Your hand', 'Waiting for you', 'Hold the button on your Ledger.'))
@@ -118,11 +117,12 @@ function nowCard(st) {
   const fresh = last && !seenVerdicts.has(last.n); if (last) seenVerdicts.add(last.n)
   const word = !b ? 'Checking…' : c.declined ? 'Not let through' : WORD[b.decision] || b.decision
   const text = !b ? '' : c.declined ? 'You declined on the device. The key was not used.' : b.decision === 'ALLOWED' ? ALLOWED_TEXT : WHY[b.reason] || b.message || ''
-  const meta = !b ? '' : [zg.requestId ? `0G request id ${esc(zg.requestId)}` : '', zg.reason && !zg.simulated ? `0G: ${esc(zg.reason)}` : '', `${esc(last.ms)} ms`, b.violation ? 'recorded against the tool' : '',
+  const meta = !b ? '' : [`<b>${esc(c.declined ? 'DECLINED' : b.decision)}</b>`, zg.requestId ? `0G request id ${esc(zg.requestId)}` : '', zg.reason && !zg.simulated ? `0G: ${esc(zg.reason)}` : '', `${esc(last.ms)} ms`, b.violation ? 'recorded against the tool' : '',
     b.decision === 'DENIED' && c.showedOnDevice ? 'shown on your Ledger' : ''].filter(Boolean).join(' · ')
   el.className = `now ${dec} ${fresh ? 'fresh' : ''}`
   el.innerHTML = `<div class="who"><span class="tool ${c.hijacked ? 'bad' : ''}">${esc(c.tool)}${c.hijacked ? ' · taken over' : ''}</span>asks to</div>
     <p class="what">${esc(c.what)}</p><p class="wire">${esc(c.method)} ${esc(c.url)}</p>
+    <p class="promise">The tool does not hold your key. The Broker uses it on the tool’s behalf, inside the range you signed.</p>
     <ol class="steps">${steps(c)}</ol>
     <div class="verdict"><strong>${esc(word)}</strong><p>${esc(text)}</p><div class="meta">${meta}</div></div>`
 }
@@ -165,42 +165,22 @@ function ledgerCard(st) {
     : `<div class="led"><i></i>Not connected</div><p class="sub">${mode === 'live' ? 'Plug in the Ledger and open Tomoshibi. Until then a software key signs, and every record says so.' : 'This is a replay. In the live console, approvals happen on a Ledger Flex.'}</p>`)
   $('chipLedger').textContent = dev ? 'Ledger connected' : 'no Ledger'; $('chipLedger').className = 'chip ' + (dev ? 'live' : 'warn')
 }
+// Naming yourself is a different question from pressing, so it lives on another page (the sky).
+// This card only says whether you could, and remembers on this computer that you really used the tool.
 function lightCard(st) {
-  const li = (on, t, s, by) => `<li class="${on ? 'on' : ''}"><i></i><div><b>${esc(t)}</b><span>${esc(s)}</span></div><small>${esc(by)}</small></li>`
-  const can = mode === 'live' && st.uses > 0 && !person && !lighting
-  const keep = $('world')?.innerHTML || ''
-  $('lightCard').innerHTML = `<h2>Your light</h2><p class="sub">Show the people who know you that you really use this tool. A light cannot be bought: all three must be true.</p>
-    <ul class="three">${li(st.byHand, 'Pressed by hand', st.byHand ? 'Signed on your Ledger.' : 'Not yet.', 'Ledger')}${li(st.uses > 0, 'Actually in use', st.uses ? `${st.uses} request${st.uses === 1 ? '' : 's'} on record.` : 'Nothing has gone through yet.', '0G')}${li(Boolean(person), 'One real person', person ? `Confirmed${person.simulated ? ' (simulated)' : ''}.` : 'One person, one light.', 'World')}</ul>
-    <button class="btn primary" id="lightBtn" ${can ? '' : 'disabled'}>${person ? 'Lit' : 'Light it'}</button><div id="world">${keep}</div>
-    ${mode !== 'live' ? '<p class="sub">Lighting needs a live Broker.</p>' : ''}`
-  $('lightBtn').onclick = () => lightIt()
+  if (st.uses > 0 && mode === 'live') try {
+    const k = 'tomoshibi.used', all = JSON.parse(localStorage.getItem(k) || '{}')
+    all[agent.skill + '@' + agent.version] = { uses: st.uses, byHand: st.byHand, at: new Date().toISOString() }
+    localStorage.setItem(k, JSON.stringify(all))
+  } catch {}
+  const sky = $('navSky').getAttribute('href'), href = sky + (sky.includes('?') ? '&' : '?') + 'light=1'
+  $('lightCard').innerHTML = `<h2>Your light</h2>` + (st.uses > 0
+    ? `<p class="sub">You really use this tool: ${st.uses} request${st.uses === 1 ? '' : 's'} on record${st.byHand ? ', lent by hand on your Ledger' : ''}. You can let the people who know you see that.</p><a class="btn primary" href="${esc(href)}">Show that you use it →</a><p class="sub">That is a different question, asked once, by World: are you one real person?</p>`
+    : `<p class="sub">Once the tool has really worked with your key, you can show the people who know you that you use it.</p>`)
 }
 function render() {
   const st = reduce(); nowCard(st); trail(st); keyCard(st); ledgerCard(st); lightCard(st)
-  journey(!st.lent ? 'lend' : person ? 'light' : st.uses > 0 && !st.asking && lighting ? 'light' : 'work', ['choose', ...(st.lent ? ['lend'] : []), ...(person ? ['work', 'light'] : [])])
-}
-
-async function lightIt() {
-  if (mode !== 'live' || lighting) return
-  lighting = true; render()
-  const B = agent.broker, w = () => $('world')
-  const call = async (path, body) => { const r = await fetch(B + path, { method: 'POST', body: JSON.stringify(body || {}) }); return { status: r.status, body: await r.json() } }
-  try {
-    w().innerHTML = '<p class="sub">Asking World…</p>'
-    const start = await call('/vouch/start')
-    if (start.status !== 200) { w().innerHTML = `<p class="note warn">World is not set up on this Broker: ${esc(start.body.error || start.status)}</p>`; return }
-    const b = start.body, uri = String(b.verificationUri || ''), real = /^https:\/\/\S+$/.test(uri) && !b.simulated
-    w().innerHTML = `${real ? `<div class="qrbox">${qrSvg(uri, 132)}</div>` : ''}<div><p class="sub">${real ? 'Scan with your own phone and confirm in World App.' : 'Simulated: no phone is asked.'} World learns that you are one person. It does not learn what you are lighting.</p><p class="code">${esc(b.userCode || '')}</p></div>`
-    const o = (await call('/vouch/finish', { deviceCode: b.deviceCode, skill: agent.skill, version: agent.version })).body
-    if (o.decision === 'STAR' || o.reason === 'ALREADY_VOUCHED') {
-      person = { nullifier: o.nullifier, simulated: Boolean(o.world?.simulated || b.simulated) }
-      if (o.nullifier) try { const list = JSON.parse(localStorage.getItem('tomoshibi.people') || '[]').filter((p) => p.id !== o.nullifier); list.push({ name: 'You', id: o.nullifier, tie: 'me' }); localStorage.setItem('tomoshibi.people', JSON.stringify(list)) } catch {}
-      lighting = false; render()
-      w().innerHTML = `<p class="done">${o.decision === 'STAR' ? 'Your light is lit.' : 'You had already lit this version.'}</p><a class="btn primary" href="${esc($('navSky').getAttribute('href'))}">See what others now see →</a>`
-    } else {
-      w().innerHTML = `<p class="note warn">${esc({ human_denied: 'You said no on your phone. Nothing was lit.', proof_expired: 'No one confirmed in time. Nothing was lit.' }[o.reason] || o.message || o.reason)}</p>`
-    }
-  } catch (e) { w().innerHTML = `<p class="note warn">${esc(String(e.message || e))}</p>` } finally { if (lighting) { lighting = false; const k = w().innerHTML; render(); w().innerHTML = k } }
+  journey(!st.lent ? 'lend' : 'work', ['choose', ...(st.lent ? ['lend'] : [])])
 }
 
 async function init() {
@@ -226,6 +206,6 @@ document.addEventListener('keydown', (e) => {
   if (e.target.closest?.('input,textarea') || e.metaKey || e.ctrlKey) return
   if (KEYS[e.key]) src().post('/run', { id: KEYS[e.key] })
   else if (e.key === 'l' || e.key === 'L') src().post('/lend')
-  else if (e.key === 'r' || e.key === 'R') { person = null; src().post('/reset') }
+  else if (e.key === 'r' || e.key === 'R') src().post('/reset')
 })
 init()

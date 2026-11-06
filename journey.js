@@ -12,15 +12,15 @@
     { k: 'choose', t: 'Choose a tool', s: 'See which AI tools the people you know really use.', on: 'On your computer', icon: 'pc', href: 'index.html' },
     { k: 'lend', t: 'Lend it a key', s: 'Plug in your Ledger. Read the range, hold the button.', on: 'On your Ledger', icon: 'ledger', href: 'gate.html' },
     { k: 'work', t: 'Let it work', s: 'It uses the key without holding it. You are asked only when it matters.', on: 'Ledger stays on your desk', icon: 'ledger', href: 'gate.html' },
-    { k: 'light', t: 'Your light goes on', s: 'One real person, really using it. The next person sees it in step 1.', on: 'On your phone · World', icon: 'phone', href: 'gate.html' },
+    { k: 'light', t: 'Your light goes on', s: 'One real person, really using it. The next person sees it in step 1.', on: 'On your phone · World', icon: 'phone', href: 'index.html', q: 'light=1' },
   ]
   // Keep ?broker= and ?agent= when moving between pages.
-  const keep = () => { const q = new URLSearchParams(location.search), o = new URLSearchParams(); for (const k of ['broker', 'agent', 'bridge']) if (q.get(k)) o.set(k, q.get(k)); const s = o.toString(); return s ? '?' + s : '' }
+  const keep = (extra) => { const q = new URLSearchParams(location.search), o = new URLSearchParams(extra || ''); for (const k of ['broker', 'agent', 'bridge']) if (q.get(k)) o.set(k, q.get(k)); const s = o.toString(); return s ? '?' + s : '' }
   window.journey = function (current, done = []) {
     const el = document.getElementById('journey'); if (!el) return
     el.innerHTML = STEPS.map((x, i) => {
       const cls = x.k === current ? 'cur' : done.includes(x.k) ? 'done' : ''
-      return `<li class="${cls}"><a href="${x.href}${keep()}" ${x.k === current ? 'aria-current="step"' : ''}>
+      return `<li class="${cls}"><a href="${x.href}${keep(x.q)}" ${x.k === current ? 'aria-current="step"' : ''}>
         <span class="jn">${done.includes(x.k) && x.k !== current ? '✓' : i + 1}</span>
         <span class="jt"><b>${x.t}</b><span>${x.s}</span></span>
         <span class="jon">${ICON[x.icon]}${x.on}</span></a></li>`

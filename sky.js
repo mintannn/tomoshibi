@@ -41,6 +41,7 @@ const store = {
   set people(v) { try { localStorage.setItem('tomoshibi.people', JSON.stringify(v)) } catch {} },
   get permits() { try { return JSON.parse(localStorage.getItem('tomoshibi.permits') || '{}') } catch { return {} } },
   set permits(v) { try { localStorage.setItem('tomoshibi.permits', JSON.stringify(v)) } catch {} },
+  get used() { try { return JSON.parse(localStorage.getItem('tomoshibi.used') || '{}') } catch { return {} } },
   get versions() { try { return JSON.parse(localStorage.getItem('tomoshibi.versions') || '{}') } catch { return {} } },
   set versions(v) { try { localStorage.setItem('tomoshibi.versions', JSON.stringify(v)) } catch {} },
 }
@@ -155,7 +156,8 @@ function frame(t) {
     const { known } = litBy(L.s)
     const lit = known.length > 0, out = !lit && wentOut(L.s) > 0
     // In "Everyone" every tool looks the same: a cold star with a rating. Whose it is only shows in "People I know".
-    L.warm = ease(L.warm, lit && !all ? 1 : 0, lit && !all ? 0.08 : 0.12)
+    // A light that goes out because the tool changed takes a few seconds, so you see it happen.
+    L.warm = ease(L.warm, lit && !all ? 1 : 0, lit && !all ? 0.08 : out ? 0.018 : 0.12)
     L.cold = ease(L.cold, all ? 1 : 0, 0.12)
     L.gone = ease(L.gone, out && !all ? 1 : 0, 0.05)
     const x = L.s.x * W, y = L.s.y * H
@@ -222,8 +224,10 @@ function paintSheet() {
     : st.who.length || st.count ? `${st.who.length || st.count} ${(st.who.length || st.count) === 1 ? 'person' : 'people'}, none you know` : 'No one yet'
   const human = (st.who.length || st.count) > 0
   // A permit this browser received from the Ledger for this exact version, by someone whose light is on.
-  const mine = store.permits[s.name + '@' + v]
-  const pressedHere = Boolean(mine && known.some((p) => p.tie === 'me'))
+  // What this computer saw on the keys page: the tool really worked with the key, lent by hand.
+  const used = store.used[s.skill + '@' + v]
+  const meLit = known.some((p) => p.tie === 'me')
+  const pressedHere = Boolean(used?.byHand && meLit), usedHere = Boolean(used && meLit)
   const sim = health?.world?.simulated
   el.hidden = false
   el.innerHTML = `
@@ -237,15 +241,18 @@ function paintSheet() {
     <div class="dots">
       <div class="dot ${human ? 'on' : ''}"><i></i>A real person <small>World${sim ? ' (simulated)' : ''}</small></div>
       <div class="dot ${st.pressed || pressedHere ? 'on' : ''}"><i></i>Pressed by hand <small>Ledger${pressedHere && !st.pressed ? ' · seen by this browser' : ''}</small></div>
-      <div class="dot ${st.used ? 'on' : ''}"><i></i>Actually in use <small>0G record</small></div>
+      <div class="dot ${st.used || usedHere ? 'on' : ''}"><i></i>Actually in use <small>0G record${usedHere && !st.used ? ' · seen by this browser' : ''}</small></div>
     </div>
     ${human && !st.pressed ? `<p class="note">The Broker checks the first one today. It does not yet tie a light to a Ledger approval or to recorded use${pressedHere ? '; the second dot is on only because this browser itself received the signed permit from your Ledger' : ', so those two stay dark here rather than pretending'}.</p>` : ''}
     ${st.noWho ? '<p class="note warn">This Broker reports how many lights, but not whose. Update the Broker to see people you know.</p>' : ''}
     <div class="actions">
-      ${s.name === 'billing-assistant' ? `<a class="btn primary" href="gate.html${journeyKeep()}">Use this tool: lend it a key →</a>` : '<button class="btn" disabled>Not installed on this computer</button>'}
+      ${s.name !== 'billing-assistant' ? '<button class="btn" disabled>Not installed on this computer</button>'
+        : used && !meLit ? '<button class="btn primary" id="lightIt">Show that I use this</button>'
+        : `<a class="btn ${used ? '' : 'primary'}" href="gate.html${journeyKeep()}">${used ? 'Open your keys →' : 'Use this tool: lend it a key →'}</a>`}
       <button class="btn" id="changeIt">Demo: the tool changes</button>
     </div>
     <div id="flow">${lastNote[s.name] || ''}</div>`
+  if ($('lightIt')) $('lightIt').onclick = () => vouch(s)
   $('changeIt').onclick = () => bump(s)
 }
 
@@ -283,15 +290,14 @@ async function vouch(s) {
 async function light(s) {
   const flow = $('flow')
   if (live !== true) { flow.innerHTML = '<p class="note warn">The Broker is not reachable, so nothing can be lit from here.</p>'; return }
-  const lent = await lend(s, flow)
-  if (lent === false) return            // declined on the device: stop here, nothing is lit
-  await new Promise((r) => setTimeout(r, lent ? 600 : 2200))
   flow.innerHTML = '<p class="note">Asking World…</p>'
   const start = await post('/vouch/start', {})
   if (start.status !== 200) { flow.innerHTML = `<p class="note warn">World is not set up on this Broker: ${esc(start.body.error || start.status)}</p>`; return }
   const b = start.body
-  flow.innerHTML = `<p class="note">Confirm on your own phone that you are a person. Nothing else is asked, and your name is not sent.</p>
-    <p class="code">${esc(b.userCode)}</p><p class="sub">${esc(b.verificationUri || '')}</p>`
+  // The code is the main thing; the QR helps only if World gave a complete link.
+  const uri = String(b.verificationUri || ''), real = /^https:\/\/\S+$/.test(uri) && !b.simulated
+  flow.innerHTML = `<p class="note"><b>One question, asked once: are you one real person?</b> Confirm on your own phone. World does not learn which tool you are lighting, which key, or when you use it.</p>
+    <div class="worldrow">${real && typeof qrSvg === 'function' ? `<div class="qrbox">${qrSvg(uri, 132)}</div>` : ''}<div><p class="code">${esc(b.userCode)}</p><p class="sub">${b.simulated ? 'Simulated: no phone is asked.' : esc(uri)}</p></div></div>`
   const done = await post('/vouch/finish', { deviceCode: b.deviceCode, skill: s.skill, version: versionOf(s) })
   const o = done.body
   if (o.decision === 'STAR') {
@@ -300,7 +306,8 @@ async function light(s) {
     flow.innerHTML = '<p class="note">Lit. It stays on while you keep using this version, and goes out by itself if the tool changes.</p>'
   } else {
     const why = { human_denied: 'You said no on your phone. Nothing was lit.', proof_expired: 'No one confirmed in time. Nothing was lit.', ALREADY_VOUCHED: 'You have already lit this version.' }[o.reason] || o.message || o.reason
-    flow.innerHTML = `<p class="note warn">${esc(why)}</p>`
+    // Saying no, or nobody answering, is a result, not an error. It goes on the record too.
+    flow.innerHTML = `<p class="note">${esc(why)}</p>`
   }
 }
 
@@ -330,4 +337,7 @@ $('addPerson').addEventListener('submit', (e) => {
 size(); paintPeople(); paintCaption(); requestAnimationFrame(frame)
 refresh(); setInterval(refresh, 3000)
 
-journey('choose', store.people.some((p) => p.tie === 'me') ? ['lend', 'work', 'light'] : [])
+// Arriving from the keys page to name yourself: open the tool you just used.
+const wantLight = new URLSearchParams(location.search).get('light') === '1'
+if (wantLight) { selected = CATALOG[0]; setMode('mine'); setTimeout(() => { paintSheet(); $('sheet').scrollIntoView({ block: 'nearest' }) }, 600) }
+journey(wantLight ? 'light' : 'choose', wantLight ? ['choose', 'lend', 'work'] : store.people.some((p) => p.tie === 'me') ? ['lend', 'work', 'light'] : [])

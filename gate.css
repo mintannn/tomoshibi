@@ -92,3 +92,6 @@
 .first li.ok { color: var(--ok); } .first li.ok::marker { content: "✓  "; }
 .quiet p { max-width: 56ch; margin: 8px auto 0; }
 .quiet .first b { display: inline; font-size: inherit; margin: 0; color: var(--flame-2); }
+
+.promise { margin: -6px 0 0; font-size: 13.5px; color: var(--muted); border-left: 2px solid var(--flame); padding-left: 10px; }
+.verdict .meta b { color: var(--text); font-weight: 600; }
