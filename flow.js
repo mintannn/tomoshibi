@@ -329,7 +329,8 @@ function vHome(st) {
     cur = 'noverdict'
     return frame({ tabs: 1, now: 'No verdict, so nothing ran', why: 'I never guess. No answer means no action.', gainLabel: 'NOTHING WAS CHARGED', gain: 'I would rather stop than guess with your money.', bg: '#ECEAFB',
       left: hero('guard', 'I stopped. No guessing.', 'No answer,<br>so nothing ran.', '0G could not be reached, so nobody judged this request. I do not make up a verdict in its place.'),
-      right: `<div class="card">${tag('NO VERDICT', 'no')}${kv('What', esc(c.what))}<small>Nothing ran, and no use was spent.</small><div class="two">${ok}${recLink(c)}</div></div>` })
+      right: `<div class="card">${tag('NO VERDICT', 'no')}${kv('What', esc(c.what))}<small>Nothing ran, and no use was spent.</small><div class="two">${ok}${recLink(c)}</div></div>`
+        + (mode === 'live' && c.id !== 'stopped' ? `<div class="card soft">0G is not answering at the moment, so every request stops here. That is the rule working. To see the rest of the story, you can go on with answers recorded earlier from the real 0G.<button class="ghost" data-act="to-preview">Continue with recorded answers</button></div>` : '') })
   }
   if (d === 'BYHAND') {
     cur = 'paid'
@@ -501,6 +502,13 @@ const ACT = {
   reset: () => { restart(); return false },
   'show-light': () => { startWorld(); return false },
   'lights-mode': (a) => { ui.lightsMode = a },
+  // Leave the live tool and go on with the recording: the loan stays, the requests start again. The bottom bar says PREVIEW.
+  'to-preview': () => { (async () => {
+    liveOn = false
+    for (const u of ['scenes.json', '../ui/scenes.json']) { if (REC) break; try { const r = await fetch(u, { cache: 'no-store' }); if (r.ok) REC = await r.json() } catch {} }
+    all = all.filter((e) => e.why === 'lend' && (e.type === 'asking' || e.type === 'signed')).map((e, i) => ({ ...e, n: i, device: false }))
+    mode = 'preview'; replay.standing = all.some((e) => e.type === 'signed'); ui.seenRid = null; ui.tab = 'home'; paint()
+  })(); return false },
   'connect-open': () => { ui.connect = true },
   'connect-live': () => { const v = ($('agentIn')?.value || '').trim().replace(/\/$/, ''); if (!/^https?:\/\/\S+$/.test(v)) return false; try { localStorage.setItem('tomoshibi.agent', v) } catch {} location.href = location.pathname; return false },
   disconnect: () => { try { localStorage.removeItem('tomoshibi.agent') } catch {} location.href = location.pathname + '?agent=local'; return false },
@@ -525,11 +533,12 @@ document.addEventListener('keydown', (e) => {
 
 // Is the AI tool there? A slow link gets a second, longer try before the page settles for the preview.
 async function probeAgent(ms) { try { const h = await (await fetch(AGENT + '/health', { signal: AbortSignal.timeout(ms) })).json(); return h.ok && h.brokerUp ? h : null } catch { return null } }
+let liveOn = true
 function goLive(h) {
   agent = h; mode = 'live'
-  const loop = async () => { await live.poll().catch(() => {}); setTimeout(loop, 400) }
+  const loop = async () => { if (!liveOn) return; await live.poll().catch(() => {}); setTimeout(loop, 400) }
   loop()
-  setInterval(async () => { const n = await probeAgent(6000); if (!n) return; const ch = n.device !== agent.device || n.lent !== agent.lent; agent = n; if (ch) paint() }, 3000)
+  setInterval(async () => { if (!liveOn) return; const n = await probeAgent(6000); if (!n) return; const ch = n.device !== agent.device || n.lent !== agent.lent; agent = n; if (ch) paint() }, 3000)
   refreshLights()
 }
 async function init() {
