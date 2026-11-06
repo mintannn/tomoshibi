@@ -58,11 +58,13 @@ Open `http://localhost:8790/gate.html`. The tool asks when you press 1–5 in it
   open the page by the computer's network address, or add `&lan=<address>`.
 - If the Broker cannot be reached, the sky shows sample data and says so in the header.
 
-## Hosted copy
+## Where it is hosted
 
-`https://mintannn.github.io/tomoshibi/` serves this folder as it is (GitHub Pages, repo `mintannn/tomoshibi`).
-It has no Broker behind it, so on its own it shows sample data and says so. Point it at one with
-`?broker=https://…`. The Broker must be HTTPS: an https page cannot call an http one.
+**`https://mintannn.github.io/tomoshibi/` is the address to hand out** (GitHub Pages, repo `mintannn/tomoshibi`,
+this folder as it is). `kou-uni.github.io/ethglobal-mumbai/web/` serves the same files from `main` and is the spare.
+
+It has no Broker behind it, so on its own the keys page replays the recording and the sky shows sample
+data, and both say so. Point it at a Broker with `?broker=https://…`. The Broker must be HTTPS.
 
 ```bash
 git push https://github.com/mintannn/tomoshibi.git "$(git subtree split --prefix web HEAD)":refs/heads/main

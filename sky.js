@@ -10,6 +10,7 @@
 
 const $ = (id) => document.getElementById(id)
 const qs = new URLSearchParams(location.search)
+const AGENT = (qs.get('agent') || 'http://127.0.0.1:8792').replace(/\/$/, '')
 const BROKER = (qs.get('broker') || localStorage.getItem('tomoshibi.broker') || 'http://127.0.0.1:8787').replace(/\/$/, '')
 // The bridge runs next to the Ledger (bridge/bridge.py). Without it, the Ledger step is skipped and said so.
 const BRIDGE = (qs.get('bridge') || localStorage.getItem('tomoshibi.bridge') || 'http://127.0.0.1:8791').replace(/\/$/, '')
@@ -289,16 +290,24 @@ async function light(s) {
       <div><p class="code">${esc(b.userCode)}</p><p class="sub">${b.simulated ? 'Simulated: no phone is asked.' : esc(uri)}</p><p class="sub" id="wleft">${left()}</p></div></div>
     <p class="note">World learns that you are a person, and the same person as before. It does not learn which tool you are lighting, which key, or when you use it.</p>`
   const tick = setInterval(() => { const el = $('wleft'); if (el) el.textContent = left(); else clearInterval(tick) }, 15000)
-  const done = await post('/vouch/finish', { deviceCode: b.deviceCode, skill: s.skill, version: versionOf(s) })
+  // Only the person who lent the key may light it. The agent on this computer adds the Permit that
+  // was signed on the Ledger; this page never holds that signature. With no agent, the Broker is asked
+  // without it and decides for itself.
+  let o = null
+  if (s.name === 'billing-assistant') try {
+    const h = await (await fetch(AGENT + '/health', { signal: AbortSignal.timeout(2000) })).json()
+    if (h.lent) o = await (await fetch(AGENT + '/vouch/finish', { method: 'POST', body: JSON.stringify({ deviceCode: b.deviceCode }) })).json()
+  } catch {}
+  if (!o) o = (await post('/vouch/finish', { deviceCode: b.deviceCode, skill: s.skill, version: versionOf(s) })).body
   clearInterval(tick)
-  const o = done.body
   if (o.decision === 'STAR') {
     const list = store.people.filter((p) => p.id !== o.nullifier)
     list.push({ name: 'You', id: o.nullifier, tie: 'me' }); store.people = list; paintPeople()
-    flow.innerHTML = worldSteps(4) + `<p class="note">Lit${o.world?.simulated || b.simulated ? ' (World was simulated)' : ''}. Only a pseudonym is kept. It stays on while you keep using this exact version, and goes out by itself when the tool changes.</p>`
+    flow.innerHTML = worldSteps(4) + `<p class="note">Lit${o.world?.simulated || b.simulated ? ' (World was simulated)' : ''}.${o.ownerProof?.sent ? (o.owner ? ' The Broker checked that you are the one who lent the key.' : ' The Permit you signed was sent along; this Broker does not check it yet.') : ''} Only a pseudonym is kept. It stays on while you keep using this exact version, and goes out by itself when the tool changes.</p>`
   } else if (o.reason === 'ALREADY_VOUCHED') {
     flow.innerHTML = worldSteps(3, 'This person has already lit this version') + '<p class="note">One person, one light. Nothing was added.</p>'
   } else {
+    if (o.reason === 'NOT_OWNER' || o.reason === 'NOT_LENT' || o.reason === 'NOT_USED') { flow.innerHTML = worldSteps(3, 'Only the person who lent the key can light it') + `<p class="note">${esc(o.message || '')} Nothing was lit.</p>`; return }
     const end = o.reason === 'human_denied' ? 'You said no' : o.reason === 'proof_expired' ? 'Nobody confirmed in time' : (o.message || o.reason || 'Not confirmed')
     const text = o.reason === 'human_denied' ? 'Nothing was lit. That you declined is on the record too.' : o.reason === 'proof_expired' ? 'The code ran out. Nothing was lit. This is not the same as saying no.' : 'Nothing was lit.'
     flow.innerHTML = worldSteps(1, end) + `<p class="note">${esc(text)}</p><div class="actions"><button class="btn" id="again">Ask again</button></div>`
