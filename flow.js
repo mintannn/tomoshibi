@@ -283,7 +283,7 @@ const PICK = () => APIS().find((a) => a.id === ui.api) || API()            // wh
 // computer, or the shared public demo (which says so). Either way only a Stripe test-mode key is taken.
 const MOCK = '<i class="mock">MOCK</i>'
 const MOCK_KEY = 'mock-key-not-a-real-key'
-const canPark = () => mode === 'live' && agent?.canPark === true
+const canPark = () => mode === 'live' && !window.appAgentIsRemote && agent?.canPark === true
 const stripeReal = () => mode === 'live' && Boolean(agent?.stripe)
 const left = (st) => (typeof st.lent?.left === 'number' ? st.lent.left : st.lent?.uses)
 /** The switchboard's table: one row per label. The key column is never shown. */
@@ -309,7 +309,7 @@ function vKey(st) {
       ${row}<div class="kv"><span>Until</span><select id="ends">${CHO.map((x, i) => `<option value="${i}" ${i === ui.choice ? 'selected' : ''}>${x.days} day${x.days === 1 ? '' : 's'} · ${x.uses} calls</option>`).join('')}</select></div>
       ${st.lendDeclined ? '<div class="err">Nothing was signed. Try again.</div>' : ''}${ui.err ? `<div class="err">${esc(ui.err)}</div>` : ''}
       <button data-act="park" disabled>Approve on my Ledger →</button>${ledgerLine()}
-      <small>${!can ? `${MOCK}This copy takes no keys: nothing is sent or stored.` : window.appAgentIsRemote ? '<b>Shared public demo.</b> A Stripe <b>test-mode</b> key (<code>sk_test_…</code>) goes to the demo’s Broker, in memory only, until <b>Start over</b>. Live keys are refused.' : 'A Stripe <b>test-mode</b> key (<code>sk_test_…</code>) goes to your Broker on this computer, in memory only. Live keys are refused.'} <button class="link" data-act="key-test">No key? Use a mock key</button></small>`
+      <small>${!can ? `${MOCK}This shared demo takes no keys: a key belongs on your own machine. Nothing is sent or stored.` : 'A Stripe <b>test-mode</b> key (<code>sk_test_…</code>) goes to your Broker on this computer, in memory only. Live keys are refused.'} <button class="link" data-act="key-test">No key? Use a mock key</button></small>`
   return frame({ steps: 0, now: 'ADD A ROW', why: 'Your tool gets a label. Never the key.',
     left: hero('awake', 'Which API?', 'Park the key<br>once.', 'No .env. No copies.'),
     right: `<div class="card"><div class="kv pickrow"><span>API</span><div class="pick"><button class="pickbtn" data-act="api-open">${esc(a.name)}${a.ready ? '' : ' (not supported yet)'}<em>▾</em></button>${ui.apiOpen ? `<div class="menu">${opts}</div>` : ''}</div></div>${body}</div>` })
