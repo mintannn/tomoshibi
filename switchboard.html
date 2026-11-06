@@ -18,6 +18,8 @@
   .ok .box { stroke:var(--ok); filter: drop-shadow(0 0 18px rgba(53,212,154,.4)) }
   .bad .box { stroke:var(--no); filter: drop-shadow(0 0 20px rgba(255,93,143,.5)) }
   .hot .box { stroke:var(--flame); filter: drop-shadow(0 0 22px rgba(242,96,12,.55)) }
+  .pill { fill:var(--bg); stroke:var(--line); stroke-width:2.5; transition: fill .3s, stroke .3s } .pick .pill { fill:var(--lemon); stroke:var(--lemon) } .pick text { fill:#111 }
+  .lapline { transition: stroke .3s, filter .3s } .on .lapline { stroke:var(--lemon); filter: drop-shadow(0 0 14px rgba(255,240,90,.4)) }
   .dim { opacity:.32 } .wire { fill:none; stroke:var(--line); stroke-width:2.5; stroke-dasharray:3 9; stroke-linecap:round }
   .wire.live { stroke:var(--lemon); stroke-dasharray:none; filter: drop-shadow(0 0 8px rgba(255,240,90,.6)) }
   .wire.hot { stroke:var(--flame); stroke-dasharray:none; filter: drop-shadow(0 0 8px rgba(242,96,12,.7)) }
@@ -42,8 +44,10 @@
   <defs><pattern id="dots" width="36" height="36" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.4" fill="#231F30"/></pattern></defs>
   <rect width="1920" height="925" fill="url(#dots)"/>
   <!-- the laptop -->
-  <rect x="40" y="96" width="1216" height="800" rx="34" fill="none" stroke="#4A4560" stroke-width="3" stroke-dasharray="14 12"/>
-  <text class="k" x="72" y="138">ON HER LAPTOP · NOTHING IN HERE IS A SERVICE OF OURS</text>
+  <g id="lap"><path class="lapline" d="M 74 56 H 1216 a34 34 0 0 1 34 34 V 880 a34 34 0 0 1 -34 34 H 458 a34 34 0 0 1 -34 -34 V 504 a34 34 0 0 0 -34 -34 H 74 a34 34 0 0 1 -34 -34 V 90 a34 34 0 0 1 34 -34 Z" fill="none" stroke="#4A4560" stroke-width="3" stroke-dasharray="14 12"/>
+  <rect id="laplabelbg" x="64" y="40" width="10" height="32" fill="#0F0D15"/><text id="laplabel" class="k" x="78" y="62">HER LAPTOP · NOTHING IN HERE IS A SERVICE OF OURS</text></g>
+  <g id="zone"><rect class="box" x="446" y="96" width="774" height="800" rx="34" style="fill:rgba(255,240,90,.025)"/></g>
+  <text class="k" x="476" y="138" fill="#FFF05A">TOMOSHIBI · THE BROKER · ITS OWN PROCESS, RUN BY HER</text>
   <text class="k" x="1320" y="138">OUTSIDE · OVER THE NETWORK</text>
   <!-- wires -->
   <path id="w-tool" class="wire" d="M 372 330 L 470 330"/>
@@ -52,15 +56,16 @@
   <path id="w-store" class="wire" d="M 1196 812 C 1262 812, 1262 620, 1320 620"/>
   <path id="w-world" class="wire" d="M 1196 846 C 1280 846, 1270 800, 1320 800"/>
   <path id="w-ledger" class="wire" d="M 222 408 L 222 566"/>
+  <rect x="188" y="455" width="68" height="30" rx="15" fill="#15121F" stroke="#6A6485" stroke-width="2.5"/><text x="222" y="475" text-anchor="middle" font-size="13" font-weight="800" letter-spacing=".1em" fill="#B8B2CC">USB</text>
   <!-- the tool -->
   <g id="tool"><rect class="box" x="72" y="252" width="300" height="156" rx="22"/>
-    <text class="k" x="96" y="290">THE TOOL SHE BUILT</text><text class="t" x="96" y="328">billing-assistant</text>
+    <text class="k" x="96" y="290">THE AI TOOL SHE BUILT</text><text class="t" x="96" y="328">billing-assistant</text>
     <text class="s" x="96" y="360">holds a label, never a key</text><text class="m" x="96" y="388" fill="#FFF05A">stripe-live</text>
     <g id="toolflame" class="fade" transform="translate(300 262) scale(.55)"><g class="flame flick"><path d="M60 10 C64 30 97 44 97 68 C97 84 83 92 60 92 C37 92 23 84 23 68 C23 44 56 30 60 10 Z" fill="#F2600C"/><path d="M60 40 C62 50 80 58 80 72 C80 81 72 86 60 86 C48 86 40 81 40 72 C40 58 58 50 60 40 Z" fill="#FFC24A"/></g><path d="M20 92 H100 C98 105 85 111 60 111 C35 111 22 105 20 92 Z" fill="#F4F1EA"/></g></g>
   <!-- the Ledger -->
   <g id="ledger"><rect class="box" x="112" y="566" width="220" height="296" rx="26"/>
     <rect x="130" y="586" width="184" height="212" rx="12" fill="#ECE9E2"/><rect x="186" y="814" width="72" height="26" rx="13" fill="none" stroke="#5A5570" stroke-width="2.5"/>
-    <text class="k" x="112" y="550">HER LEDGER · IN HER HAND</text>
+    <text class="k" x="240" y="532">HER LEDGER</text><text class="s" x="112" y="890" fill="#8E88A0">a separate device, in her hand</text>
     <g id="lg-quiet"><text x="222" y="676" text-anchor="middle" font-size="19" font-weight="800" style="fill:#1B1630">All quiet.</text><text x="222" y="704" text-anchor="middle" font-size="13" style="fill:#6b6580">Nothing needs you.</text></g>
     <g id="lg-ask" class="fade"><text x="146" y="622" font-size="13" font-weight="800" style="fill:#6b6580">stripe-live</text><text x="146" y="650" font-size="14" style="fill:#1B1630">api.stripe.com</text><text id="lg-count" x="146" y="676" font-size="14" style="fill:#1B1630">up to 1x</text><text x="146" y="702" font-size="14" style="fill:#1B1630">until 19:10 UTC</text>
       <circle class="ringbg" cx="222" cy="756" r="24"/><circle id="lg-ring" class="ring" cx="222" cy="756" r="24" stroke-dasharray="151" stroke-dashoffset="151"/><text x="222" y="761" text-anchor="middle" font-size="11" font-weight="800" style="fill:#1B1630">HOLD</text></g>
@@ -68,7 +73,7 @@
     <g id="lg-blocked" class="fade"><rect x="130" y="586" width="184" height="212" rx="12" fill="#1B1630"/><text x="222" y="684" text-anchor="middle" font-size="20" font-weight="800">BLOCKED</text><text x="222" y="712" text-anchor="middle" font-size="12" style="fill:#C9C4D6">a tool tried another host</text></g></g>
   <!-- the switchboard -->
   <g id="sb"><rect class="box" x="470" y="170" width="726" height="560" rx="26"/>
-    <text class="k" x="500" y="214">TOMOSHIBI · THE SWITCHBOARD</text>
+    <text class="k" x="500" y="214">THE SWITCHBOARD’S TABLE</text>
     <text class="t" x="500" y="252">label → where it goes → the real key</text>
     <rect x="500" y="278" width="666" height="40" rx="10" fill="#262233"/>
     <text class="k" x="518" y="304">LABEL</text><text class="k" x="700" y="304">GOES TO</text><text class="k" x="926" y="304">UNTIL</text><text class="k" x="1078" y="304">KEY</text>
@@ -83,7 +88,7 @@
     <text id="gateline" class="s" x="500" y="668"> </text>
     <text class="s" x="500" y="702" fill="#8E88A0">The key column is never printed, never logged, never returned to a tool.</text></g>
   <!-- the trail -->
-  <g id="trail"><rect class="box" x="470" y="752" width="726" height="122" rx="22"/><text class="k" x="500" y="790">THE TRAIL · APPEND-ONLY</text><g id="trailrows"></g></g>
+  <g id="trail"><rect class="box" x="470" y="752" width="726" height="122" rx="22"/><text class="k" x="500" y="790">THE TRAIL · THE BROKER’S OWN FILE · APPEND-ONLY</text><g id="trailrows"></g></g>
   <!-- outside -->
   <g id="zg"><rect class="box" x="1320" y="160" width="540" height="150" rx="22"/><text class="k" x="1346" y="198" fill="#A78BFA">0G PRIVATE COMPUTER</text><text class="t" x="1346" y="238">How heavy is this call?</text><text class="s" x="1346" y="270">a sealed model reads it · no answer, no verdict</text><text id="zgv" class="verdict" x="1838" y="246" text-anchor="end"> </text></g>
   <g id="api"><rect class="box" x="1320" y="350" width="540" height="140" rx="22"/><text class="k" x="1346" y="388">THE REAL SERVICE</text><text class="t" x="1346" y="428">Stripe</text><text class="s" x="1346" y="460">sees an ordinary call, with the key</text></g>
@@ -107,6 +112,8 @@ const REC = Q.has('rec')            // recording: play once, no button, say when
 if (REC) document.documentElement.classList.add('rec')
 function fit() { const s = Math.min(innerWidth / 1920, innerHeight / 1080), st = $('stage'); st.style.transform = `translate(${-960 * s}px, ${-540 * s}px) scale(${s})` }
 addEventListener('resize', fit); fit()
+const mark = (name) => { (window.switchboardMarks = window.switchboardMarks || []).push({ name, t: Date.now() / 1000 }) }
+{ const b = $('laplabel').getBBox(), r = $('laplabelbg'); r.setAttribute('x', b.x - 14); r.setAttribute('width', b.width + 28) }   // the outline's label sits on its top edge
 const cls = (id, c) => { const e = $(id); e.classList.remove('on', 'ok', 'bad', 'hot'); if (c) e.classList.add(c) }
 const wire = (id, c) => { const e = $(id); e.classList.remove('live', 'hot', 'bad'); if (c) e.classList.add(c) }
 const show = (id, on = true) => $(id).classList.toggle('in', on)
@@ -131,30 +138,35 @@ function trail(tag, what, color, extra = '') {
 const ledger = (which) => { for (const k of ['lg-ask', 'lg-lit', 'lg-blocked']) show(k, k === which); $('lg-quiet').style.opacity = which ? 0 : 1 }
 async function holdRing(ms) { const r = $('lg-ring'); r.setAttribute('stroke-dashoffset', 151); await r.animate([{ strokeDashoffset: 151 }, { strokeDashoffset: 0 }], { duration: ms / PACE, easing: 'linear', fill: 'forwards' }).finished }
 async function seal(hash) { await send('w-store', 'thread', 'pur', { ms: 800 }); cls('store', 'on'); text('tx', 'sealed · tx ' + hash, '#A78BFA'); await W(500); cls('store', '') }
-function reset() { rows = 0; $('trailrows').innerHTML = ''; $('chips').innerHTML = ''; for (const k of ['tool', 'ledger', 'sb', 'zg', 'api', 'store', 'world', 'g1', 'g2', 'g3', 'trail']) cls(k, ''); for (const k of ['w-tool', 'w-zg', 'w-api', 'w-store', 'w-world', 'w-ledger']) wire(k, '')
+function reset() { rows = 0; $('trailrows').innerHTML = ''; $('chips').innerHTML = ''; for (const k of ['tool', 'ledger', 'sb', 'zg', 'api', 'store', 'world', 'g1', 'g2', 'g3', 'trail', 'zone', 'lap']) cls(k, ''); for (const k of ['w-tool', 'w-zg', 'w-api', 'w-store', 'w-world', 'w-ledger']) wire(k, '')
   text('zgv', ' '); text('gateline', ' '); text('left', '20 calls'); text('tx', 'nobody can go back and tidy it', '#8E88A0'); text('lightn', ' '); text('lights', 'lights on billing-assistant 1.0.0'); show('toolflame', false); ledger(null); $('rowbg').setAttribute('stroke', 'transparent'); $('rowbg').setAttribute('fill', 'transparent') }
 const rowOn = (c) => { $('rowbg').setAttribute('stroke', c || 'transparent'); $('rowbg').setAttribute('fill', c ? 'rgba(255,240,90,.07)' : 'transparent') }
 
 async function play() {
-  reset(); $('big').style.display = 'flex'; $('big').style.opacity = 1
+  reset(); window.switchboardMarks = []; mark('intro'); $('big').style.display = 'flex'; $('big').style.opacity = 1
   await say('INSIDE', 'One call, through the switchboard.'); await W(2600)
   $('big').style.opacity = 0; await W(600); $('big').style.display = 'none'
+  // ── where each thing is ──
+  mark('where'); await say('WHERE IT RUNS', 'Her laptop runs the AI tool she built. Her Ledger is a separate device, plugged in by USB.'); cls('tool', 'on'); cls('ledger', 'on'); wire('w-ledger', 'live'); await W(3000)
+  cls('tool', ''); cls('ledger', ''); wire('w-ledger', ''); await say('WHERE IT RUNS', 'TOMOSHIBI is the Broker. She runs it herself, on the same laptop: its own process, apart from the AI.'); cls('zone', 'on'); await W(3600)
+  cls('zone', ''); cls('lap', 'on'); await say('WHERE IT RUNS', 'Nothing inside this outline is a service of ours. Her key is kept on her own machine.'); await W(3200)
+  cls('lap', '')
   // ── the table ──
-  await say('THE TABLE', 'On her laptop: one table. A label, where it goes, and the real key.'); cls('sb', 'on'); rowOn('var(--lemon)'); await W(3000)
-  await say('THE TABLE', 'Only her Ledger can add a row. Her tool holds the label, never the key.'); cls('ledger', 'on'); cls('tool', 'on'); wire('w-ledger', 'live'); await W(3000)
+  mark('table'); await say('THE TABLE', 'TOMOSHIBI keeps one table: a label, where it goes, and the real key.'); cls('sb', 'on'); rowOn('var(--lemon)'); await W(3000)
+  await say('THE TABLE', 'Only her Ledger can add a row. The AI holds the label, never the key.'); cls('ledger', 'on'); cls('tool', 'on'); wire('w-ledger', 'live'); await W(3000)
   cls('sb', ''); cls('ledger', ''); cls('tool', ''); wire('w-ledger', ''); rowOn('')
   // ── a routine call ──
-  await say('A ROUTINE CALL', 'The tool calls by label.'); cls('tool', 'on'); await send('w-tool', 'stripe-live · GET /v1/invoices', '', { ms: 1000 }); cls('tool', '')
+  mark('routine'); await say('A ROUTINE CALL', 'The tool calls by label.'); cls('tool', 'on'); await send('w-tool', 'stripe-live · GET /v1/invoices', '', { ms: 1000 }); cls('tool', '')
   cls('g1', 'ok'); rowOn('var(--ok)'); text('gateline', '✓ a row she signed, and the call goes where the row says', '#35D49A'); await W(1100)
   await say('A ROUTINE CALL', '0G weighs it inside a sealed model. We never read it.', 'var(--pur)'); cls('g2', 'on'); await send('w-zg', 'the request', 'pur', { ms: 900 }); cls('zg', 'on'); await W(900)
   text('zgv', 'routine', '#35D49A'); cls('zg', 'ok'); await send('w-zg', 'routine · request id', 'okc', { back: true, ms: 900 }); cls('g2', 'ok'); await W(300)
   await say('A ROUTINE CALL', 'Only at the edge is the label swapped for the key.', 'var(--flame)'); cls('g3', 'hot'); await W(700); await send('w-api', '🔒 sk_•••  GET /v1/invoices', 'key', { ms: 1000 }); cls('api', 'ok'); await W(500)
   await send('w-api', 'the answer', 'ans', { back: true, ms: 800 }); cls('g3', 'ok'); text('left', '19 calls'); await send('w-tool', 'the answer · never the key', 'ans', { back: true, ms: 900 }); cls('tool', 'ok')
   trail('ALLOWED', 'read the unpaid invoices', 'var(--ok)'); await seal('0x9fb05d18…c41f')
-  await say('A ROUTINE CALL', 'She was not asked. The call is on the trail, sealed in 0G Storage.'); await W(2400)
+  await say('A ROUTINE CALL', 'She was not asked. The call is in the Broker’s trail, and sealed in 0G Storage.'); await W(2400)
   for (const k of ['g1', 'g2', 'g3', 'api', 'zg', 'tool']) cls(k, ''); text('zgv', ' '); text('gateline', ' '); rowOn('')
   // ── a heavy call ──
-  await say('A HEAVY CALL', 'A refund. The row is fine…', 'var(--flame)'); cls('tool', 'on'); await send('w-tool', 'stripe-live · POST /v1/refunds', '', { ms: 900 }); cls('tool', ''); cls('g1', 'ok'); rowOn('var(--ok)')
+  mark('heavy'); await say('A HEAVY CALL', 'A refund. The row is fine…', 'var(--flame)'); cls('tool', 'on'); await send('w-tool', 'stripe-live · POST /v1/refunds', '', { ms: 900 }); cls('tool', ''); cls('g1', 'ok'); rowOn('var(--ok)')
   cls('g2', 'on'); await send('w-zg', 'the request', 'pur', { ms: 800 }); cls('zg', 'on'); await W(700); text('zgv', 'decisive', '#F2600C'); cls('zg', 'hot'); await send('w-zg', 'decisive · request id', 'key', { back: true, ms: 800 }); cls('g2', 'hot')
   await say('A HEAVY CALL', '…but 0G says it is heavy. Nothing runs. The tool must come back with her signature.', 'var(--flame)'); text('gateline', 'NEEDS_PRESS — nothing is held open, nothing runs', '#F2600C'); await send('w-tool', 'NEEDS_PRESS', 'key', { back: true, ms: 800 }); await W(500)
   cls('ledger', 'hot'); wire('w-ledger', 'hot'); ledger('lg-ask'); await W(900); await say('A HEAVY CALL', 'Her Ledger shows the same lines it signs. She holds the button.', 'var(--flame)'); await holdRing(2600)
@@ -164,21 +176,21 @@ async function play() {
   await say('A HEAVY CALL', 'One hold. It goes out once.', 'var(--flame)'); await W(2000)
   for (const k of ['g1', 'g2', 'g3', 'api', 'zg', 'ledger']) cls(k, ''); text('zgv', ' '); text('gateline', ' '); rowOn(''); ledger(null)
   // ── refused ──
-  await say('REFUSED', 'An email tells the tool to send her customer list somewhere else.', 'var(--no)'); cls('tool', 'on'); const c = await send('w-tool', 'stripe-live · POST files.unknown-host.example', 'noc', { ms: 1000, keep: true }); cls('tool', '')
+  mark('refused'); await say('REFUSED', 'An email tells the tool to send her customer list somewhere else.', 'var(--no)'); cls('tool', 'on'); const c = await send('w-tool', 'stripe-live · POST files.unknown-host.example', 'noc', { ms: 1000, keep: true }); cls('tool', '')
   cls('g1', 'bad'); rowOn('var(--no)'); cls('sb', 'bad'); text('gateline', 'DENIED — this label only reaches api.stripe.com', '#FF5D8F'); c.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500, fill: 'forwards' }); $('zg').classList.add('dim'); $('api').classList.add('dim')
   await say('REFUSED', 'Stopped at the row. 0G is never asked, nothing leaves, and her Ledger shows it.', 'var(--no)'); ledger('lg-blocked'); cls('ledger', 'bad'); trail('DENIED', 'another host · tool’s signature', 'var(--no)'); await W(3400)
   $('zg').classList.remove('dim'); $('api').classList.remove('dim'); cls('g1', ''); cls('sb', ''); cls('ledger', ''); rowOn(''); text('gateline', ' '); ledger(null)
   // ── no verdict ──
-  await say('NO VERDICT', 'And if 0G cannot be reached? No verdict is made up. The call stops.', 'var(--no)'); cls('g2', 'on'); await send('w-zg', 'the request', 'pur', { ms: 800 }); $('zg').classList.add('dim'); text('zgv', '· · ·', '#8E88A0'); await W(1300); cls('g2', 'bad'); text('gateline', 'STOPPED — no verdict exists', '#FF5D8F'); trail('STOPPED', '0G did not answer', 'var(--no)'); await W(1900)
+  mark('no-verdict'); await say('NO VERDICT', 'And if 0G cannot be reached? No verdict is made up. The call stops.', 'var(--no)'); cls('g2', 'on'); await send('w-zg', 'the request', 'pur', { ms: 800 }); $('zg').classList.add('dim'); text('zgv', '· · ·', '#8E88A0'); await W(1300); cls('g2', 'bad'); text('gateline', 'STOPPED — no verdict exists', '#FF5D8F'); trail('STOPPED', '0G did not answer', 'var(--no)'); await W(1900)
   $('zg').classList.remove('dim'); cls('g2', ''); text('zgv', ' '); text('gateline', ' ')
   // ── what accumulates ──
-  await say('WHAT ACCUMULATES', 'The trail is real use. She lights the tool she built: World says one real person, once.'); cls('trail', 'on'); await send('w-world', 'she really ran it', '', { ms: 1000 }); cls('world', 'on'); await W(500)
+  mark('lights'); await say('WHAT ACCUMULATES', 'The trail is real use. She lights the tool she built: World says one real person, once.'); cls('trail', 'on'); await send('w-world', 'she really ran it', '', { ms: 1000 }); cls('world', 'on'); await W(500)
   show('toolflame'); text('lightn', '1'); cls('tool', 'hot'); await W(1700)
   await say('WHAT ACCUMULATES', 'Others run it too. The lights add up to her name as a builder.'); for (const n of [2, 3, 5, 8, 11, 14]) { text('lightn', String(n)); await W(210) } await W(1500)
   await say('WHAT ACCUMULATES', 'A new version? Every light goes out. Only people still running it light it again.', 'var(--flame)'); text('lights', 'lights on billing-assistant 1.0.1'); await W(600); show('toolflame', false); text('lightn', '0', '#8E88A0'); cls('world', ''); cls('tool', ''); await W(2600)
   text('lightn', ' ', '#FFF05A'); cls('trail', '')
-  await say('INSIDE', 'The key never left her laptop. Heavy calls waited for her hand. The record cannot be tidied.'); cls('sb', 'on'); cls('ledger', 'on'); cls('store', 'on'); await W(4200)
-  window.switchboardDone = true
+  mark('close'); await say('INSIDE', 'The key never reached the AI. Heavy calls waited for her hand. The record cannot be tidied.'); cls('sb', 'on'); cls('ledger', 'on'); cls('store', 'on'); await W(4200)
+  mark('end'); window.switchboardDone = true
 }
 $('replay').onclick = () => location.reload()
 ;(async () => { await W(400); do { window.switchboardDone = false; await play(); if (REC) break; await W(2500) } while (true) })()
