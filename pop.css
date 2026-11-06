@@ -192,3 +192,7 @@ main.stage { background: var(--night); }
 /* the way in */
 .field { border: 0; background: var(--soft-bad); } .lendbtn { box-shadow: none; } .ask { background: #fff; } .chat .ai { background: #fff; }
 .kbd, .foot kbd { border: 0; background: #F3EEE6; }
+
+/* Connect the Ledger first, then lend. */
+.console.unlent #ledgerCard { order: -1; }
+#ledgerCard .actions { display: flex; gap: 8px; flex-wrap: wrap; }

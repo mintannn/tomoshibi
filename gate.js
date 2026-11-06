@@ -85,6 +85,7 @@ function reduce() {
     else if (e.type === 'signed') { st.asking = null; st.waitingDevice = false; if (e.device) st.byHand = true; if (e.why === 'lend') st.lent = { holder: e.holder, device: e.device, uses: e.uses, left: e.uses, at: e.at } }
     else if (e.type === 'declined') { st.asking = null; st.waitingDevice = false; const c = card(e.rid); if (c) c.declined = true; else st.lendDeclined = true }
     else if (e.type === 'device') { const c = card(e.rid); if (c) c.showedOnDevice = e.ok }
+    else if (e.type === 'notice') { const c = card(e.rid); if (c) c.showedOnDevice = true; if (e.via === 'page' && !noticed.has(e.n) && window.Ledger?.connected) { noticed.add(e.n); if (Date.now() - Date.parse(e.at) < 15000) Ledger.exchange(e.apdu, 6000).catch(() => {}) } }
     else if (e.type === 'error') st.error = e
     if (e.type !== 'error') st.error = st.error && e.n === st.error.n ? st.error : (e.type === 'request' ? null : st.error)
   }
@@ -165,8 +166,51 @@ function keyCard(st) {
     : `<p class="sub">Not lent to anyone.${st.lendDeclined ? ' You declined on the device: nothing was signed.' : ''}</p><button class="btn primary" id="lendBtn" ${st.asking ? 'disabled' : ''}>Lend to billing-assistant</button>`)
   const b = $('lendBtn'); if (b) b.onclick = () => src().post('/lend')
 }
+// ── the Ledger, connected to this page (Bluetooth or USB from the browser) ──
+// The page only carries bytes between the tool and the device. It cannot sign: the device shows the
+// person what it is about to sign, and the key never leaves it.
+let dev = { on: false, app: null, how: null, error: null, piping: false }
+async function connectLedger(way) {
+  dev.error = null
+  try {
+    if (!(await Ledger.connect(true, way))) { dev.error = 'No Ledger was chosen.'; render(); return }
+    dev.on = true; dev.how = Ledger.how
+    await checkApp()
+  } catch (e) { dev.on = false; dev.error = String(e.message || e) }
+  render()
+}
+async function checkApp() {
+  if (!dev.on || dev.piping) return
+  try {
+    const a = await Ledger.app()
+    dev.app = a.locked ? 'locked' : a.busy ? 'Tomoshibi' : a.name
+    const ready = dev.app === 'Tomoshibi'
+    if (mode === 'live') live.post('/device', { ready, how: dev.how })
+    if (agent && agent.device !== ready) { agent.device = ready || agent.device; }
+  } catch (e) { if (!Ledger.connected) { dev.on = false; dev.error = 'The Ledger disconnected.'; if (mode === 'live') live.post('/device', { ready: false }) } }
+}
+setInterval(() => { if (dev.on) checkApp().then(() => { if (!dev.piping) ledgerCard(reduce()) }) }, 3000)
+let piped = null
+/** Carry one request from the tool to the Ledger and the Ledger's answer back. */
+async function pipe(a) {
+  if (piped === a.askId || !a.apdus) return
+  piped = a.askId; dev.piping = true
+  let hex = null, error = null
+  try {
+    for (let i = 0; i < a.apdus.length; i++) {
+      const last = i === a.apdus.length - 1
+      hex = await Ledger.exchange(a.apdus[i], last ? 235000 : 6000)   // the last one waits for the person to hold
+      if (!last && !hex.endsWith('9000')) break
+    }
+  } catch (e) { error = String(e.message || e) }
+  dev.piping = false
+  live.post('/device/answer', error ? { askId: a.askId, error } : { askId: a.askId, hex })
+}
+let noticed = new Set()
+
 function ledgerCard(st) {
-  const el = $('ledgerCard'), a = st.asking, dev = mode === 'live' && agent.device
+  const el = $('ledgerCard'), a = st.asking, hasDev = mode === 'live' && (agent.device || (dev.on && dev.app === 'Tomoshibi'))
+  if (a && a.via === 'page' && mode === 'live') pipe(a)
   const blocked = (() => { const c = st.cards[st.cards.length - 1]; return c && final(c)?.response.decision === 'DENIED' && c.showedOnDevice })()
   el.className = 'card ' + (a ? 'ask' : blocked ? 'blk' : '')
   const head = '<h2>Your Ledger</h2>'
@@ -183,9 +227,21 @@ function ledgerCard(st) {
       h.onpointerup = up; h.onpointerleave = up; $('noBtn').onclick = () => src().post('/hold', { ok: false }) }
   } else if (st.waitingDevice) { el.className = 'card ask'; el.innerHTML = head + '<div class="led ask"><i></i>Looking for your Ledger…</div><p class="sub">This key was lent on your Ledger, so only your Ledger can let this through. Check the cable and that Tomoshibi is open.</p>'
   } else if (blocked) el.innerHTML = head + '<div class="led blk"><i></i>Showing BLOCKED</div><p class="sub">The refusal is on the device in your hand, where a program on this computer cannot draw.</p>'
-  else el.innerHTML = head + (dev ? '<div class="led ok"><i></i>Connected · quiet</div><p class="sub">It wakes only when you are needed.</p>'
-    : `<div class="led"><i></i>Not connected</div><p class="sub">${mode === 'live' ? 'Plug in the Ledger and open Tomoshibi. Until then a software key signs, and every record says so.' : 'This is a replay. In the live console, approvals happen on a Ledger Flex.'}</p>`)
-  $('chipLedger').textContent = dev ? 'Ledger connected' : 'no Ledger'; $('chipLedger').className = 'chip ' + (dev ? 'live' : 'warn')
+  else if (hasDev) el.innerHTML = head + `<div class="led ok"><i></i>Connected · quiet</div><p class="sub">${dev.on ? `Over ${dev.how === 'bluetooth' ? 'Bluetooth' : 'USB'}, straight from this ${dev.how === 'bluetooth' ? 'phone' : 'browser'}. ` : ''}It wakes only when you are needed.</p>`
+  else {
+    const ways = (window.Ledger && Ledger.ways) || []
+    const btn = (w, label) => `<button class="btn primary" data-way="${w}">${label}</button>`
+    const state = dev.on ? (dev.app === 'locked' ? 'Unlock your Ledger.' : `Open Tomoshibi on your Ledger${dev.app ? ` (it is showing ${esc(dev.app)})` : ''}.`) : ''
+    el.innerHTML = head + `<div class="led"><i></i>${dev.on ? 'Connected, not ready' : 'Not connected'}</div>` +
+      (mode !== 'live' ? '<p class="sub">This is a replay. In the live app, approvals happen on a Ledger Flex.</p>'
+        : dev.on ? `<p class="sub">${state}</p>`
+        : ways.length ? `<p class="sub">Connect it to this ${ways.includes('usb') ? 'browser' : 'phone'}. Turn the Ledger on, unlock it and open Tomoshibi first.</p><div class="actions">${ways.includes('bluetooth') ? btn('bluetooth', 'Connect by Bluetooth') : ''}${ways.includes('usb') ? btn('usb', 'Connect by USB') : ''}</div>`
+        : '<p class="sub">This browser cannot reach a Ledger. On an iPhone, open this page in the Bluefy browser. On a computer, use Chrome.</p>') +
+      (dev.error ? `<p class="note warn">${esc(dev.error)}</p>` : '') +
+      (mode === 'live' && !dev.on ? '<p class="sub">Until one is connected, a button on this page stands in for it, and every record says so.</p>' : '')
+    el.querySelectorAll('[data-way]').forEach((b) => (b.onclick = () => connectLedger(b.dataset.way)))
+  }
+  $('chipLedger').textContent = hasDev ? 'Ledger connected' : 'no Ledger'; $('chipLedger').className = 'chip ' + (hasDev ? 'live' : 'warn')
 }
 // Naming yourself is a different question from pressing, so it lives on another page (the sky).
 // This card only says whether you could, and remembers on this computer that you really used the tool.
