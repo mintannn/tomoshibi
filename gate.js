@@ -13,7 +13,7 @@ const short = (h, n = 4) => (typeof h === 'string' && h.length > 2 * n + 4 ? `${
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const FLAME = '<svg viewBox="0 0 120 152" aria-hidden="true"><rect x="31" y="96" width="58" height="48" rx="19" fill="#27407a"/><path d="M60 10 C62.2 10 63.8 12.2 64.8 14.8 C70.5 28 90 49 90 68 A30 30 0 1 1 30 68 C30 49 49.5 28 55.2 14.8 C56.2 12.2 57.8 10 60 10 Z" fill="#f0a73b"/><path d="M60 46 C61.3 46 62.2 47.2 62.8 48.6 C65.6 55 75 65.5 75 75 A15 15 0 1 1 45 75 C45 65.5 54.4 55 57.2 48.6 C57.8 47.2 58.7 46 60 46 Z" fill="#ffd98a"/></svg>'
 
-const TIER = { 'ふだん': 'routine', '大事': 'matters', '決定的': 'critical' }
+const TIER = { 'ふだん': 'routine', '大事': 'significant', '決定的': 'decisive' }
 const WORD = { ALLOWED: 'Let through', DENIED: 'Blocked', NEEDS_PRESS: 'Needs your hand', STOPPED: 'Stopped on purpose' }
 const WHY = {
   OUT_OF_TARGET: 'It tried to reach a place you did not allow. Stopped before anything left, and recorded against the tool.',

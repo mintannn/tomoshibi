@@ -15,7 +15,7 @@ const TITLE = {
   ALLOWED: 'Let through', DENIED: 'Stopped', STOPPED: 'Stopped, on purpose', NEEDS_PRESS: 'Waiting for a press on the Ledger',
   SEALED: 'Written to 0G Storage', STAR: 'A light was lit', VOUCH_DENIED: 'No light was lit',
 }
-const TIER = { 'ふだん': 'routine', '大事': 'matters', '決定的': 'critical' }
+const TIER = { 'ふだん': 'routine', '大事': 'significant', '決定的': 'decisive' }
 const REASON = {
   OUT_OF_TARGET: 'It tried to reach a place that was not allowed.',
   OUT_OF_SCOPE: 'It tried to do something that was not allowed.',
