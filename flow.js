@@ -240,7 +240,7 @@ function frame(o) {
   const nav = o.steps !== undefined
     ? `<div class="stepper">${['Leave your key', 'Choose a job', 'Hold to light'].map((t, i) => `<span class="${i === o.steps ? 'on' : i < o.steps ? 'done' : ''}"><em>${i < o.steps ? '✓' : i + 1}</em>${t}</span>`).join('')}</div>`
     : o.tabs ? `<div class="links">${['home', 'activity', 'lights'].map((t) => `<span class="${t === ui.tab ? 'on' : ''}" data-act="tab:${t}">${t[0].toUpperCase() + t.slice(1)}${t === 'lights' ? '<i class="wld">World</i>' : ''}</span>`).join('')}</div>` : '<div class="links"></div>'
-  return `<div class="frame ${o.cls || ''} ${o.loading ? 'loading' : ''}" data-view="${cur}"><div class="nav"><div class="logo">${lamp('awake', 30)}<b>tomoshibi</b></div>${nav}<div class="who">${o.who || 'Priya’s shop'}</div></div>`
+  return `<div class="frame ${o.cls || ''} ${o.loading ? 'loading' : ''}" data-view="${cur}"><div class="nav"><div class="logo"><img src="logo.svg" alt="tomoshibi"></div>${nav}<div class="who">${o.who || 'Priya’s shop'}</div></div>`
     + `<div class="vbar"><i>${o.now}</i><b>${o.why}</b></div>`
     + (o.gain ? `<div class="gain"><i>${o.gainLabel || 'NOW YOU CAN'}</i>${o.gain}</div>` : '')
     + (o.stage || `<div class="body" style="background:${o.bg || '#FFF3E4'}"><div class="l">${o.left}</div><div class="r">${o.right}</div></div>`)
@@ -251,7 +251,7 @@ const softHold = (label) => `<div class="softhold"><b>No Ledger connected.</b> T
 const connectRow = () => { const ways = (mode === 'live' && window.Ledger && Ledger.ways) || []; if (!ways.length || dev.on || hasDevice()) return dev.on && dev.app !== 'Tomoshibi' ? `<p class="connectmsg">${dev.app === 'locked' ? 'Unlock your Ledger.' : 'Open TOMOSHIBI on your Ledger.'}</p>` : ''
   return `<div class="connect">${ways.includes('usb') ? '<button class="ghost" data-act="connect:usb">Connect by USB</button>' : ''}${ways.includes('bluetooth') ? '<button class="ghost" data-act="connect:bluetooth">Connect by Bluetooth</button>' : ''}</div>${dev.error ? `<div class="err">${esc(dev.error)}</div>` : ''}` }
 
-const boot = () => `<div class="frame loading" data-view="boot"><div class="nav"><div class="logo">${lamp('awake', 30)}<b>tomoshibi</b></div></div><div class="body"><div class="l"><div class="hero m-awake"><div class="c flick">${lamp('awake', 150)}</div><div class="say">Loading<span class="dots"><i>.</i><i>.</i><i>.</i></span></div></div><div class="sk w70"></div><div class="sk w50"></div></div><div class="r"><div class="card"><div class="sk w40"></div><div class="sk"></div><div class="sk w60"></div></div></div></div></div>`
+const boot = () => `<div class="frame loading" data-view="boot"><div class="nav"><div class="logo"><img src="logo.svg" alt="tomoshibi"></div></div><div class="body"><div class="l"><div class="hero m-awake"><div class="c flick">${lamp('awake', 150)}</div><div class="say">Loading<span class="dots"><i>.</i><i>.</i><i>.</i></span></div></div><div class="sk w70"></div><div class="sk w50"></div></div><div class="r"><div class="card"><div class="sk w40"></div><div class="sk"></div><div class="sk w60"></div></div></div></div></div>`
 
 /** Is a Ledger there? If not, this browser can connect to one (USB on a computer, Bluetooth on a phone). */
 function ledgerLine() {
@@ -441,7 +441,7 @@ function chat(st) {
   if (ui.chat === 0) extra = '<div class="thoughts"><span>What is a .env?</span><span>Which folder…?</span><span>How do I even write that?</span></div><div class="suggest">Can you use TOMOSHIBI instead? <span class="link">tomoshibi.app/priya</span><button data-act="chat-send">Send</button></div>'
   else {
     M.push(['me', 'Can you use TOMOSHIBI instead? <span class="link">tomoshibi.app/priya</span>'])
-    M.push(ui.typing ? ['bot typing', '<span class="typing"><i></i><i></i><i></i></span>'] : ['bot', 'Yes. Then there is no file to create, and I never hold your key.' + (st.lent ? '' : `<br>Approve what I may do here:<button class="aibtn" data-act="open-tomo">${lamp('awake', 22)} Approve in TOMOSHIBI ↗</button>`)])
+    M.push(ui.typing ? ['bot typing', '<span class="typing"><i></i><i></i><i></i></span>'] : ['bot', 'Yes. Then there is no file to create, and I never hold your key.' + (st.lent ? '' : `<br>Approve what I may do here:<button class="aibtn" data-act="open-tomo"><img src="logo-mark-light.svg" alt="" width="20" height="20"> Approve in TOMOSHIBI ↗</button>`)])
   }
   if (st.lent) M.push(['bot', 'Thank you. I am connected through TOMOSHIBI, no file needed. I will start on the unpaid orders.'])
   for (const c of st.cards.slice(-8)) {
@@ -461,7 +461,7 @@ function paint() {
   const st = reduce(), root = $('root'); if (!root) return
   const needs = st.lent && (st.asking?.why === 'press' || (st.cards.length && ['NEEDS', 'DENIED'].includes(dec(st.cards[st.cards.length - 1])) && ui.seenRid !== st.cards[st.cards.length - 1].rid))
   const showTomo = ui.opened || st.lent || ui.surface === 'tomo'
-  const tabs = `<div class="tabs"><button class="${ui.surface === 'ai' ? 'on' : ''}" data-act="open-ai"><span class="bot"></span>${TOOL}</button>${showTomo ? `<button class="${ui.surface === 'tomo' ? 'on' : ''}" data-act="open-tomo">${lamp('awake', 18)}tomoshibi${needs && ui.surface !== 'tomo' ? '<i class="dot"></i>' : ''}</button>` : ''}</div>`
+  const tabs = `<div class="tabs"><button class="${ui.surface === 'ai' ? 'on' : ''}" data-act="open-ai"><span class="bot"></span>${TOOL}</button>${showTomo ? `<button class="${ui.surface === 'tomo' ? 'on' : ''}" data-act="open-tomo"><img src="logo-mark.svg" alt="" width="18" height="18">tomoshibi${needs && ui.surface !== 'tomo' ? '<i class="dot"></i>' : ''}</button>` : ''}</div>`
   const main = ui.surface === 'ai' ? chat(st) : tomo(st)
   const c = st.cards[st.cards.length - 1], m = c && money(c)
   const toast = ui.surface === 'ai' && st.lent && (st.asking?.why === 'press' || (c && dec(c) === 'NEEDS')) ? `<div class="toast" data-act="open-tomo">${lamp('alert', 34)}<div><b>TOMOSHIBI</b><br>${m ? `A refund of ${esc(m.amount)} is waiting for you.` : 'Something is waiting for you.'}</div><span>Open ↗</span></div>` : ''
