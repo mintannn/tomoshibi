@@ -222,7 +222,7 @@ const strip = (a) => { const n = stepsDone(a); return `<div class="steps"><b cla
 function frame(o) {
   const nav = o.steps !== undefined
     ? `<div class="stepper">${['Leave your key', 'Choose what it may do', 'Hold to light'].map((t, i) => `<span class="${i === o.steps ? 'on' : i < o.steps ? 'done' : ''}"><em>${i < o.steps ? '✓' : i + 1}</em>${t}</span>`).join('')}</div>`
-    : o.tabs ? `<div class="links">${['home', 'activity', 'lights'].map((t) => `<span class="${t === ui.tab ? 'on' : ''}" data-act="tab:${t}">${t[0].toUpperCase() + t.slice(1)}</span>`).join('')}</div>` : '<div class="links"></div>'
+    : o.tabs ? `<div class="links">${['home', 'activity', 'lights'].map((t) => `<span class="${t === ui.tab ? 'on' : ''}" data-act="tab:${t}">${t[0].toUpperCase() + t.slice(1)}${t === 'lights' ? '<i class="wld">World</i>' : ''}</span>`).join('')}</div>` : '<div class="links"></div>'
   return `<div class="frame ${o.cls || ''} ${o.loading ? 'loading' : ''}" data-view="${cur}"><div class="nav"><div class="logo">${lamp('awake', 30)}<b>tomoshibi</b></div>${nav}<div class="who">${o.who || 'Priya’s shop'}</div></div>`
     + `<div class="nowbar"><div><i>NOW</i><b>${o.now}</b></div><div class="y"><i>WHY IT MATTERS</i><b>${o.why}</b></div></div>`
     + (o.gain ? `<div class="gain"><i>${o.gainLabel || 'NOW YOU CAN'}</i>${o.gain}</div>` : '')
@@ -253,7 +253,7 @@ function vWelcome() {
   const pre = [['Leave your key with me', 'You never paste it into an AI again.'], ['Choose what it may do', 'It gets one small job, not the key.'], ['Hold your Ledger', 'Nothing starts without your hand.']]
   return frame({ now: 'Welcome', why: 'From here on, you never touch a key file again.',
     left: hero('happy', 'Welcome! So glad you came.', 'Let’s take keys<br>off your plate.', `${TOOL} asked you to edit a file. You do not have to. Three small steps, about two minutes, and key files are behind you.`),
-    right: `<div class="card"><div class="cardh">What happens next <span>about 2 minutes</span></div>${pre.map(([t, g], i) => `<div class="pre"><em>${i + 1}</em><div><b>${t}</b><span>${g}</span></div></div>`).join('')}<button data-act="onb:key">Let’s go →</button></div>` })
+    right: `<div class="card"><div class="cardh">What happens next <span>about 2 minutes</span></div>${pre.map(([t, g], i) => `<div class="pre"><em>${i + 1}</em><div><b>${t}</b><span>${g}</span></div></div>`).join('')}<div class="pre later"><em>+</em><div><b>Later: show your light <i class="wld">World</i></b><span>World App confirms you are one real person. Others can choose by your light.</span></div></div><button data-act="onb:key">Let’s go →</button></div>` })
 }
 function vKey() {
   cur = 'key'
@@ -293,10 +293,10 @@ function vLit(st) {
     gain: `let ${TOOL} work, and stop thinking about keys.`, bg: '#EAF7EF',
     left: `<div class="hero"><div class="c"><svg viewBox="0 0 120 120" width="150" height="150" aria-hidden="true">${WICK}<g id="hf" style="transform-origin:60px 92px">${BODY}${FACE.happy}${SPK}</g>${DISH}</svg></div><div class="say">A light is lit!</div></div><h1>You did it.<br>Go back to your AI.</h1><p>${TOOL} holds a pass, not your key. I will only call you when money is about to move.</p>`,
     right: `<div class="card"><div class="did"><div><i>YOU DID</i><span class="y">Pasted a key, once</span><span class="y">Chose what it may do</span><span class="y">Held your Ledger</span></div><div><i>YOU DID NOT</i><span class="x">Create a file</span><span class="x">Look for a folder</span><span class="x">Give your key to an AI</span></div></div>
-      <button data-act="back-ai">Back to ${TOOL} ↗</button><small>Your light is on. For now, only you can see it.${st.lent.device ? '' : ' (Signed by a software key: no Ledger was connected.)'}</small></div>` })
+      <button data-act="back-ai">Back to ${TOOL} ↗</button><small>Your light is on. For now, only you can see it.${st.lent.device ? '' : ' (Signed by a software key: no Ledger was connected.)'}</small></div><div class="card soft">Later, under <b>Lights</b>: let people who know you see this light. That is where <b>World App</b> comes in.</div>` })
 }
 const shownMine = () => Boolean(me() && lights.who.includes(me())) || ui.world?.step === 'done'
-const nudge = (st) => (st.uses && !shownMine() ? `<div class="card nudge">${lamp('happy', 46)}<div><b>Your light can guide others.</b><small>You really use this tool now. Let people who know you see it.</small></div><button data-act="tab:lights">Show my light →</button></div>` : '')
+const nudge = (st) => (st.uses && !shownMine() ? `<div class="card nudge">${lamp('happy', 46)}<div><b>Your light can guide others.</b><small>You really use this tool now. Let people who know you see it. World App confirms you are one real person.</small></div><button data-act="tab:lights">Show my light →</button></div>` : '')
 function vHome(st) {
   const c = st.cards[st.cards.length - 1], a = st.asking
   const d = c && ui.seenRid !== c.rid ? dec(c) : null
@@ -349,7 +349,7 @@ function vHome(st) {
   const n = through.length
   return frame({ tabs: 1, now: 'Nothing needs you', why: 'On an ordinary day, I never ask.', gain: n ? '' : '', bg: '#EAF7EF',
     left: hero('asleep', 'zzz… all quiet.', 'All quiet.<br>That is the point.', n ? `${n} request${n === 1 ? '' : 's'} went through. You were not bothered once.` : `${TOOL} has not asked for anything yet. When it does, small things simply go through.`),
-    right: `<div class="card">${n ? tag('ROUTINE', 'ok') + kv(esc(through[n - 1].what), '× ' + n) + `<small>${zgLine(through[n - 1])}</small>` : '<small>Nothing yet.</small>'}</div>${nudge(st) || '<div class="card soft">You can close this tab. I will only call you when money is about to move.</div>'}` })
+    right: `<div class="card">${n ? tag('ROUTINE', 'ok') + kv(esc(through[n - 1].what), '× ' + n) + `<small>${zgLine(through[n - 1])}</small>` : '<small>Nothing yet. After its first real job you can show your light with World, under <b>Lights</b>.</small>'}</div>${nudge(st) || '<div class="card soft">You can close this tab. I will only call you when money is about to move.</div>'}` })
 }
 function vActivity(st) {
   cur = 'activity'
@@ -388,12 +388,16 @@ function vLights(st) {
   }
   if (!st.uses) {
     cur = 'lights-early'
-    return frame({ tabs: 1, now: 'Your light', why: 'A light means real use, so it cannot be shown early.',
-      left: hero('awake', 'Not yet. Soon!', 'Let it do some<br>real work first.', `Once ${TOOL} has really used your key, you can let others see your light.`), right: '<div class="card soft">A light is not a review or a like. It says one thing: a real person really uses this, with their own key.</div>' })
+    const last = st.cards[st.cards.length - 1], down = last && dec(last) === 'STOPPED'
+    const row = (state, n, t, g) => `<div class="pre ${state}"><em>${state === 'ok' ? '✓' : n}</em><div><b>${t}</b><span>${g}</span></div></div>`
+    return frame({ tabs: 1, now: 'Show your light with World', why: 'One real person, one light. That is why a light can be trusted.',
+      left: hero('awake', 'This is where World comes in.', 'Your light, shown<br>with World.', `When ${TOOL} has done one real job with your key, you can let others see your light. World App confirms you are one real person. It does not learn which tool, which key, or when.`),
+      right: `<div class="card"><div class="cardh">How it goes <span>about a minute</span></div>${row('ok', 1, 'You lit a light', 'You held your Ledger.')}${row('now', 2, `${TOOL} does one real job`, down ? '0G is not answering right now, so no job can finish yet.' : 'Not yet. Use the bar below: “A normal day”.')}${row('', 3, 'Press “Show my light”', 'Here, on this screen.')}${row('', 4, 'Confirm in World App', 'Scan a code with your phone, tap Confirm.')}
+        <button disabled>Show my light with World →</button><small>Locked until step 2. A light means real use, so it cannot be shown early.</small></div>` })
   }
   cur = 'lights'
   let right
-  if (!w) right = `<div class="card">${kv('Tool', name)}${kv('You used it', `${st.uses} time${st.uses === 1 ? '' : 's'}`)}<button data-act="show-light">Show my light →</button><small>World asks one question, once: are you one real person? It does not learn which tool, which key, or when.</small></div>`
+  if (!w) right = `<div class="card">${kv('Tool', name)}${kv('You used it', `${st.uses} time${st.uses === 1 ? '' : 's'}`)}<button data-act="show-light">Show my light with World →</button><small>World asks one question, once: are you one real person? It does not learn which tool, which key, or when.</small></div>`
   else if (w.step === 'starting') right = `<div class="card">${waitbox('Asking World for a code', 'You confirm on your own phone, in World App.', 'One real person, one light. That is why a light cannot be faked.')}</div>`
   else if (w.step === 'confirm') right = `<div class="card"><div class="qrrow">${w.real && typeof qrSvg === 'function' ? `<div class="qrbox">${qrSvg(w.uri, 132)}</div>` : ''}<div><b>Confirm you are one real person</b><ol><li>Open World App on your phone</li><li>Scan this code</li><li>Tap Confirm</li></ol></div></div>
       ${w.real ? `<a class="btn ghost" href="${esc(w.uri)}" target="_blank" rel="noopener">Or open World App on this device ↗</a><small>Code <b>${esc(w.code)}</b></small>` : '<small>Simulated on this Broker: no phone is asked.</small>'}
@@ -448,7 +452,9 @@ function paint() {
   const main = ui.surface === 'ai' ? chat(st) : tomo(st)
   const c = st.cards[st.cards.length - 1], m = c && money(c)
   const toast = ui.surface === 'ai' && st.lent && (st.asking?.why === 'press' || (c && dec(c) === 'NEEDS')) ? `<div class="toast" data-act="open-tomo">${lamp('alert', 34)}<div><b>TOMOSHIBI</b><br>${m ? `A refund of ${esc(m.amount)} is waiting for you.` : 'Something is waiting for you.'}</div><span>Open ↗</span></div>` : ''
-  const html = tabs + main + toast
+  // A hosted copy keeps one session for everybody who has the page open. Say so before anything else.
+  const shared = mode === 'live' && window.appAgentIsRemote ? '<div class="shared"><b>Shared live demo.</b> Everyone who opens this page sees the same session, so someone else may move it while you watch. <b>Start over</b> resets it for everyone.</div>' : ''
+  const html = shared + tabs + main + toast
   if (html !== lastHtml) {
     const changed = cur !== lastView, seen = chatNext
     let applied = false
@@ -472,7 +478,7 @@ function paint() {
     + (mode === 'live' ? chip(agent.simulated ? '0G simulated' : `0G live${agent.model ? ' · ' + esc(agent.model) : ''}`, agent.simulated ? 'warn' : 'live') + chip(hasDevice() ? 'Ledger connected' : 'no Ledger', hasDevice() ? 'live' : 'warn') + chip(agent.worldSimulated ? 'World simulated' : 'World live', agent.worldSimulated ? 'warn' : 'live') + chip(agent.execute ? 'execution on' : 'execution off', '')
       : mode === 'preview' ? chip('PREVIEW · recorded answers, nothing is sent', 'warn') + (ui.connect ? '<input id="agentIn" placeholder="https://… address of your TOMOSHIBI" autocomplete="off" spellcheck="false"><button data-act="connect-live">Connect</button>' : '<button data-act="connect-open">Connect to a live TOMOSHIBI</button>') : chip('starting…', ''))
     + (mode === 'live' && window.appAgentIsRemote ? `<button data-act="disconnect">Disconnect (${esc(new URL(AGENT).hostname.split('.')[0])}…)</button>` : '')
-    + `<button data-act="reset">Start over</button>${st.error ? `<span class="chip warn">${esc(st.error)}</span>` : ''}`
+    + (ui.confirmReset ? '<span class="chip warn">Reset for everyone?</span><button data-act="reset">Yes, start over</button><button data-act="reset-no">No</button>' : '<button data-act="reset">Start over</button>') + (st.error ? `<span class="chip warn">${esc(st.error)}</span>` : '')
   if (demo !== lastDemo) { $('demo').innerHTML = demo; lastDemo = demo }
 }
 /** Numbers run up from zero when their screen arrives. */
@@ -499,7 +505,8 @@ const ACT = {
   seen: () => { const st = reduce(), c = st.cards[st.cards.length - 1]; if (c) ui.seenRid = c.rid },
   connect: (a) => { connectLedger(a); return false },
   run: (a) => { src().post('/run', { id: a }) },
-  reset: () => { restart(); return false },
+  reset: () => { if (mode === 'live' && window.appAgentIsRemote && !ui.confirmReset) { ui.confirmReset = true; return } ui.confirmReset = false; restart(); return false },
+  'reset-no': () => { ui.confirmReset = false },
   'show-light': () => { startWorld(); return false },
   'lights-mode': (a) => { ui.lightsMode = a },
   // Leave the live tool and go on with the recording: the loan stays, the requests start again. The bottom bar says PREVIEW.
