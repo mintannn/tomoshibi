@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TOMOSHIBI — architecture replay</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<!-- An illustrative replay of how one request travels. The counts are sample numbers. Nothing is sent from this page. -->
+<style>
+  :root{--bg:#111;--panel:#1a1a1a;--line:#3a3a3a;--text:#f5f5f2;--mut:#9b9b96;--lemon:#FFF05A;--stop:#ff6b81;--hand:#ffab52;--zg:#b9a7ff}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:ui-rounded,"SF Pro Rounded","Hiragino Sans",system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1520px;margin:0 auto;padding:18px 20px 40px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:12px}header img{height:30px}header p{margin:0;color:var(--mut);font-size:14px}
+  .lang{margin-left:auto;display:flex;gap:6px}.lang button,.ctl button{all:unset;cursor:pointer;font-size:13px;font-weight:700;border:1.5px solid var(--line);border-radius:99px;padding:5px 14px;color:var(--text)}.lang button.on{background:var(--lemon);color:#111;border-color:var(--lemon)}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+  .stage{background:#161616;border:1.5px solid var(--line);border-radius:22px;padding:8px}
+  svg{display:block;width:100%;height:auto}
+  .box{fill:var(--panel);stroke:var(--line);stroke-width:1.5;transition:stroke .25s,fill .25s}
+  .on .box{stroke:var(--lemon);fill:#22210f}.on.stop .box{stroke:var(--stop);fill:#2a1519}.on.hand .box{stroke:var(--hand);fill:#2a1e10}.on.zg .box{stroke:var(--zg);fill:#1c1930}
+  .t{fill:var(--text);font-size:17px;font-weight:700}.s{fill:var(--mut);font-size:11.5px}.k{fill:var(--mut);font-size:10.5px;font-weight:700;letter-spacing:.12em}
+  .big{font-size:34px;font-weight:800}.lem{fill:var(--lemon)}.red{fill:var(--stop)}.org{fill:var(--hand)}.pur{fill:var(--zg)}
+  .wire{fill:none;stroke:#4a4a46;stroke-width:1.5;stroke-dasharray:3 6}.wire.solid{stroke-dasharray:none}
+  .req rect{fill:#202020;stroke:var(--line)}.req text{fill:var(--mut);font-size:11.5px}.req.on rect{stroke:var(--lemon)}.req.on text{fill:var(--text)}
+  .lamp .flame{transform-origin:60px 92px;transform:scale(0);transition:transform .7s cubic-bezier(.3,1.5,.5,1)}.lit .flame{transform:scale(1)}
+  .pulse{animation:pulse 0.7s ease-in-out infinite}@keyframes pulse{50%{opacity:.35}}
+  .cap{margin:10px 6px 0;font-size:16.5px;min-height:3.2em}.cap b{color:var(--lemon)}
+  .ctl{display:flex;gap:8px;align-items:center;margin:8px 6px 0;color:var(--mut);font-size:12.5px}
+  aside h2{font-size:12px;letter-spacing:.14em;color:var(--mut);margin:6px 0 8px}aside h3{font-size:23px;line-height:1.3;margin:0 0 10px}aside p{color:#cfcfca;font-size:14px;margin:0 0 16px}
+  .stack div{border-top:1px solid #2c2c2a;padding:9px 0}.stack b{display:block;font-size:14.5px}.stack span{color:var(--mut);font-size:12.5px;display:block}.stack i{font-style:normal;color:var(--lemon)}
+  .note{color:var(--mut);font-size:12.5px;margin:16px 6px 0}
+  @media(max-width:1000px){.grid{grid-template-columns:1fr}}
+</style>
+<div class="wrap">
+  <header><img src="logo-mark-light.svg" alt=""><b style="font-size:22px;letter-spacing:-.03em">tomoshibi</b><p data-en="The key stays. One approved use goes." data-ja="キーは渡さない。渡すのは、許可した1回ぶんだけ。"></p>
+    <div class="lang"><button data-l="en">English</button><button data-l="ja">日本語</button></div></header>
+  <div class="grid">
+    <div>
+      <div class="stage">
+        <svg viewBox="0 56 1280 652" id="s">
+          <!-- AI tool -->
+          <g id="ai"><rect class="box" x="24" y="90" width="210" height="390" rx="16"/><text class="k" x="42" y="118">AI TOOL</text><text class="t" x="42" y="142">Billing assistant</text><text class="s" x="42" y="160">never holds the key</text>
+            <g class="req" id="q1"><rect x="40" y="180" width="178" height="30" rx="9"/><text x="52" y="200">Read unpaid invoices</text></g>
+            <g class="req" id="q2"><rect x="40" y="218" width="178" height="30" rx="9"/><text x="52" y="238">Refund ₹4,800</text></g>
+            <g class="req" id="q3"><rect x="40" y="256" width="178" height="30" rx="9"/><text x="52" y="276">Send data → unknown host</text></g>
+            <g class="req" id="q4"><rect x="40" y="294" width="178" height="30" rx="9"/><text x="52" y="314">Refund (0G silent)</text></g>
+            <text class="k" x="42" y="372">REQUESTS</text><text class="big lem" x="42" y="412" id="nReq">0</text><text class="s" x="42" y="452">demo-agent.mjs · Node.js</text></g>
+          <!-- the gate -->
+          <rect x="258" y="70" width="646" height="500" rx="22" fill="none" stroke="#55554f" stroke-width="1.5"/>
+          <text class="k" x="282" y="100">TOMOSHIBI GATE</text><text class="s" x="412" y="100">Broker · Node.js · viem · holds the key, hands out one use</text>
+          <g id="A"><rect class="box" x="288" y="118" width="264" height="92" rx="14"/><text class="k" x="304" y="142">1 · PERMIT</text><text class="t" x="304" y="166">Inside what you signed?</text><text class="s" x="304" y="186">EIP-712 · where · what · how many · until</text></g>
+          <g id="B"><rect class="box" x="288" y="250" width="264" height="92" rx="14"/><text class="k pur" x="304" y="274">2 · WEIGHT · 0G</text><text class="t" x="304" y="298">How heavy is it?</text><text class="s" x="304" y="318">sealed model (TeeML) reads the request</text></g>
+          <g id="NV" class="stop"><rect class="box" x="288" y="382" width="264" height="74" rx="14"/><text class="k red" x="304" y="406">NO VERDICT</text><text class="s" x="304" y="426">0G silent → nothing runs</text><text class="s" x="304" y="442">no verdict is made up</text><text class="big red" x="504" y="434" id="nNV">0</text></g>
+          <g id="BL" class="stop"><rect class="box" x="640" y="118" width="236" height="92" rx="14"/><text class="k red" x="656" y="142">BLOCKED</text><text class="s" x="656" y="164">outside the permit</text><text class="s" x="656" y="180">stopped before 0G</text><text class="big red" x="828" y="180" id="nBL">0</text></g>
+          <g id="D"><rect class="box" x="640" y="250" width="236" height="92" rx="14"/><text class="k lem" x="656" y="274">4 · USE THE KEY</text><text class="t" x="656" y="298">Key added here</text><text class="s" x="656" y="318">the AI gets the answer, not the key</text></g>
+          <g id="C" class="hand"><rect class="box" x="640" y="382" width="236" height="74" rx="14"/><text class="k org" x="656" y="406">3 · YOUR HAND</text><text class="s" x="656" y="426">heavy → waits for a hold</text><text class="s" x="656" y="442">one hold, one use</text><text class="big org" x="828" y="434" id="nBH">0</text></g>
+          <g id="T"><rect class="box" x="288" y="486" width="588" height="62" rx="14"/><text class="k" x="304" y="510">5 · TRAIL</text><text class="t" x="304" y="533">Every yes and every no, kept</text><text class="s" x="620" y="533">append-only · sealed to 0G Storage</text></g>
+          <!-- wires -->
+          <path class="wire solid" d="M234 285 L262 285 L262 164 L288 164"/><path class="wire solid" d="M420 210 L420 250"/><path class="wire" d="M552 164 L640 164"/>
+          <path class="wire solid" d="M552 296 L640 296"/><text class="s lem" x="566" y="288">routine</text>
+          <path class="wire" d="M520 342 L520 364 L758 364 L758 382"/><text class="s org" x="566" y="358">heavy</text>
+          <path class="wire" d="M810 382 L810 342"/><path class="wire" d="M380 342 L380 382"/>
+          <path class="wire solid" d="M876 296 L940 296"/>
+          <path class="wire" d="M1010 232 L1010 258" /><path class="wire" d="M940 150 L900 150 L900 100 L500 100 L500 118" style="opacity:.6"/>
+          <!-- right: Ledger, API, week -->
+          <g id="LG" class="lamp"><rect class="box" x="940" y="90" width="316" height="142" rx="16"/><text class="k" x="958" y="118">YOUR LEDGER · HARDWARE</text><text class="t" x="958" y="144">Hold to light</text><text class="s" x="958" y="164">custom app (Rust) · signs the permit</text><text class="s" x="958" y="180">an AI cannot press this button</text><text class="s" x="958" y="212" id="lgState">waiting</text>
+            <g transform="translate(1168 112) scale(.72)"><path d="M60 92 v-9" stroke="#f5f5f2" stroke-width="5" stroke-linecap="round"/><g class="flame"><path d="M60 10 C64 30 97 44 97 68 C97 84 83 92 60 92 C37 92 23 84 23 68 C23 44 56 30 60 10 Z" fill="#FFF05A"/></g><path d="M20 92 H100 C98 105 85 111 60 111 C35 111 22 105 20 92 Z" fill="#f5f5f2"/></g></g>
+          <g id="API"><rect class="box" x="940" y="262" width="316" height="68" rx="14"/><text class="k" x="958" y="288">THE API</text><text class="t" x="958" y="312">Stripe</text><text class="s" x="1030" y="312">a normal request · no change needed</text></g>
+          <g id="W"><rect class="box" x="940" y="356" width="316" height="192" rx="16"/><text class="k" x="958" y="384">WHAT THE PERSON SEES</text><text class="t" x="958" y="410">Your week</text>
+            <text class="big red" x="972" y="474" id="wStop">0</text><text class="s" x="962" y="498">stopped</text>
+            <text class="big lem" x="1076" y="474" id="wThru">0</text><text class="s" x="1058" y="498">not asked</text>
+            <text class="big org" x="1186" y="474" id="wHand">0</text><text class="s" x="1160" y="498">by your hand</text><text class="s" x="958" y="530">web app · static pages · no build step</text></g>
+          <!-- lights -->
+          <g id="LI"><rect class="box" x="24" y="592" width="1232" height="104" rx="16"/><text class="k" x="42" y="620">LIGHTS · WORLD</text><text class="t" x="42" y="648">One real person, one light</text><text class="s" x="42" y="670">World confirms the person (OIDC device flow) · only someone who really used the key can show one</text>
+            <g id="lamps" transform="translate(760 612)"></g><text class="s" x="1040" y="676">people choose by whose light it is</text></g>
+          <path class="wire" d="M582 548 L582 592"/>
+          <circle id="tok" r="8" fill="#fff" opacity="0"/>
+          <!-- motion paths (not drawn) -->
+          <path id="p_in" d="M218 195 L262 195 L262 164 L288 164" fill="none"/><path id="p_ab" d="M420 164 L420 296" fill="none"/><path id="p_bd" d="M420 296 L758 296" fill="none"/><path id="p_api" d="M758 296 L1000 296" fill="none"/>
+          <path id="p_bl" d="M420 164 L758 164" fill="none"/><path id="p_bc" d="M420 296 L520 342 L520 364 L758 364 L758 419" fill="none"/><path id="p_cd" d="M810 419 L810 296" fill="none"/><path id="p_nv" d="M420 296 L380 342 L380 419" fill="none"/><path id="p_t" d="M758 296 L758 364 L582 486 L582 517" fill="none"/>
+        </svg>
+      </div>
+      <p class="cap" id="cap"></p>
+      <div class="ctl"><button id="again" data-en="Replay" data-ja="もう一度"></button><span data-en="Illustrative replay · sample numbers · nothing is sent from this page" data-ja="説明用の再生です。数字は例で、このページからは何も送られません"></span></div>
+    </div>
+    <aside>
+      <h2>INSIDE TOMOSHIBI</h2>
+      <h3 data-en="The AI asks. The gate decides. Your hand has the last word." data-ja="AI が頼む。門が判定する。最後は、あなたの手。"></h3>
+      <p data-en="The key never reaches the AI tool. Each request is checked against the permit you signed, weighed by a sealed model, and, when money moves, held until you press." data-ja="キーは AI に渡りません。依頼は1件ずつ、サインした許可の範囲と照らされ、封印されたモデルが重さを量り、お金が動くときはあなたが押すまで止まります。"></p>
+      <div class="stack">
+        <div><b>Ledger Flex</b><span data-en="Custom app (Rust). Shows what is signed, signs an EIP-712 permit on a hold." data-ja="専用アプリ（Rust）。サインする内容を表示し、長押しで EIP-712 の許可にサイン"></span></div>
+        <div><b>Broker <i>· the gate</i></b><span data-en="Node.js, viem. Holds the key, checks the permit, counts the uses, keeps the trail." data-ja="Node.js・viem。キーを持ち、許可を確かめ、回数を数え、記録を残す"></span></div>
+        <div><b>0G Private Computer</b><span data-en="A sealed model (TeeML) reads each request and says how heavy it is. No answer means no action." data-ja="封印されたモデル（TeeML）が依頼を読み、重さを判定。答えがなければ何も動かさない"></span></div>
+        <div><b>0G Storage</b><span data-en="The trail is sealed there, so it cannot be quietly changed." data-ja="記録を保管。あとから書き換えられない"></span></div>
+        <div><b>World</b><span data-en="Agent Pass (OIDC device flow). One real person, one light per version." data-ja="Agent Pass（OIDC のデバイスフロー）。実在の1人につき、1つの版に光は1つ"></span></div>
+        <div><b>Web app</b><span data-en="Static pages, no build step. Live back end in one container; the Ledger over USB through a small bridge." data-ja="静的なページ（ビルドなし）。本番の裏側は1つのコンテナ、Ledger は小さな中継で USB 接続"></span></div>
+      </div>
+    </aside>
+  </div>
+  <p class="note" data-en="In the demo, execution is off: the gate decides and records, but no real API call is made and no real key is loaded." data-ja="デモでは実行を切っています。門は判定と記録まで行い、本物の API 呼び出しも本物のキーもありません。"></p>
+</div>
+<script>
+'use strict'
+const $ = (id) => document.getElementById(id), sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+let lang = new URLSearchParams(location.search).get('lang') || (navigator.language || '').startsWith('ja') ? 'ja' : 'en'
+if (new URLSearchParams(location.search).get('lang')) lang = new URLSearchParams(location.search).get('lang') === 'ja' ? 'ja' : 'en'
+const CAP = {
+  lend: { en: '<b>Lend.</b> You sign a permit on the Ledger: where, what, how many times, until when. The key stays in the gate. Nothing starts until you hold.', ja: '<b>許可する。</b>Ledger で許可にサインします（どこへ・何を・何回・いつまで）。キーは門に残ります。長押しするまで、何も始まりません。' },
+  routine: { en: '<b>An ordinary day.</b> Inside the permit, 0G calls it routine, the gate adds the key. Nobody is asked.', ja: '<b>ふつうの日。</b>許可の範囲内で、0G が「ふつう」と判定。門がキーを足して通します。誰にも聞きません。' },
+  heavy: { en: '<b>Money moves.</b> 0G calls it heavy, so it waits. One hold on the Ledger, one payment.', ja: '<b>お金が動く。</b>0G が「重い」と判定したので止まります。Ledger を1回長押しで、1回だけ通ります。' },
+  blocked: { en: '<b>Outside the permit.</b> Stopped before 0G ever sees it. Nothing is sent, and the attempt is on record.', ja: '<b>許可の外。</b>0G に見せる前に止めます。何も送られず、試したことは記録に残ります。' },
+  nv: { en: '<b>0G gives no answer.</b> No verdict is made up in its place. Nothing runs.', ja: '<b>0G が答えない。</b>判定をでっち上げません。何も動きません。' },
+  end: { en: '<b>Kept, and shown.</b> Every yes and no goes to the trail, sealed on 0G Storage. Someone who really used the tool can show a light, once World confirms they are one real person.', ja: '<b>残す、見せる。</b>通したものも止めたものも記録に残り、0G Storage に保管されます。本当に使った人は、World で実在の1人と確かめて、光を見せられます。' },
+}
+function setLang(l) { lang = l; document.documentElement.lang = l; document.querySelectorAll('[data-en]').forEach((e) => { e.innerHTML = e.dataset[l] }); document.querySelectorAll('.lang button').forEach((b) => b.classList.toggle('on', b.dataset.l === l)); if (curCap) cap(curCap) }
+let curCap = null
+const cap = (k) => { curCap = k; $('cap').innerHTML = CAP[k][lang] }
+const on = (id, v = true) => $(id).classList.toggle('on', v)
+const set = (id, v) => { $(id).textContent = v }
+let run = 0
+async function move(pathId, ms, color, my) {
+  const p = $(pathId), len = p.getTotalLength(), tok = $('tok'); tok.setAttribute('fill', color); tok.setAttribute('opacity', 1)
+  const t0 = performance.now()
+  for (;;) { if (my !== run) return; const k = Math.min(1, (performance.now() - t0) / ms), pt = p.getPointAtLength(len * k); tok.setAttribute('cx', pt.x); tok.setAttribute('cy', pt.y); if (k >= 1) break; await new Promise(requestAnimationFrame) }
+}
+const lamps = (n) => { $('lamps').innerHTML = Array.from({ length: n }, (_, i) => `<g transform="translate(${i * 34} 0) scale(.26)" opacity="${i === 0 ? 1 : .55}"><path d="M60 10 C64 30 97 44 97 68 C97 84 83 92 60 92 C37 92 23 84 23 68 C23 44 56 30 60 10 Z" fill="#FFF05A"/><path d="M20 92 H100 C98 105 85 111 60 111 C35 111 22 105 20 92 Z" fill="#f5f5f2"/></g>`).join('') }
+async function play() {
+  const my = ++run, ok = () => my === run
+  let req = 0, thru = 0
+  for (const id of ['A', 'B', 'C', 'D', 'NV', 'BL', 'T', 'LI', 'API', 'q1', 'q2', 'q3', 'q4']) on(id, false)
+  for (const id of ['nReq', 'nNV', 'nBL', 'nBH', 'wStop', 'wThru', 'wHand']) set(id, 0)
+  $('LG').classList.remove('lit'); set('lgState', 'waiting'); lamps(0); $('tok').setAttribute('opacity', 0)
+  cap('lend'); on('A'); $('LG').classList.add('on'); set('lgState', 'hold…'); $('lgState').classList.add('pulse'); await sleep(2600); if (!ok()) return
+  $('LG').classList.add('lit'); $('lgState').classList.remove('pulse'); set('lgState', 'a light is lit · 20 uses · 7 days'); await sleep(2400); if (!ok()) return
+  $('LG').classList.remove('on'); on('A', false)
+  cap('routine'); on('q1')
+  for (let i = 0; i < 12 && ok(); i++) {
+    set('nReq', ++req); on('A'); await move('p_in', 170, '#fff', my); await move('p_ab', 150, '#fff', my); on('B'); $('B').classList.add('zg'); await sleep(120)
+    await move('p_bd', 200, '#FFF05A', my); on('D'); on('API'); await move('p_api', 150, '#FFF05A', my); set('wThru', ++thru); await sleep(90)
+    on('A', false); on('B', false); on('D', false); on('API', false)
+  }
+  if (!ok()) return; on('q1', false); await sleep(500)
+  cap('heavy'); on('q2'); set('nReq', ++req); on('A'); await move('p_in', 400, '#fff', my); await move('p_ab', 400, '#fff', my); on('B'); await sleep(700); if (!ok()) return
+  await move('p_bc', 900, '#ffab52', my); on('C'); $('LG').classList.add('on'); set('lgState', 'hold…'); $('lgState').classList.add('pulse'); await sleep(2600); if (!ok()) return
+  $('lgState').classList.remove('pulse'); set('lgState', 'held · once'); set('nBH', 1); set('wHand', 1); await move('p_cd', 500, '#ffab52', my); on('D'); on('API'); await move('p_api', 400, '#FFF05A', my); await sleep(900); if (!ok()) return
+  for (const id of ['A', 'B', 'C', 'D', 'API', 'q2']) on(id, false); $('LG').classList.remove('on')
+  cap('blocked'); on('q3'); set('nReq', ++req); on('A'); await move('p_in', 400, '#fff', my); await sleep(350); await move('p_bl', 600, '#ff6b81', my); on('BL'); set('nBL', 1); set('wStop', 1); await sleep(2600); if (!ok()) return
+  for (const id of ['A', 'BL', 'q3']) on(id, false)
+  cap('nv'); on('q4'); set('nReq', ++req); on('A'); await move('p_in', 400, '#fff', my); await move('p_ab', 400, '#fff', my); on('B'); await sleep(1100); await move('p_nv', 600, '#ff6b81', my); on('NV'); set('nNV', 1); set('wStop', 2); await sleep(2600); if (!ok()) return
+  for (const id of ['A', 'B', 'NV', 'q4']) on(id, false); $('tok').setAttribute('opacity', 0)
+  cap('end'); on('T'); await sleep(1500); on('LI'); for (let n = 1; n <= 9 && ok(); n++) { lamps(n); await sleep(260) }
+  await sleep(4200); if (ok()) play()
+}
+document.querySelectorAll('.lang button').forEach((b) => (b.onclick = () => setLang(b.dataset.l)))
+$('again').onclick = play
+setLang(lang); play()
+</script>
+</html>

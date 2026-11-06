@@ -103,7 +103,7 @@ const src = () => (mode === 'live' ? live : replay)
 function onEvents(evs) {
   for (const e of evs) {
     if (e.type === 'request') { ui.tab = 'home'; ui.seenRid = null }
-    else if (e.type === 'asking') { ui.pending = null; if (e.via === 'page' && mode === 'live') pipe(e) }
+    else if (e.type === 'asking') { ui.pending = null; if (e.via === 'page' && mode === 'live' && window.appAgentIsRemote) pipe(e) }
     else if (e.type === 'signed' && e.why === 'lend') { ui.pending = null; ui.ackLit = false }
     else if (e.type === 'declined') ui.pending = null
     else if (e.type === 'light') { if (e.decision === 'STAR' || e.reason === 'ALREADY_VOUCHED' || (ui.world?.step === 'confirm' && Date.now() - Date.parse(e.at) < 30000)) worldResult(e) }
@@ -141,6 +141,7 @@ function money(c) { const m = /^Refund (\S+) for (order #\d+)(?: \((.+)\))?/.exe
 let dev = { on: false, app: null, how: null, error: null, piping: false }
 const say = (msg) => { if (mode === 'live') live.post('/device/log', { msg }) }
 async function connectLedger(way) {
+  if (!window.appAgentIsRemote) return   // the bridge on this computer owns the USB link
   dev.error = null
   try {
     if (!(await Ledger.connect(true, way))) { dev.error = 'No Ledger was chosen.'; paint(); return }
@@ -248,7 +249,7 @@ function frame(o) {
 }
 /** When no Ledger is connected: a button on this page stands in for it, and says so. */
 const softHold = (label) => `<div class="softhold"><b>No Ledger connected.</b> This button stands in, and the record says so.<div class="two"><button class="holdbtn" data-hold="1"><i></i>${label}</button><button class="ghost" data-act="soft-no">Not now</button></div></div>`
-const connectRow = () => { const ways = (mode === 'live' && window.Ledger && Ledger.ways) || []; if (!ways.length || dev.on || hasDevice()) return dev.on && dev.app !== 'Tomoshibi' ? `<p class="connectmsg">${dev.app === 'locked' ? 'Unlock your Ledger.' : 'Open TOMOSHIBI on your Ledger.'}</p>` : ''
+const connectRow = () => { const ways = (mode === 'live' && window.appAgentIsRemote && window.Ledger && Ledger.ways) || []; if (!ways.length || dev.on || hasDevice()) return dev.on && dev.app !== 'Tomoshibi' ? `<p class="connectmsg">${dev.app === 'locked' ? 'Unlock your Ledger.' : 'Open TOMOSHIBI on your Ledger.'}</p>` : ''
   return `<div class="connect">${ways.includes('usb') ? '<button class="ghost" data-act="connect:usb">Connect by USB</button>' : ''}${ways.includes('bluetooth') ? '<button class="ghost" data-act="connect:bluetooth">Connect by Bluetooth</button>' : ''}</div>${dev.error ? `<div class="err">${esc(dev.error)}</div>` : ''}` }
 
 const boot = () => `<div class="frame loading" data-view="boot"><div class="nav"><div class="logo"><img src="logo.svg" alt="tomoshibi"></div></div><div class="body"><div class="l"><div class="hero m-awake"><div class="c flick">${lamp('awake', 150)}</div><div class="say">Loading<span class="dots"><i>.</i><i>.</i><i>.</i></span></div></div><div class="sk w70"></div><div class="sk w50"></div></div><div class="r"><div class="card"><div class="sk w40"></div><div class="sk"></div><div class="sk w60"></div></div></div></div></div>`
@@ -257,7 +258,8 @@ const boot = () => `<div class="frame loading" data-view="boot"><div class="nav"
 function ledgerLine() {
   if (mode !== 'live') return ''
   if (hasDevice()) return '<div class="ledgerline ok"><em>✓</em>Ledger connected</div>'
-  const ways = (window.Ledger && Ledger.ways) || []
+  const ways = (window.appAgentIsRemote && window.Ledger && Ledger.ways) || []
+  if (!window.appAgentIsRemote) return '<div class="ledgerline"><em>!</em><div>No Ledger yet. Plug it in, unlock it, open TOMOSHIBI.<small>It connects by itself.</small></div></div>'
   if (dev.on) return `<div class="ledgerline"><em>!</em>${dev.app === 'locked' ? 'Unlock your Ledger.' : 'Open TOMOSHIBI on your Ledger.'}</div>`
   return `<div class="ledgerline"><em>!</em><div>No Ledger yet.${ways.length ? `<div class="connect">${ways.includes('usb') ? '<button class="ghost" data-act="connect:usb">Connect by USB</button>' : ''}${ways.includes('bluetooth') ? '<button class="ghost" data-act="connect:bluetooth">Connect by Bluetooth</button>' : ''}</div>` : ''}
     <small>Without one, a button on this page stands in.</small>${dev.error ? `<div class="err">${esc(dev.error)}</div>` : ''}</div></div>`
