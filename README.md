@@ -8,12 +8,26 @@ Static pages. No build step, no web fonts, no trackers. The only other host the 
 **The app.** One page with two surfaces, shown as two tabs: the AI tool's chat, and TOMOSHIBI.
 
 1. The AI tool asks you to put a key into a `.env` file. You answer "use TOMOSHIBI" instead.
-2. TOMOSHIBI opens: leave the key (once) → choose what the tool may do → **continue on your Ledger**.
+2. TOMOSHIBI opens: the key stays here (once) → the permit (key, to, scope, until) → **continue on your Ledger**.
    The Ledger is never drawn inside the page. The page says to pick up the device, and waits.
-3. A light is lit. After that TOMOSHIBI stays out of sight: an ordinary request simply goes through,
-   a request that moves money waits for another hold, a request outside the range is stopped.
-4. *Activity* is the week in three numbers. *Lights* lets other people see the light you lit
-   (World confirms you are one real person). One light, two verbs: **lit** by the hold, **shown** through World.
+3. The permit is signed. After that TOMOSHIBI stays out of sight: a routine request simply goes through,
+   a heavier one waits for a press, a request outside the signed scope is refused.
+4. *Trail* is the week in three numbers. *Flame* is where you light a star on the version you used
+   (World confirms you are one real person).
+
+**Words.** The app uses the function names fixed in the README and the journey, one per screen:
+
+| Screen (bar under the name) | Function | What the screen says |
+|---|---|---|
+| `CUSTODY`, `PERMIT`, `PERMIT SIGNED` | Custody + Permit | You never hand the key over. You hand over one use of it. |
+| `WEIGHT` (quiet, weighing, `STOPPED`) | Weight | On an ordinary day it asks you nothing. No verdict, nothing runs. |
+| `PRESS` (`NEEDS_PRESS`, by hand, you said no) | Press | Money cannot move while you are away. |
+| `SCOPE + ATTRIBUTION` (`DENIED`) | Scope + Attribution | It did not get anywhere, and it has a name on it. |
+| `TRAIL` (tab) | Trail | You can say what was stopped, and whose code tried it. |
+| `FLAME` (tab) | Flame | You choose by whose star it is, not by how many. |
+
+The page no longer says *lend*, *light* (for a star), *blocked* or *no verdict*: the permit is **signed**, a star is
+**lit**, and the stops are `DENIED`, `NEEDS_PRESS`, `STOPPED`.
 
 Every TOMOSHIBI screen says one thing: a bar under the name states the value in a few words, the headline states the
 moment. After each step a green line says what you gained; while something is on its way the screen says what comes next.
