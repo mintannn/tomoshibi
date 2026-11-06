@@ -279,10 +279,11 @@ const APIS = () => agent?.apis || [{ id: 'stripe', name: 'Stripe', label: 'strip
   { id: 'resend', name: 'Resend', label: 'resend-tx', target: 'api.resend.com', keyHint: 're_…', ready: false }, { id: 'github', name: 'GitHub', label: 'github-bot', target: 'api.github.com', keyHint: 'ghp_…', ready: false }, { id: 'slack', name: 'Slack', label: 'slack-bot', target: 'slack.com', keyHint: 'xoxb-…', ready: false }]
 const API = () => APIS().find((a) => a.ready) || APIS()[0]                 // the row that exists: Stripe
 const PICK = () => APIS().find((a) => a.id === ui.api) || API()            // what is chosen in the list
-// What is not real is said where it is shown. A key can only be parked next to a Broker on this computer.
+// What is not real is said where it is shown. A key is parked in the Broker this page is talking to: on this
+// computer, or the shared public demo (which says so). Either way only a Stripe test-mode key is taken.
 const MOCK = '<i class="mock">MOCK</i>'
 const MOCK_KEY = 'mock-key-not-a-real-key'
-const canPark = () => mode === 'live' && !window.appAgentIsRemote && agent?.canPark === true
+const canPark = () => mode === 'live' && agent?.canPark === true
 const stripeReal = () => mode === 'live' && Boolean(agent?.stripe)
 const left = (st) => (typeof st.lent?.left === 'number' ? st.lent.left : st.lent?.uses)
 /** The switchboard's table: one row per label. The key column is never shown. */
@@ -308,7 +309,7 @@ function vKey(st) {
       ${row}<div class="kv"><span>Until</span><select id="ends">${CHO.map((x, i) => `<option value="${i}" ${i === ui.choice ? 'selected' : ''}>${x.days} day${x.days === 1 ? '' : 's'} · ${x.uses} calls</option>`).join('')}</select></div>
       ${st.lendDeclined ? '<div class="err">Nothing was signed. Try again.</div>' : ''}${ui.err ? `<div class="err">${esc(ui.err)}</div>` : ''}
       <button data-act="park" disabled>Approve on my Ledger →</button>${ledgerLine()}
-      <small>${can ? 'A Stripe <b>test-mode</b> key (<code>sk_test_…</code>) goes to your Broker on this computer, in memory only. Live keys are refused.' : `${MOCK}This copy takes no keys: nothing is sent or stored.`} <button class="link" data-act="key-test">No key? Use a mock key</button></small>`
+      <small>${!can ? `${MOCK}This copy takes no keys: nothing is sent or stored.` : window.appAgentIsRemote ? '<b>Shared public demo.</b> A Stripe <b>test-mode</b> key (<code>sk_test_…</code>) goes to the demo’s Broker, in memory only, until <b>Start over</b>. Live keys are refused.' : 'A Stripe <b>test-mode</b> key (<code>sk_test_…</code>) goes to your Broker on this computer, in memory only. Live keys are refused.'} <button class="link" data-act="key-test">No key? Use a mock key</button></small>`
   return frame({ steps: 0, now: 'ADD A ROW', why: 'Your tool gets a label. Never the key.',
     left: hero('awake', 'Which API?', 'Park the key<br>once.', 'No .env. No copies.'),
     right: `<div class="card"><div class="kv"><span>API</span><select id="api">${opts}</select></div>${body}</div>` })
@@ -565,7 +566,7 @@ const ACT = {
     if (v === MOCK_KEY || !canPark()) { ui.keyMode = 'mock'; ACT.lend(); return }
     // A real test-mode key goes to the Broker on this computer, and nowhere else. The Broker asks Stripe if it is good.
     ui.busy = { steps: 0, now: 'ADD A ROW', why: 'Your tool gets a label. Never the key.', h: 'Checking<br>the key.', doing: 'Asking Stripe if this key is good', next: 'Then: approve on your Ledger.' }
-    fetch(agent.broker + '/keys', { method: 'POST', body: JSON.stringify({ label: LABEL(), key: v, seed: true }) }).then((r) => r.json()).catch(() => ({ ok: false, error: 'The Broker did not answer.' }))
+    fetch(BROKER() + '/keys', { method: 'POST', body: JSON.stringify({ label: LABEL(), key: v, seed: true }) }).then((r) => r.json()).catch(() => ({ ok: false, error: 'The Broker did not answer.' }))
       .then((o) => { ui.busy = null; if (o.ok) { ui.keyMode = 'test'; ACT.lend() } else ui.err = o.error || 'The key was not accepted.'; save(); paint() }) },
   lend: () => { ui.pending = 'lend'; ui.err = null; ui.gain = null; src().post('/lend', CHO[ui.choice]); setTimeout(() => { if (ui.pending === 'lend') { ui.pending = null; ui.err = `${TOOL} did not answer. Try again.`; paint() } }, 15000) },
   'soft-no': () => { src().post('/hold', { ok: false }) },

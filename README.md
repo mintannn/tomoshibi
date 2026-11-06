@@ -25,8 +25,10 @@ The person is a builder who is tired of keeping API keys in `.env` files (see `d
 - The key: next to a Broker on the same computer, a Stripe **test-mode** key (`sk_test_…`) is really parked. It goes to the
   Broker (`POST /keys`), Stripe is asked whether it is good, and it stays in memory only. A live key is refused. The Broker
   then makes a little test data in that test account (one paid order, two unpaid invoices), so the calls have something
-  real to read and to refund, and the page shows what Stripe answered. With the mock key, or on the hosted copy, nothing
-  is sent and Stripe is a stand-in (`MOCK`).
+  real to read and to refund, and the page shows what Stripe answered. The public demo works the same way, and says it is shared: the
+  test-mode key goes to the demo's Broker, in memory only, until **Start over** (or until the free server sleeps). With the
+  mock key nothing is sent and Stripe is a stand-in (`MOCK`). 0G Storage sealing is off on the public demo, on purpose: it
+  would need a wallet key on a public server.
 - Lights are counted per tool version; "your name as a builder" shows this tool's count. The two screens of what someone
   else sees are a mock.
 
