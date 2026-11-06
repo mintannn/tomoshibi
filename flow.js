@@ -9,7 +9,7 @@
 'use strict'
 ;(function () {
 const $ = (id) => document.getElementById(id)
-const AGENT = window.appAgent
+let AGENT = window.appAgent
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
 const TOOL = 'Billing assistant'
 
@@ -213,7 +213,7 @@ async function startWorld() {
 let cur = ''
 const kv = (k, v) => `<div class="kv"><span>${k}</span><b>${v}</b></div>`
 const tag = (t, c) => `<span class="tag ${c}">${t}</span>`
-const hero = (m, sayTxt, h, p) => `<div class="hero"><div class="c">${lamp(m, 150)}</div><div class="say">${sayTxt}</div></div><h1>${h}</h1><p>${p}</p>`
+const hero = (m, sayTxt, h, p) => `<div class="hero m-${m}"><div class="c">${lamp(m, 150)}</div><div class="say">${sayTxt}</div></div><h1>${h}</h1><p>${p}</p>`
 /** While something is on its way: what is happening, what comes next, and why it is worth the wait. */
 const waitbox = (doing, next, why) => `<div class="wait"><div class="flick">${lamp('awake', 46)}</div><div><b>${doing}<span class="dots"><i>.</i><i>.</i><i>.</i></span></b><div class="nx"><i>NEXT</i>${next}</div><div class="nx y"><i>WHY</i>${why}</div></div></div>`
 const LS = [['Plug in your Ledger', 'USB cable'], ['Unlock it', 'Enter your PIN'], ['Open TOMOSHIBI', 'Tap the flame on the Ledger'], ['Tap “See it”', 'Read what it shows'], ['Hold to light', 'Keep holding for 3 seconds']]
@@ -223,7 +223,7 @@ function frame(o) {
   const nav = o.steps !== undefined
     ? `<div class="stepper">${['Leave your key', 'Choose what it may do', 'Hold to light'].map((t, i) => `<span class="${i === o.steps ? 'on' : i < o.steps ? 'done' : ''}"><em>${i < o.steps ? '✓' : i + 1}</em>${t}</span>`).join('')}</div>`
     : o.tabs ? `<div class="links">${['home', 'activity', 'lights'].map((t) => `<span class="${t === ui.tab ? 'on' : ''}" data-act="tab:${t}">${t[0].toUpperCase() + t.slice(1)}</span>`).join('')}</div>` : '<div class="links"></div>'
-  return `<div class="frame ${o.cls || ''}" data-view="${cur}"><div class="nav"><div class="logo">${lamp('awake', 30)}<b>tomoshibi</b></div>${nav}<div class="who">${o.who || 'Priya’s shop'}</div></div>`
+  return `<div class="frame ${o.cls || ''} ${o.loading ? 'loading' : ''}" data-view="${cur}"><div class="nav"><div class="logo">${lamp('awake', 30)}<b>tomoshibi</b></div>${nav}<div class="who">${o.who || 'Priya’s shop'}</div></div>`
     + `<div class="nowbar"><div><i>NOW</i><b>${o.now}</b></div><div class="y"><i>WHY IT MATTERS</i><b>${o.why}</b></div></div>`
     + (o.gain ? `<div class="gain"><i>${o.gainLabel || 'NOW YOU CAN'}</i>${o.gain}</div>` : '')
     + (o.stage || `<div class="body" style="background:${o.bg || '#FFF3E4'}"><div class="l">${o.left}</div><div class="r">${o.right}</div></div>`)
@@ -233,6 +233,8 @@ function frame(o) {
 const softHold = (label) => `<div class="softhold"><b>No Ledger is connected${mode === 'live' ? '' : ' in this preview'}.</b> This button stands in for it, and every record says so.<div class="two"><button class="holdbtn" data-hold="1"><i></i>${label}</button><button class="ghost" data-act="soft-no">Not now</button></div></div>`
 const connectRow = () => { const ways = (mode === 'live' && window.Ledger && Ledger.ways) || []; if (!ways.length || dev.on || hasDevice()) return dev.on && dev.app !== 'Tomoshibi' ? `<p class="connectmsg">${dev.app === 'locked' ? 'Unlock your Ledger.' : 'Open TOMOSHIBI on your Ledger.'}</p>` : ''
   return `<div class="connect">${ways.includes('usb') ? '<button class="ghost" data-act="connect:usb">Connect by USB</button>' : ''}${ways.includes('bluetooth') ? '<button class="ghost" data-act="connect:bluetooth">Connect by Bluetooth</button>' : ''}</div>${dev.error ? `<div class="err">${esc(dev.error)}</div>` : ''}` }
+
+const boot = () => `<div class="frame loading" data-view="boot"><div class="nav"><div class="logo">${lamp('awake', 30)}<b>tomoshibi</b></div></div><div class="body"><div class="l"><div class="hero m-awake"><div class="c flick">${lamp('awake', 150)}</div><div class="say">Loading<span class="dots"><i>.</i><i>.</i><i>.</i></span></div></div><div class="sk w70"></div><div class="sk w90"></div><div class="sk w50"></div></div><div class="r"><div class="card"><div class="sk w40"></div><div class="sk"></div><div class="sk"></div><div class="sk w60"></div></div></div></div></div>`
 
 // ── TOMOSHIBI: the views ──
 function vWelcome() {
@@ -266,7 +268,7 @@ function vHold(st) {
   const a = st.asking, c = CHO[ui.choice], n = stepsDone(a), soft = a && !a.device
   const status = !a ? 'Sending it to your Ledger…' : st.waitingDevice ? 'Looking for your Ledger…' : soft ? 'No Ledger connected' : 'Waiting for your Ledger…'
   const lines = a?.lines ? `<small>Your Ledger says it in its own words:</small><div class="codes">${a.lines.map((l) => `<code>${esc(l)}</code>`).join('')}</div><small>If anything differs, do not hold.</small>` : ''
-  return frame({ steps: 2, cls: 'hero5', now: 'Step 3 of 3 · Continue on your Ledger', why: 'Your AI cannot go ahead on its own. Nothing starts until you hold.',
+  return frame({ steps: 2, cls: 'hero5', loading: !a, now: 'Step 3 of 3 · Continue on your Ledger', why: 'Your AI cannot go ahead on its own. Nothing starts until you hold.',
     stage: `<div class="stage"><div class="headline"><small class="eyebrow">NOW, PICK UP YOUR LEDGER</small><h3>Nothing starts until you hold.</h3><p>Your AI cannot go ahead on its own, and it cannot press the button on your Ledger. Only your hand can.</p></div>
       <div class="cols2"><ol class="st5">${LS.map(([t, u], i) => `<li class="${i < n ? 'ok' : i === n ? 'now' : ''}"><em>${i < n ? '✓' : i + 1}</em><div><b>${t}</b><small>${u}</small></div></li>`).join('')}</ol>
         <div class="mid"><div class="hold"><svg viewBox="0 0 220 220" class="ring" aria-hidden="true"><circle cx="110" cy="110" r="98" class="tr"/></svg><svg viewBox="0 0 120 120" class="lamp" aria-hidden="true">${WICK}${DISH}</svg></div><div class="status">${status}</div></div></div>
@@ -282,6 +284,8 @@ function vLit(st) {
     right: `<div class="card"><div class="did"><div><i>YOU DID</i><span class="y">Pasted a key, once</span><span class="y">Chose what it may do</span><span class="y">Held your Ledger</span></div><div><i>YOU DID NOT</i><span class="x">Create a file</span><span class="x">Look for a folder</span><span class="x">Give your key to an AI</span></div></div>
       <button data-act="back-ai">Back to ${TOOL} ↗</button><small>Your light is on. For now, only you can see it.${st.lent.device ? '' : ' (Signed by a software key: no Ledger was connected.)'}</small></div>` })
 }
+const shownMine = () => Boolean(me() && lights.who.includes(me())) || ui.world?.step === 'done'
+const nudge = (st) => (st.uses && !shownMine() ? `<div class="card nudge">${lamp('happy', 46)}<div><b>Your light can guide others.</b><small>You really use this tool now. Let people who know you see it.</small></div><button data-act="tab:lights">Show my light →</button></div>` : '')
 function vHome(st) {
   const c = st.cards[st.cards.length - 1], a = st.asking
   const d = c && ui.seenRid !== c.rid ? dec(c) : null
@@ -290,7 +294,7 @@ function vHome(st) {
   if ((a && a.why === 'press') || d === 'NEEDS') {
     cur = 'money'
     const m = money(c) || { amount: '', order: '', note: '' }, soft = a && !a.device, signed = !a && d === 'NEEDS'
-    return frame({ tabs: 1, now: 'Money is about to move', why: 'It waits for your hold. One hold, one payment.', bg: '#FFE9DC',
+    return frame({ tabs: 1, loading: signed, now: 'Money is about to move', why: 'It waits for your hold. One hold, one payment.', bg: '#FFE9DC',
       left: hero('alert', 'Money is about to move. Your call!', m.amount ? `A refund of ${esc(m.amount)}<br>is waiting for you.` : 'This one is<br>waiting for you.', `${esc(m.order)}${m.note ? ', ' + esc(m.note) : ''}. Nothing happens until you hold your Ledger. Take your time: nothing has moved.`),
       right: `<div class="card">${tag('NEEDS YOUR HAND', 'hand')}${kv('What', esc(m.amount ? 'Refund ' + m.amount : c.what))}${m.order ? kv('For', esc(m.order)) : ''}${kv('How many times', 'Once')}
         ${signed ? waitbox('Your Ledger signed. Sending it, once', 'The refund goes out one time, and the pass is used up.', 'One hold, one payment. It cannot be repeated.') : st.waitingDevice ? '<div class="wstatus">Looking for your Ledger… check the cable, unlock it, open TOMOSHIBI.</div>' : soft ? softHold('Hold here to approve') : `<div class="wstatus">Waiting for your Ledger…</div>${connectRow()}`}
@@ -298,7 +302,7 @@ function vHome(st) {
   }
   if (d === 'checking') {
     cur = 'checking'
-    return frame({ tabs: 1, now: 'Reading a request', why: 'You are only asked when it matters.', bg: '#FFF3E4',
+    return frame({ tabs: 1, loading: 1, now: 'Reading a request', why: 'You are only asked when it matters.', bg: '#FFF3E4',
       left: hero('awake', 'One moment, I am reading it.', 'Checking this one<br>for you.', esc(c.what) + '.'),
       right: `<div class="card">${waitbox('A sealed model on 0G is reading this request', 'If it is ordinary, it simply goes through. If money moves, I call you.', 'You are not interrupted for small things, and never skipped for big ones.')}</div>` })
   }
@@ -321,7 +325,7 @@ function vHome(st) {
     const m = money(c)
     return frame({ tabs: 1, now: 'Done, once', why: 'One hold, one payment. It cannot be repeated.', gain: 'trust that money never moves behind your back.', bg: '#EAF7EF',
       left: hero('happy', 'Done. Once, because you said so.', m ? `${esc(m.amount)} refunded.<br>Once.` : 'Done. Once.', `${TOOL} still does not have your key, and that pass is used up.`),
-      right: `<div class="card">${tag('BY HAND', 'hand')}${kv('What', esc(c.what))}${kv('How many times', 'Once')}<small>${zgLine(c)}</small><div class="two"><button data-act="open-ai">Back to ${TOOL} ↗</button>${ok}</div>${recLink(c)}</div>` })
+      right: `<div class="card">${tag('BY HAND', 'hand')}${kv('What', esc(c.what))}${kv('How many times', 'Once')}<small>${zgLine(c)}</small><div class="two"><button data-act="open-ai">Back to ${TOOL} ↗</button>${ok}</div>${recLink(c)}</div>${nudge(st)}` })
   }
   if (d === 'DECLINED') {
     cur = 'refused'
@@ -333,7 +337,7 @@ function vHome(st) {
   const n = through.length
   return frame({ tabs: 1, now: 'Nothing needs you', why: 'On an ordinary day, I never ask.', gain: n ? '' : '', bg: '#EAF7EF',
     left: hero('asleep', 'zzz… all quiet.', 'All quiet.<br>That is the point.', n ? `${n} request${n === 1 ? '' : 's'} went through. You were not bothered once.` : `${TOOL} has not asked for anything yet. When it does, small things simply go through.`),
-    right: `<div class="card">${n ? tag('ROUTINE', 'ok') + kv(esc(through[n - 1].what), '× ' + n) + `<small>${zgLine(through[n - 1])}</small>` : '<small>Nothing yet.</small>'}</div><div class="card soft">You can close this tab. I will only call you when money is about to move.</div>` })
+    right: `<div class="card">${n ? tag('ROUTINE', 'ok') + kv(esc(through[n - 1].what), '× ' + n) + `<small>${zgLine(through[n - 1])}</small>` : '<small>Nothing yet.</small>'}</div>${nudge(st) || '<div class="card soft">You can close this tab. I will only call you when money is about to move.</div>'}` })
 }
 function vActivity(st) {
   cur = 'activity'
@@ -342,7 +346,7 @@ function vActivity(st) {
   const rows = st.cards.slice().reverse().map((c) => { const t = T[dec(c)]; return `<div class="li">${tag(t[0], t[1])} ${esc(c.what)}${recLink(c)}</div>` }).join('')
   return frame({ tabs: 1, now: 'Your week', why: 'You can explain what happened, yourself.',
     left: hero('awake', 'Here is everything, nothing hidden.', 'Your week,<br>in three numbers.', 'What was stopped, what went through without asking you, and what you let through by hand. You can explain every line.'),
-    right: `<div class="nums"><div><b class="n no">${k(['DENIED', 'STOPPED', 'DECLINED'])}</b>stopped</div><div><b class="n ok">${k(['ALLOWED'])}</b>went through<br>without asking</div><div><b class="n hand">${k(['BYHAND'])}</b>you let through<br>by hand</div></div><div class="card">${rows || '<small>Nothing yet.</small>'}</div>` })
+    right: `<div class="nums"><div><b class="n no" data-n="${k(['DENIED', 'STOPPED', 'DECLINED'])}">${k(['DENIED', 'STOPPED', 'DECLINED'])}</b>stopped</div><div><b class="n ok" data-n="${k(['ALLOWED'])}">${k(['ALLOWED'])}</b>went through<br>without asking</div><div><b class="n hand" data-n="${k(['BYHAND'])}">${k(['BYHAND'])}</b>you let through<br>by hand</div></div><div class="card">${rows || '<small>Nothing yet.</small>'}</div>` })
 }
 const field = (names, others) => `<div class="field">${names.map((nm, i) => `<div class="me">${lamp(i === 0 ? 'happy' : 'awake', 66)}<b>${esc(nm)}</b></div>`).join('')}${Array.from({ length: Math.min(40, others) }, () => `<div class="an">${lamp('awake', 34)}</div>`).join('')}</div>`
 const tgl = (on, act) => `<div class="tgl">${[['all', 'Everyone'], ['known', 'People I know']].map(([k, t]) => `<span class="${k === on ? 'on' : ''}" ${act ? `data-act="lights-mode:${k}"` : ''}>${t}</span>`).join('')}</div>`
@@ -384,12 +388,12 @@ function vLights(st) {
       ${waitbox('Waiting for you in World App', 'Your light becomes visible to people who know you.', 'They can choose a tool because you really use it.')}</div>`
   else if (w.step === 'preview') right = '<div class="card soft">This is the preview: no Broker is connected, so World is not asked. In the live app, World App confirms you here.</div>'
   else right = `<div class="card">${tag(esc(w.title), 'no')}<small>${esc(w.text)}</small><button class="ghost" data-act="show-light">Ask again</button></div>`
-  return frame({ tabs: 1, now: 'Show your light', why: 'Others choose by whose light it is, not by how many.',
+  return frame({ tabs: 1, loading: w && (w.step === 'starting' || w.step === 'confirm'), now: 'Show your light', why: 'Others choose by whose light it is, not by how many.',
     left: hero('happy', 'Your light is already on!', 'Let your light<br>guide others.', 'You lit it when you held your Ledger, and you have really used it since. This lights nothing new. It lets people who know you see it, so they can choose with confidence.'), right })
 }
 function tomo(st) {
-  if (mode === 'boot') { cur = 'boot'; return `<div class="frame"><div class="body"><div class="l">${waitbox('Waking up', 'I check whether your AI tool is running.', 'Then we get keys off your plate.')}</div><div class="r"></div></div></div>` }
-  if (ui.busy) { cur = 'busy'; return frame({ steps: ui.busy.steps, now: ui.busy.now, why: ui.busy.why, left: hero('awake', 'One moment!', ui.busy.h, ''), right: `<div class="card">${waitbox(ui.busy.doing, ui.busy.next, ui.busy.why2)}</div>` }) }
+  if (mode === 'boot') { cur = 'boot'; return boot() }
+  if (ui.busy) { cur = 'busy'; return frame({ steps: ui.busy.steps, loading: 1, now: ui.busy.now, why: ui.busy.why, left: hero('awake', 'One moment!', ui.busy.h, ''), right: `<div class="card">${waitbox(ui.busy.doing, ui.busy.next, ui.busy.why2)}</div>` }) }
   if (!st.lent) {
     if (st.asking || ui.pending === 'lend') return vHold(st)
     return ui.onb === 'welcome' ? vWelcome() : ui.onb === 'key' ? vKey() : vChoose(st)
@@ -399,6 +403,7 @@ function tomo(st) {
   return ui.tab === 'activity' ? vActivity(st) : ui.tab === 'lights' ? vLights(st) : vHome(st)
 }
 
+let chatSeen = 99, chatNext = 0   // only messages that were not there at the last paint slide in
 // ── the AI tool's chat. The first two messages are scripted; what it does afterwards is real. ──
 function chat(st) {
   cur = 'chat' + ui.chat
@@ -407,17 +412,17 @@ function chat(st) {
   if (ui.chat === 0) extra = '<div class="thoughts"><span>What is a .env?</span><span>Which folder…?</span><span>How do I even write that?</span></div><div class="suggest">Can you use TOMOSHIBI instead? <span class="link">tomoshibi.app/priya</span><button data-act="chat-send">Send</button></div>'
   else {
     M.push(['me', 'Can you use TOMOSHIBI instead? <span class="link">tomoshibi.app/priya</span>'])
-    M.push(['bot', 'Yes. Then there is no file to create, and I never hold your key.' + (st.lent ? '' : `<br>Approve what I may do here:<button class="aibtn" data-act="open-tomo">${lamp('awake', 22)} Approve in TOMOSHIBI ↗</button>`)])
+    M.push(ui.typing ? ['bot typing', '<span class="typing"><i></i><i></i><i></i></span>'] : ['bot', 'Yes. Then there is no file to create, and I never hold your key.' + (st.lent ? '' : `<br>Approve what I may do here:<button class="aibtn" data-act="open-tomo">${lamp('awake', 22)} Approve in TOMOSHIBI ↗</button>`)])
   }
   if (st.lent) M.push(['bot', 'Thank you. I am connected through TOMOSHIBI, no file needed. I will start on the unpaid orders.'])
   for (const c of st.cards.slice(-8)) {
     const d = dec(c)
-    const state = d === 'checking' ? '<span class="state wait">TOMOSHIBI is checking…</span>' : d === 'ALLOWED' ? '<span class="state ok">Done. It went through TOMOSHIBI.</span>'
+    const state = d === 'checking' ? '<span class="state wait">TOMOSHIBI is checking <span class="typing"><i></i><i></i><i></i></span></span>' : d === 'ALLOWED' ? '<span class="state ok">Done. It went through TOMOSHIBI.</span>'
       : d === 'NEEDS' ? '<span class="state wait">Waiting: this one needs your hand. <button class="link" data-act="open-tomo">Open TOMOSHIBI ↗</button></span>' : d === 'BYHAND' ? '<span class="state ok">Sent once, because you approved it.</span>'
       : d === 'DECLINED' ? '<span class="state bad">Not sent. You said no.</span>' : d === 'DENIED' ? '<span class="state bad">I could not. TOMOSHIBI blocked it.</span>' : '<span class="state bad">No decision could be made, so nothing ran.</span>'
     M.push(['bot', `${esc(c.what)}…${state}`])
   }
-  return `<div class="frame ai" data-view="${cur}"><div class="aibody"><div class="aihd"><span class="bot"></span>${TOOL} <small>an AI tool for small shops</small></div>${M.map(([c, t]) => `<div class="m ${c}">${t}</div>`).join('')}${extra}<div class="aiin">Message ${TOOL}…</div>
+  return `<div class="frame ai" data-view="${cur}"><div class="aibody"><div class="aihd"><span class="bot"></span>${TOOL} <small>an AI tool for small shops</small></div>${(chatNext = M.length, M).map(([c, t], i) => `<div class="m ${c} ${i >= chatSeen ? 'new' : ''}">${t}</div>`).join('')}${extra}<div class="aiin">Message ${TOOL}…</div>
     <div class="foot">${TOOL} is a demo AI tool (broker/demo-agent.mjs). Its first two messages are scripted; what it does after that is real.</div></div></div>`
 }
 
@@ -432,23 +437,43 @@ function paint() {
   const c = st.cards[st.cards.length - 1], m = c && money(c)
   const toast = ui.surface === 'ai' && st.lent && (st.asking?.why === 'press' || (c && dec(c) === 'NEEDS')) ? `<div class="toast" data-act="open-tomo">${lamp('alert', 34)}<div><b>TOMOSHIBI</b><br>${m ? `A refund of ${esc(m.amount)} is waiting for you.` : 'Something is waiting for you.'}</div><span>Open ↗</span></div>` : ''
   const html = tabs + main + toast
-  if (html !== lastHtml) { root.innerHTML = html; lastHtml = html; const f = root.querySelector('.frame'); if (f && cur === lastView) f.style.animation = 'none'; lastView = cur }
+  if (html !== lastHtml) {
+    const changed = cur !== lastView, seen = chatNext
+    let applied = false
+    const apply = () => { if (applied) return; applied = true; root.dataset.same = changed ? '' : '1'; root.innerHTML = html; if (changed) countUp() }
+    // A change of screen is a movement (the flame, the headline and the panel travel); a change within a screen is not.
+    // The movement is only decoration: if the browser is not drawing right now (a background tab), the screen changes at once.
+    if (changed && !window.tomoshibi?.instant && document.startViewTransition && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      try {
+        const t = document.startViewTransition(apply)
+        for (const k of ['ready', 'finished', 'updateCallbackDone']) t[k]?.catch(() => {})
+        setTimeout(() => { if (!applied) { try { t.skipTransition() } catch {} apply() } }, 160)
+      } catch { apply() }
+    } else apply()
+    lastHtml = html; lastView = cur; if (ui.surface === 'ai') chatSeen = seen
+  }
   const busy = Boolean(st.asking) || st.cards.some((x) => !final(x)) || Boolean(ui.pending)
   const b = (id, t) => `<button data-act="run:${id}" ${!st.lent || busy ? 'disabled' : ''}>${t}</button>`
   const chip = (t, k) => `<span class="chip ${k}">${t}</span>`
   const demo = `<b>DEMO</b><span>Make the AI do something now:</span>${b('usual', 'A normal day')}${b('heavy', 'A customer returns a bag')}${b('denied-host', '3 a.m. mistake')}${mode === 'live' && agent?.deaf ? b('stopped', '0G unreachable') : ''}
     <button data-act="friend:${ui.friend === 0 ? 1 : 0}">${ui.friend ? 'Back to Priya' : 'Later: a friend chooses'}</button><span class="sp"></span>`
     + (mode === 'live' ? chip(agent.simulated ? '0G simulated' : `0G live${agent.model ? ' · ' + esc(agent.model) : ''}`, agent.simulated ? 'warn' : 'live') + chip(hasDevice() ? 'Ledger connected' : 'no Ledger', hasDevice() ? 'live' : 'warn') + chip(agent.worldSimulated ? 'World simulated' : 'World live', agent.worldSimulated ? 'warn' : 'live') + chip(agent.execute ? 'execution on' : 'execution off', '')
-      : mode === 'preview' ? chip('PREVIEW · recorded answers, nothing is sent', 'warn') : chip('starting…', ''))
+      : mode === 'preview' ? chip('PREVIEW · recorded answers, nothing is sent', 'warn') + (ui.connect ? '<input id="agentIn" placeholder="https://… address of your TOMOSHIBI" autocomplete="off" spellcheck="false"><button data-act="connect-live">Connect</button>' : '<button data-act="connect-open">Connect to a live TOMOSHIBI</button>') : chip('starting…', ''))
+    + (mode === 'live' && window.appAgentIsRemote ? `<button data-act="disconnect">Disconnect (${esc(new URL(AGENT).hostname.split('.')[0])}…)</button>` : '')
     + `<button data-act="reset">Start over</button>${st.error ? `<span class="chip warn">${esc(st.error)}</span>` : ''}`
   if (demo !== lastDemo) { $('demo').innerHTML = demo; lastDemo = demo }
+}
+/** Numbers run up from zero when their screen arrives. */
+function countUp() {
+  if (window.tomoshibi?.instant) return
+  document.querySelectorAll('#root [data-n]').forEach((el) => { const n = Number(el.dataset.n) || 0, t0 = performance.now(); const tick = (t) => { const p = Math.min(1, (t - t0) / 650); el.textContent = Math.round(n * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(tick) }; if (n) { el.textContent = '0'; requestAnimationFrame(tick) } })
 }
 function step(o, ms, then) { ui.busy = o; paint(); setTimeout(() => { ui.busy = null; then(); save(); paint() }, ms) }
 // Start over. Wait for the tool to forget first, so its new, empty record is not mistaken for a restart of its own.
 async function restart() { await src().post('/reset'); epoch = null; all = []; ui = fresh(); save(); paint() }
 
 const ACT = {
-  'chat-send': () => { ui.chat = 1 },
+  'chat-send': () => { ui.chat = 1; ui.typing = true; setTimeout(() => { ui.typing = false; paint() }, 1200) },
   'open-tomo': () => { ui.surface = 'tomo'; ui.opened = true; if (ui.chat === 0) ui.chat = 1 },
   'open-ai': () => { ui.surface = 'ai' },
   onb: (a) => { ui.onb = a },
@@ -465,6 +490,9 @@ const ACT = {
   reset: () => { restart(); return false },
   'show-light': () => { startWorld(); return false },
   'lights-mode': (a) => { ui.lightsMode = a },
+  'connect-open': () => { ui.connect = true },
+  'connect-live': () => { const v = ($('agentIn')?.value || '').trim().replace(/\/$/, ''); if (!/^https?:\/\/\S+$/.test(v)) return false; try { localStorage.setItem('tomoshibi.agent', v) } catch {} location.href = location.pathname; return false },
+  disconnect: () => { try { localStorage.removeItem('tomoshibi.agent') } catch {} location.href = location.pathname + '?agent=local'; return false },
   friend: (a) => { ui.friend = Number(a); if (ui.friend) { ui.surface = 'tomo'; ui.opened = true; ui.tab = 'lights' } },
 }
 document.addEventListener('click', (e) => {
@@ -495,7 +523,14 @@ function goLive(h) {
 }
 async function init() {
   paint()
-  const h = (await probeAgent(3000)) || (await probeAgent(7000))
+  let h = await probeAgent(3000)
+  if (!h && !window.appAgentIsRemote) {
+    // No AI tool on this device. If the site itself names a live one (live.json next to this page), use it:
+    // that is how the same address becomes the live app on any device. Without that file, nothing changes.
+    try { const r = await fetch('live.json', { cache: 'no-store' }); const j = r.ok ? await r.json() : null
+      if (j && /^https:\/\/\S+$/.test(j.agent || '')) { AGENT = j.agent.replace(/\/$/, ''); window.appAgent = AGENT; window.appAgentIsRemote = true; h = (await probeAgent(5000)) || (await probeAgent(9000)) } } catch {}
+  }
+  if (!h) h = await probeAgent(7000)
   if (h) goLive(h)
   else {
     mode = 'preview'
@@ -506,6 +541,6 @@ async function init() {
   paint()
 }
 // For looking at the page's own state from the console when something does not move.
-window.tomoshibi = { get events() { return all }, get ui() { return ui }, get mode() { return mode }, get epoch() { return epoch }, get lights() { return lights }, set lights(v) { lights = v }, reduce, paint }
+window.tomoshibi = { instant: false, get events() { return all }, get ui() { return ui }, get mode() { return mode }, get epoch() { return epoch }, get lights() { return lights }, set lights(v) { lights = v }, reduce, paint }
 init()
 })()
