@@ -108,3 +108,7 @@
 .story button b { font-size: 15px; } .story button small { color: var(--muted); font-size: 12.5px; }
 .story button.done { border-color: #2f6b52; }
 .card .name.human { font: 700 20px var(--sans); }
+
+.carry { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 14px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.carry h3 { margin: 0 0 2px; font-size: 16px; } .carry .sub { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
+.carry .qrbox { line-height: 0; background: #fff; padding: 6px; border-radius: 10px; }

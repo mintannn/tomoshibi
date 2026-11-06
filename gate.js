@@ -82,7 +82,7 @@ function reduce() {
     else if (e.type === 'verdict') { const c = card(e.rid); if (c) { c.verdicts.push(e); c.declined = false } if (st.lent && !e.pressed && typeof e.response.remaining === 'number') st.lent.left = e.response.remaining }
     else if (e.type === 'asking') { st.asking = e; st.lendDeclined = false }
     else if (e.type === 'waiting-device') st.waitingDevice = true
-    else if (e.type === 'signed') { st.asking = null; st.waitingDevice = false; if (e.device) st.byHand = true; if (e.why === 'lend') st.lent = { holder: e.holder, device: e.device, uses: e.uses, left: e.uses } }
+    else if (e.type === 'signed') { st.asking = null; st.waitingDevice = false; if (e.device) st.byHand = true; if (e.why === 'lend') st.lent = { holder: e.holder, device: e.device, uses: e.uses, left: e.uses, at: e.at } }
     else if (e.type === 'declined') { st.asking = null; st.waitingDevice = false; const c = card(e.rid); if (c) c.declined = true; else st.lendDeclined = true }
     else if (e.type === 'device') { const c = card(e.rid); if (c) c.showedOnDevice = e.ok }
     else if (e.type === 'error') st.error = e
@@ -137,6 +137,24 @@ function trail(st) {
     return `<li><span class="o ${esc(b.decision)}">${esc(WORD[b.decision] || b.decision)}${v.pressed ? ' · by hand' : ''}</span><span>${esc(c.what)}</span>${link}</li>`
   }).join('')
   $('trail').innerHTML = rows || '<li class="empty">Nothing yet.</li>'
+}
+// The same record, on your phone: one line first ("1 thing was stopped"), then the rest.
+// A phone cannot reach this computer's localhost. With ?pub=<public Broker URL> the QR points at the
+// hosted page and that Broker; without it, the link only works on this machine and says so.
+const PAGES = 'https://mintannn.github.io/tomoshibi/'
+function carry(st) {
+  const el = $('carry'); if (!el) return
+  if (mode !== 'live' || !st.lent || !st.cards.length) { el.hidden = true; return }
+  const pub = (qs.get('pub') || '').replace(/\/$/, '')
+  const q = `?broker=${encodeURIComponent(pub || agent.broker)}&holder=${encodeURIComponent(st.lent.holder)}&since=${encodeURIComponent(st.lent.at || '')}`
+  const link = pub ? PAGES + 'morning.html' + q : 'morning.html' + q
+  if (el.dataset.link === link) { el.hidden = false; return }
+  el.dataset.link = link; el.hidden = false
+  let qr = ''
+  if (pub) try { qr = `<div class="qrbox">${qrSvg(link, 150)}</div>` } catch {}
+  el.innerHTML = `${qr}<div><h3>Read it on your phone</h3><p class="sub">One line first: what was stopped. Then what you let through, and what never needed you.</p>
+    <a class="btn" href="${esc(link)}" target="_blank" rel="noopener">Open the summary →</a>
+    ${pub ? '' : '<p class="note">To scan it from a phone, the Broker needs a public address: open this page with <code>?pub=https://…</code> (a temporary tunnel). Without it, the summary opens on this computer only.</p>'}</div>`
 }
 function keyCard(st) {
   const r = agent?.range || { key: 'stripe-live', target: 'api.stripe.com', scope: '* /v1', uses: 10 }
@@ -194,7 +212,7 @@ function storyBar(st) {
   el.querySelectorAll('button').forEach((x) => (x.onclick = () => src().post('/run', { id: x.dataset.id })))
 }
 function render() {
-  const st = reduce(); nowCard(st); trail(st); keyCard(st); ledgerCard(st); lightCard(st)
+  const st = reduce(); nowCard(st); trail(st); keyCard(st); ledgerCard(st); lightCard(st); carry(st)
   // Which of the three scenes are we in? It follows what has actually happened.
   const lastCard = st.cards[st.cards.length - 1], lastDec = lastCard && final(lastCard)?.response.decision
   const blocked = st.cards.some((c) => final(c)?.response.decision === 'DENIED')
