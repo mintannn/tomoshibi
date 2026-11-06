@@ -7,7 +7,7 @@
 
 const $ = (id) => document.getElementById(id)
 const qs = new URLSearchParams(location.search)
-const AGENT = (qs.get('agent') || 'http://127.0.0.1:8792').replace(/\/$/, '')
+const AGENT = window.appAgent
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
 const short = (h, n = 4) => (typeof h === 'string' && h.length > 2 * n + 4 ? `${h.slice(0, n + 2)}…${h.slice(-n)}` : h)
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -249,8 +249,11 @@ function render() {
 async function init() {
   try { agent = await (await fetch(AGENT + '/health', { signal: AbortSignal.timeout(2500) })).json(); if (agent.ok && agent.brokerUp) mode = 'live' } catch {}
   if (mode === 'replay') for (const u of ['../ui/scenes.json', 'scenes.json']) { if (REC) break; try { const r = await fetch(u, { cache: 'no-store' }); if (r.ok) REC = await r.json() } catch {} }
+  // Opened from somewhere else (a phone): the Broker is reached through the agent's own address.
+  if (mode === 'live' && window.appAgentIsRemote) agent.broker = AGENT + '/b'
   const broker = qs.get('broker') || (mode === 'live' ? agent.broker : '')
-  $('navSky').href = 'index.html' + (broker ? '?broker=' + encodeURIComponent(broker) : '')
+  const nav = new URLSearchParams(); if (broker && !window.appAgentIsRemote) nav.set('broker', broker)
+  $('navSky').href = 'index.html' + (nav.toString() ? '?' + nav : '')
   if (mode === 'live') {
     $('chipZg').textContent = agent.simulated ? '0G simulated' : `0G live · ${agent.model || ''}`; $('chipZg').className = 'chip ' + (agent.simulated ? 'warn' : 'live')
     if (agent.simulated) { $('banner').hidden = false; $('banner').textContent = 'The Broker is in simulated mode: 0G is not being asked. Judgements here come from a stand-in.' }

@@ -7,7 +7,7 @@ const $ = (id) => document.getElementById(id)
 const qs = new URLSearchParams(location.search)
 // Opened from the tab bar there is no link to read from, so use what the keys page remembered on this device.
 let last = {}; try { last = JSON.parse(localStorage.getItem('tomoshibi.last') || '{}') } catch {}
-const BROKER = (qs.get('broker') || last.broker || 'http://127.0.0.1:8787').replace(/\/$/, '')
+const BROKER = (qs.get('broker') || window.appBroker(last.broker || 'http://127.0.0.1:8787')).replace(/\/$/, '')
 const holder = qs.get('holder') || last.holder || ''
 // Only what happened since the key was last lent (the keys page passes that moment). Without it, everything.
 const since = Date.parse(qs.get('since') || last.since || '') || 0

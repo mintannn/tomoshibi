@@ -11,6 +11,18 @@
   }
   window.flameFace = (mood = 'awake') => `<svg viewBox="0 0 120 152" aria-hidden="true"><rect x="31" y="100" width="58" height="46" rx="19" fill="#27407a"/><path d="M60 8 C62.4 8 64 10.4 65 13 C71 27 92 49 92 70 A32 32 0 1 1 28 70 C28 49 49 27 55 13 C56 10.4 57.6 8 60 8 Z" fill="#F2600C"/><path d="M60 34 C61.6 34 62.7 35.6 63.4 37.4 C67 46 80 60 80 73 A20 20 0 1 1 40 73 C40 60 53 46 56.6 37.4 C57.3 35.6 58.4 34 60 34 Z" fill="#FFC24A"/>${FACE[mood] || FACE.awake}</svg>`
 
+  // Where the AI tool (the agent) is. On the computer it runs on, that is localhost. On a phone it is
+  // the temporary public address given once in the link (?agent=…) and remembered on this device.
+  // ?agent=local forgets it.
+  const LOCAL = 'http://127.0.0.1:8792'
+  const given = new URLSearchParams(location.search).get('agent')
+  try { if (given === 'local') localStorage.removeItem('tomoshibi.agent'); else if (given) localStorage.setItem('tomoshibi.agent', given.replace(/\/$/, '')) } catch {}
+  let remembered = null; try { remembered = localStorage.getItem('tomoshibi.agent') } catch {}
+  window.appAgent = (given && given !== 'local' ? given.replace(/\/$/, '') : remembered) || LOCAL
+  window.appAgentIsRemote = window.appAgent !== LOCAL
+  /** The Broker as seen from this device: through the agent when the agent is somewhere else. */
+  window.appBroker = (fallback) => (window.appAgentIsRemote ? window.appAgent + '/b' : fallback)
+
   const keep = (extra) => { const q = new URLSearchParams(location.search), o = new URLSearchParams(extra || ''); for (const k of ['broker', 'agent', 'bridge', 'pub']) if (q.get(k) && !o.get(k)) o.set(k, q.get(k)); const s = o.toString(); return s ? '?' + s : '' }
   window.appKeep = keep
 

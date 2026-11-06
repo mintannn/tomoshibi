@@ -5,7 +5,7 @@
 
 const $ = (id) => document.getElementById(id)
 const qs = new URLSearchParams(location.search)
-const BROKER = (qs.get('broker') || localStorage.getItem('tomoshibi.broker') || 'http://127.0.0.1:8787').replace(/\/$/, '')
+const BROKER = (qs.get('broker') || window.appBroker(localStorage.getItem('tomoshibi.broker') || 'http://127.0.0.1:8787')).replace(/\/$/, '')
 const thread = qs.get('thread') || ''
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
 const short = (h, n = 10) => (typeof h === 'string' && h.length > 2 * n + 2 ? `${h.slice(0, n + 2)}…${h.slice(-n)}` : h)

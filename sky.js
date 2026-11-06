@@ -10,8 +10,8 @@
 
 const $ = (id) => document.getElementById(id)
 const qs = new URLSearchParams(location.search)
-const AGENT = (qs.get('agent') || 'http://127.0.0.1:8792').replace(/\/$/, '')
-const BROKER = (qs.get('broker') || localStorage.getItem('tomoshibi.broker') || 'http://127.0.0.1:8787').replace(/\/$/, '')
+const AGENT = window.appAgent
+const BROKER = (qs.get('broker') || window.appBroker(localStorage.getItem('tomoshibi.broker') || 'http://127.0.0.1:8787')).replace(/\/$/, '')
 // The bridge runs next to the Ledger (bridge/bridge.py). Without it, the Ledger step is skipped and said so.
 const BRIDGE = (qs.get('bridge') || localStorage.getItem('tomoshibi.bridge') || 'http://127.0.0.1:8791').replace(/\/$/, '')
 
