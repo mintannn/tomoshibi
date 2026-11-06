@@ -412,12 +412,19 @@ function vLights(st) {
   let right
   if (!w) right = `<div class="card">${kv('Tool', name)}${kv('You used it', `${st.uses} time${st.uses === 1 ? '' : 's'}`)}<button data-act="show-light">Show my light with World →</button><small>World only checks you are one real person.</small></div>`
   else if (w.step === 'starting') right = `<div class="card">${waitbox('Asking World for a code', 'You confirm on your phone.')}</div>`
-  // World's own page has to stay open until it says it is done: it is that page, not World App alone, that completes
-  // the confirmation. So the way in is one button that opens World's page here (it shows World's code to scan, or on a
-  // phone it opens World App). A code of our own that only led to that page made it easy to stop one step short.
-  else if (w.step === 'confirm') right = `<div class="card">${w.real ? `<a class="btn" href="${esc(w.uri)}" target="_blank" rel="noopener">Open World’s page ↗</a>
-      <div class="pre"><em>1</em><div><b>Open World’s page</b></div></div><div class="pre"><em>2</em><div><b>Confirm with World App</b><span>Scan the code that page shows</span></div></div><div class="pre"><em>3</em><div><b>Wait for that page to finish</b><span>Then come back here</span></div></div>` : '<small>Simulated here: no phone is asked.</small>'}
+  // The phone does it: scan our code, World's page opens on the phone, World App confirms. The step that is easy to
+  // miss is the last one. It is World's page (in the phone's browser), not World App alone, that completes the
+  // confirmation, so the person has to go back to that page and let it finish. World's page cannot be shown inside
+  // ours (it forbids framing), so this list is how we say it. On a phone there is no code to scan: a button opens the page.
+  else if (w.step === 'confirm') {
+    const phone = matchMedia('(max-width: 700px)').matches
+    right = `<div class="card">${!w.real ? '<small>Simulated here: no phone is asked.</small>'
+      : phone ? `<a class="btn" href="${esc(w.uri)}" target="_blank" rel="noopener">Open World’s page ↗</a><div class="pre"><em>1</em><div><b>Confirm in World App</b></div></div><div class="pre now"><em>2</em><div><b>Go back to World’s page</b><span>Wait until it says it is done</span></div></div><div class="pre"><em>3</em><div><b>Come back here</b></div></div>`
+      : `<div class="qrrow">${typeof qrSvg === 'function' ? `<div class="qrbox">${qrSvg(w.uri, 132)}</div>` : ''}<div><b>Scan with your phone’s camera</b><small>World’s page opens on your phone.</small></div></div>
+        <div class="pre"><em>1</em><div><b>Confirm in World App</b></div></div><div class="pre now"><em>2</em><div><b>Go back to World’s page on your phone</b><span>Wait until it says it is done</span></div></div>
+        <small>No camera? <a href="${esc(w.uri)}" target="_blank" rel="noopener"><u>Open World’s page on this computer ↗</u></a></small>`}
       ${waitbox('Waiting for World', 'This screen changes by itself.')}</div>`
+  }
   else if (w.step === 'preview') right = '<div class="card soft">Preview: World is not asked here.</div>'
   else right = `<div class="card">${tag(esc(w.title), 'no')}<small>${esc(w.text)}</small><button class="ghost" data-act="show-light">Ask again</button></div>`
   return frame({ tabs: 1, loading: w && (w.step === 'starting' || w.step === 'confirm'), now: 'LIGHTS', why: 'People choose by whose light it is.',
