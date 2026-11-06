@@ -412,9 +412,12 @@ function vLights(st) {
   let right
   if (!w) right = `<div class="card">${kv('Tool', name)}${kv('You used it', `${st.uses} time${st.uses === 1 ? '' : 's'}`)}<button data-act="show-light">Show my light with World →</button><small>World only checks you are one real person.</small></div>`
   else if (w.step === 'starting') right = `<div class="card">${waitbox('Asking World for a code', 'You confirm on your phone.')}</div>`
-  else if (w.step === 'confirm') right = `<div class="card"><div class="qrrow">${w.real && typeof qrSvg === 'function' ? `<div class="qrbox">${qrSvg(w.uri, 132)}</div>` : ''}<div><b>Scan with World App</b><ol><li>Open World App</li><li>Scan</li><li>Confirm</li></ol></div></div>
-      ${w.real ? `<a class="btn ghost" href="${esc(w.uri)}" target="_blank" rel="noopener">Open World App on this phone ↗</a><small>Code <b>${esc(w.code)}</b></small>` : '<small>Simulated here: no phone is asked.</small>'}
-      ${waitbox('Waiting for World App', 'Confirm, then come back here.')}</div>`
+  // World's own page has to stay open until it says it is done: it is that page, not World App alone, that completes
+  // the confirmation. So the way in is one button that opens World's page here (it shows World's code to scan, or on a
+  // phone it opens World App). A code of our own that only led to that page made it easy to stop one step short.
+  else if (w.step === 'confirm') right = `<div class="card">${w.real ? `<a class="btn" href="${esc(w.uri)}" target="_blank" rel="noopener">Open World’s page ↗</a>
+      <div class="pre"><em>1</em><div><b>Open World’s page</b></div></div><div class="pre"><em>2</em><div><b>Confirm with World App</b><span>Scan the code that page shows</span></div></div><div class="pre"><em>3</em><div><b>Wait for that page to finish</b><span>Then come back here</span></div></div>` : '<small>Simulated here: no phone is asked.</small>'}
+      ${waitbox('Waiting for World', 'This screen changes by itself.')}</div>`
   else if (w.step === 'preview') right = '<div class="card soft">Preview: World is not asked here.</div>'
   else right = `<div class="card">${tag(esc(w.title), 'no')}<small>${esc(w.text)}</small><button class="ghost" data-act="show-light">Ask again</button></div>`
   return frame({ tabs: 1, loading: w && (w.step === 'starting' || w.step === 'confirm'), now: 'LIGHTS', why: 'People choose by whose light it is.',
