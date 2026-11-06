@@ -256,27 +256,7 @@ function paintSheet() {
   $('changeIt').onclick = () => bump(s)
 }
 
-/** Step one of lighting: lend the key on the Ledger. The person reads the range on the
- *  device and holds the button; the signed permit comes back through the bridge. */
-async function lend(s, flow) {
-  let ready = false
-  try { ready = (await (await fetch(BRIDGE + '/health', { cache: 'no-store' })).json()).ready } catch {}
-  if (!ready) {
-    flow.innerHTML = '<p class="note warn">No Ledger with Tomoshibi open was found on this machine, so the key was not lent from here. Going on to the person check only.</p>'
-    return null
-  }
-  flow.innerHTML = '<p class="note"><b>Look at your Ledger.</b> Read what this tool is asking for, then hold the button. Nothing happens unless you do.</p>'
-  const r = await fetch(BRIDGE + '/permit', { method: 'POST', body: JSON.stringify({
-    skill: s.skill, version: versionOf(s), keyLabel: s.key, target: s.target, scope: s.scope,
-    maxCalls: 3, expiry: Math.floor(Date.now() / 1000) + 24 * 3600, nonce: Date.now() }) })
-  const b = await r.json()
-  if (r.status !== 200) { flow.innerHTML = `<p class="note warn">${esc(b.error || 'The Ledger did not sign.')}</p>`; return false }
-  store.permits = { ...store.permits, [s.name + '@' + versionOf(s)]: b }
-  return b
-}
-
-/** Publishing a light: first the key is lent on the Ledger, then the Broker asks
- *  World, once, whether a real person is behind it. */
+/** Publishing a light. The key was lent on the keys page; here the Broker asks World, once. */
 async function vouch(s) {
   if (flowing) return
   flowing = true
@@ -287,29 +267,46 @@ async function vouch(s) {
   lastNote[s.name] = $('flow') ? $('flow').innerHTML : ''
   await refresh(); paintSheet()
 }
+// Naming yourself. One question, asked once, by World: are you one real person?
+// Four steps, and three endings that are kept apart: confirmed, you said no, nobody answered.
+// Saying no is a result, not an error. It goes on the record like everything else.
+const WSTEPS = ['Ask World for a code', 'You confirm on your own phone', 'World’s signature is checked', 'Your light goes on']
+function worldSteps(at, ending) {
+  return `<ol class="wsteps">${WSTEPS.map((t, i) => `<li class="${i < at ? 'done' : i === at ? (ending ? 'end' : 'now') : ''}"><i></i>${esc(i === at && ending ? ending : t)}</li>`).join('')}</ol>`
+}
 async function light(s) {
   const flow = $('flow')
   if (live !== true) { flow.innerHTML = '<p class="note warn">The Broker is not reachable, so nothing can be lit from here.</p>'; return }
-  flow.innerHTML = '<p class="note">Asking World…</p>'
+  flow.innerHTML = worldSteps(0)
   const start = await post('/vouch/start', {})
-  if (start.status !== 200) { flow.innerHTML = `<p class="note warn">World is not set up on this Broker: ${esc(start.body.error || start.status)}</p>`; return }
+  if (start.status !== 200) { flow.innerHTML = worldSteps(0, 'World is not set up on this Broker') + `<p class="note">${esc(start.body.error || start.status)}. Nothing was lit, and nothing is pretended.</p>`; return }
   const b = start.body
   // The code is the main thing; the QR helps only if World gave a complete link.
   const uri = String(b.verificationUri || ''), real = /^https:\/\/\S+$/.test(uri) && !b.simulated
-  flow.innerHTML = `<p class="note"><b>One question, asked once: are you one real person?</b> Confirm on your own phone. World does not learn which tool you are lighting, which key, or when you use it.</p>
-    <div class="worldrow">${real && typeof qrSvg === 'function' ? `<div class="qrbox">${qrSvg(uri, 132)}</div>` : ''}<div><p class="code">${esc(b.userCode)}</p><p class="sub">${b.simulated ? 'Simulated: no phone is asked.' : esc(uri)}</p></div></div>`
+  const until = Date.now() + (Number(b.expiresIn) || 600) * 1000
+  const left = () => { const m = Math.max(0, Math.ceil((until - Date.now()) / 60000)); return `${m} minute${m === 1 ? '' : 's'} left` }
+  flow.innerHTML = worldSteps(1) + `<div class="worldrow">${real && typeof qrSvg === 'function' ? `<div class="qrbox">${qrSvg(uri, 132)}</div>` : ''}
+      <div><p class="code">${esc(b.userCode)}</p><p class="sub">${b.simulated ? 'Simulated: no phone is asked.' : esc(uri)}</p><p class="sub" id="wleft">${left()}</p></div></div>
+    <p class="note">World learns that you are a person, and the same person as before. It does not learn which tool you are lighting, which key, or when you use it.</p>`
+  const tick = setInterval(() => { const el = $('wleft'); if (el) el.textContent = left(); else clearInterval(tick) }, 15000)
   const done = await post('/vouch/finish', { deviceCode: b.deviceCode, skill: s.skill, version: versionOf(s) })
+  clearInterval(tick)
   const o = done.body
   if (o.decision === 'STAR') {
     const list = store.people.filter((p) => p.id !== o.nullifier)
     list.push({ name: 'You', id: o.nullifier, tie: 'me' }); store.people = list; paintPeople()
-    flow.innerHTML = '<p class="note">Lit. It stays on while you keep using this version, and goes out by itself if the tool changes.</p>'
+    flow.innerHTML = worldSteps(4) + `<p class="note">Lit${o.world?.simulated || b.simulated ? ' (World was simulated)' : ''}. Only a pseudonym is kept. It stays on while you keep using this exact version, and goes out by itself when the tool changes.</p>`
+  } else if (o.reason === 'ALREADY_VOUCHED') {
+    flow.innerHTML = worldSteps(3, 'This person has already lit this version') + '<p class="note">One person, one light. Nothing was added.</p>'
   } else {
-    const why = { human_denied: 'You said no on your phone. Nothing was lit.', proof_expired: 'No one confirmed in time. Nothing was lit.', ALREADY_VOUCHED: 'You have already lit this version.' }[o.reason] || o.message || o.reason
-    // Saying no, or nobody answering, is a result, not an error. It goes on the record too.
-    flow.innerHTML = `<p class="note">${esc(why)}</p>`
+    const end = o.reason === 'human_denied' ? 'You said no' : o.reason === 'proof_expired' ? 'Nobody confirmed in time' : (o.message || o.reason || 'Not confirmed')
+    const text = o.reason === 'human_denied' ? 'Nothing was lit. That you declined is on the record too.' : o.reason === 'proof_expired' ? 'The code ran out. Nothing was lit. This is not the same as saying no.' : 'Nothing was lit.'
+    flow.innerHTML = worldSteps(1, end) + `<p class="note">${esc(text)}</p><div class="actions"><button class="btn" id="again">Ask again</button></div>`
+    retry = s
   }
 }
+let retry = null
+document.addEventListener('click', (e) => { if (e.target.id === 'again' && retry) { const s = retry; retry = null; vouch(s) } })
 
 /** Demo control. In the product, the version is the hash of the tool's manifest
  *  and changes when the tool does. Here a button stands in for the tool's author. */
