@@ -50,10 +50,19 @@ const BROKER = () => (window.appAgentIsRemote ? AGENT + '/b' : agent.broker)
 // ── where events come from ──
 const live = {
   post: (path, body) => fetch(AGENT + path, { method: 'POST', body: JSON.stringify(body || {}) }).catch(() => {}),
+  // One request at a time, and every event taken exactly once and in order (by its number). On a slow
+  // link two overlapping requests would otherwise bring the same event twice, and the next one would be skipped.
+  busy: false,
   async poll() {
-    const r = await (await fetch(`${AGENT}/events?since=${epoch === null ? 0 : all.length}`, { cache: 'no-store' })).json()
-    if (r.epoch !== epoch) { const first = epoch === null; epoch = r.epoch; all = []; if (!first) { ui = fresh(); save() } if (r.events.length && r.events[0].n !== 0) return this.poll(); paint() }
-    if (r.events.length) { all.push(...r.events); onEvents(r.events); paint() }
+    if (this.busy) return
+    this.busy = true
+    try {
+      const r = await (await fetch(`${AGENT}/events?since=${epoch === null ? 0 : all.length}`, { cache: 'no-store', signal: AbortSignal.timeout(8000) })).json()
+      if (r.epoch !== epoch) { const first = epoch === null; epoch = r.epoch; all = []; if (!first) { ui = fresh(); save() } paint() }
+      const got = []
+      for (const e of r.events) if (e.n === all.length) { all.push(e); got.push(e) }
+      if (got.length) { onEvents(got); paint() }
+    } finally { this.busy = false }
   },
 }
 // The same events, made here from the recording. Used only when no agent is running.
@@ -435,7 +444,8 @@ function paint() {
   if (demo !== lastDemo) { $('demo').innerHTML = demo; lastDemo = demo }
 }
 function step(o, ms, then) { ui.busy = o; paint(); setTimeout(() => { ui.busy = null; then(); save(); paint() }, ms) }
-function restart() { src().post('/reset'); all = []; if (mode === 'preview') { replay.standing = false } ui = fresh(); save(); paint() }
+// Start over. Wait for the tool to forget first, so its new, empty record is not mistaken for a restart of its own.
+async function restart() { await src().post('/reset'); epoch = null; all = []; ui = fresh(); save(); paint() }
 
 const ACT = {
   'chat-send': () => { ui.chat = 1 },
@@ -474,17 +484,28 @@ document.addEventListener('keydown', (e) => {
   if (KEYS[e.key]) src().post('/run', { id: KEYS[e.key] }); else if (e.key === 'r' || e.key === 'R') restart()
 })
 
+// Is the AI tool there? A slow link gets a second, longer try before the page settles for the preview.
+async function probeAgent(ms) { try { const h = await (await fetch(AGENT + '/health', { signal: AbortSignal.timeout(ms) })).json(); return h.ok && h.brokerUp ? h : null } catch { return null } }
+function goLive(h) {
+  agent = h; mode = 'live'
+  const loop = async () => { await live.poll().catch(() => {}); setTimeout(loop, 400) }
+  loop()
+  setInterval(async () => { const n = await probeAgent(6000); if (!n) return; const ch = n.device !== agent.device || n.lent !== agent.lent; agent = n; if (ch) paint() }, 3000)
+  refreshLights()
+}
 async function init() {
   paint()
-  try { agent = await (await fetch(AGENT + '/health', { signal: AbortSignal.timeout(2500) })).json(); if (agent.ok && agent.brokerUp) mode = 'live' } catch {}
-  if (mode !== 'live') { mode = 'preview'; for (const u of ['scenes.json', '../ui/scenes.json']) { if (REC) break; try { const r = await fetch(u, { cache: 'no-store' }); if (r.ok) REC = await r.json() } catch {} } }
-  if (mode === 'live') {
-    await live.poll().catch(() => {})
-    setInterval(() => live.poll().catch(() => {}), 400)
-    setInterval(async () => { try { const h = await (await fetch(AGENT + '/health')).json(); const ch = h.device !== agent.device || h.lent !== agent.lent; agent = h; if (ch) paint() } catch {} }, 3000)
-    refreshLights()
+  const h = (await probeAgent(3000)) || (await probeAgent(7000))
+  if (h) goLive(h)
+  else {
+    mode = 'preview'
+    for (const u of ['scenes.json', '../ui/scenes.json']) { if (REC) break; try { const r = await fetch(u, { cache: 'no-store' }); if (r.ok) REC = await r.json() } catch {} }
+    // If the tool turns up later and nothing has been replayed yet, switch to it.
+    const again = setInterval(async () => { const n = await probeAgent(5000); if (n && all.length === 0) { clearInterval(again); goLive(n); paint() } }, 6000)
   }
   paint()
 }
+// For looking at the page's own state from the console when something does not move.
+window.tomoshibi = { get events() { return all }, get ui() { return ui }, get mode() { return mode }, get epoch() { return epoch }, reduce, paint }
 init()
 })()
