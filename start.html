@@ -5,6 +5,13 @@
 <title>TOMOSHIBI — don't paste the key</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="start.css">
+<link rel="stylesheet" href="pop.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#F2600C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tomoshibi">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
 
 <main class="stage" id="stage" data-step="0">
   <!-- 0: the one slide. Three lines, nothing else. -->
@@ -40,6 +47,8 @@
   <p class="nav"><span id="dots"></span><span class="kbd">Space</span></p>
 </main>
 
+<script>document.documentElement.dataset.tabs = "off"</script>
+<script src="app.js"></script>
 <script>
 // Three beats: the slide, the paste box, the lend button. Space or a click moves on; the last one opens the keys page.
 'use strict'

@@ -150,6 +150,7 @@ function carry(st) {
   const link = pub ? PAGES + 'morning.html' + q : 'morning.html' + q
   if (el.dataset.link === link) { el.hidden = false; return }
   el.dataset.link = link; el.hidden = false
+  try { localStorage.setItem('tomoshibi.last', JSON.stringify({ broker: pub || agent.broker, holder: st.lent.holder, since: st.lent.at || '' })) } catch {}
   let qr = ''
   if (pub) try { qr = `<div class="qrbox">${qrSvg(link, 150)}</div>` } catch {}
   el.innerHTML = `${qr}<div><h3>Read it on your phone</h3><p class="sub">One line first: what was stopped. Then what you let through, and what never needed you.</p>
@@ -199,6 +200,28 @@ function lightCard(st) {
     ? `<p class="sub">You really use this tool: ${st.uses} request${st.uses === 1 ? '' : 's'} on record${st.byHand ? ', lent by hand on your Ledger' : ''}. You can let the people who know you see that.</p><a class="btn primary" href="${esc(href)}">Show that you use it →</a><p class="sub">That is a different question, asked once, by World: are you one real person?</p>`
     : `<p class="sub">Once the tool has really worked with your key, you can show the people who know you that you use it.</p>`)
 }
+// The flame says what is going on, in one line. This is the first thing a person reads.
+function mascot(st) {
+  const el = $('mascot'); if (!el) return
+  const c = st.cards[st.cards.length - 1], last = c && final(c), b = last?.response
+  let mood = 'awake', tone = 'bob', line, sub
+  if (st.asking?.why === 'lend') { mood = 'alert'; tone = 'alert'; line = 'Look at your Ledger.'; sub = 'Read the range, then hold the button.' }
+  else if (!st.lent) { line = 'Don’t paste your key. Lend it.'; sub = 'The tool never gets the key itself.' }
+  else if (st.asking || (b?.decision === 'NEEDS_PRESS' && !c.declined)) { mood = 'alert'; tone = 'alert'; line = 'Money is about to move. Your call.'; sub = 'Hold the button on your Ledger, or do nothing.' }
+  else if (!c) { mood = 'asleep'; line = 'All quiet.'; sub = 'I’ll wake you only when money moves.' }
+  else if (!last) { line = 'Checking…'; sub = '' }
+  else if (c.declined) { mood = 'guard'; tone = 'bob'; line = 'Not let through.'; sub = 'You said no. The key was not used.' }
+  else if (b.decision === 'DENIED') { mood = 'guard'; tone = 'bad'; line = 'Blocked it.'; sub = 'You didn’t have to do anything.' }
+  else if (b.decision === 'STOPPED') { mood = 'guard'; tone = 'bob'; line = 'I stopped. No guessing.'; sub = '0G gave no answer, so nothing ran.' }
+  else if (last.pressed) { mood = 'happy'; tone = 'ok'; line = 'Done. Once, because you said so.'; sub = 'The tool still doesn’t have your key.' }
+  else { mood = 'asleep'; tone = 'ok'; line = 'Went through. You weren’t needed.'; sub = 'Nothing that moves money.' }
+  const key = mood + tone + line
+  if (el.dataset.key === key) return
+  el.dataset.key = key
+  el.className = `mascot ${tone}`
+  el.innerHTML = `<div class="face">${flameFace(mood)}</div><div class="bubble"><b>${esc(line)}</b><span>${esc(sub)}</span></div>`
+}
+
 // What the tool does next. In real life it does these on its own; here a button makes each one happen now.
 function storyBar(st) {
   const el = $('story'); if (!el) return
@@ -218,7 +241,9 @@ function render() {
   const blocked = st.cards.some((c) => final(c)?.response.decision === 'DENIED')
   const scene = !st.lent ? 'lend' : lastDec === 'DENIED' ? 'stopped' : 'woken'
   journey(scene, [...(st.lent ? ['lend'] : []), ...(blocked && scene !== 'stopped' ? ['stopped'] : []), ...(scene === 'stopped' ? ['woken'] : [])])
-  storyBar(st)
+  storyBar(st); mascot(st)
+  document.querySelector('.console').classList.toggle('unlent', !st.lent)
+  document.querySelector('.console').classList.toggle('asking', Boolean(st.asking) || Boolean(st.waitingDevice))
 }
 
 async function init() {

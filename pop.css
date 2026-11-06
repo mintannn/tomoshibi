@@ -1,0 +1,140 @@
+/* The app look: light, warm, one loud colour, round cards, a tab bar. Loaded last on every page.
+   It is a phone-first web app; on a computer it sits in a phone-wide column. */
+:root {
+  color-scheme: light;
+  --night: #FBF7F1; --night-2: #FFFFFF; --line: #ECE4D8;
+  --text: #1B1630; --muted: #726C88;
+  --cold: #3B5BDB; --flame: #F2600C; --flame-2: #C2410C;
+  --danger: #D92D20; --ok: #0E9F6E;
+  --soft: #FFF1E4; --soft-ok: #E6F7EF; --soft-bad: #FDECEA; --soft-cold: #EAF0FF;
+  --sans: ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --shadow: 0 1px 0 #1b16300a, 0 10px 30px #1b163012;
+}
+html, body { background: var(--night); color: var(--text); font-size: 16px; }
+body { padding-bottom: 84px; }
+a { color: var(--flame-2); }
+.wrap, .wrap.wide, .wrap.phone { max-width: 480px; padding: 12px 16px 28px; gap: 14px; }
+.top { position: sticky; top: 0; z-index: 5; background: #fbf7f1ee; backdrop-filter: blur(8px); margin: -12px -16px 0; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.brand { letter-spacing: .06em; font-weight: 800; }
+.chip { background: #fff; border-color: var(--line); color: var(--muted); border-radius: 999px; padding: 4px 10px; font-size: 11px; }
+.chip.live { color: var(--ok); border-color: #b9e8d3; background: var(--soft-ok); }
+.chip.warn { color: var(--danger); border-color: #f5c2bc; background: var(--soft-bad); }
+.banner { border-color: #f5c2bc; background: var(--soft-bad); color: #8f1d14; border-radius: 14px; font-size: 12.5px; }
+.note { color: var(--muted); border-color: var(--line); } .note.warn { color: #8f1d14; border-color: var(--danger); }
+code { color: var(--cold); }
+
+/* cards and buttons */
+.card, .sheet, .now, .scene, .story, .list li { border: 1px solid var(--line); border-radius: 22px; background: #fff; box-shadow: var(--shadow); }
+.card h2, .now h2 { color: var(--muted); }
+.card code { color: var(--cold); }
+.btn { background: #fff; border: 1.5px solid var(--line); border-radius: 999px; padding: 12px 18px; font-weight: 700; color: var(--text); }
+.btn.primary, a.btn.primary { background: var(--flame); border-color: var(--flame); color: #fff; box-shadow: 0 6px 18px #f2600c40; }
+.btn:disabled { opacity: .45; box-shadow: none; }
+a.btn { color: var(--text); }
+.kbd, .foot kbd { border-color: var(--line); background: #fff; }
+.foot { color: var(--muted); text-align: center; line-height: 1.9; }
+.meter { background: var(--soft); } .meter i { background: var(--flame); }
+
+/* the mascot says what is going on, in one line */
+.mascot { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px; align-items: center; }
+.mascot .face { width: 96px; height: 120px; }
+.mascot .face svg { width: 100%; height: 100%; filter: drop-shadow(0 8px 14px #f2600c33); }
+.mascot.bob .face { animation: bob 2.6s ease-in-out infinite; }
+.mascot.alert .face { animation: hop .6s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-4px); } } @keyframes hop { 50% { transform: translateY(-7px) rotate(-3deg); } }
+.bubble { position: relative; background: #fff; border: 1.5px solid var(--text); border-radius: 20px; padding: 12px 14px; box-shadow: 4px 4px 0 var(--text); }
+.bubble::before { content: ""; position: absolute; left: -9px; top: 50%; width: 14px; height: 14px; background: #fff; border-left: 1.5px solid var(--text); border-bottom: 1.5px solid var(--text); transform: translateY(-50%) rotate(45deg); }
+.bubble b { display: block; font-size: 19px; line-height: 1.25; } .bubble span { display: block; color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+.mascot.ok .bubble { border-color: var(--ok); box-shadow: 4px 4px 0 var(--ok); } .mascot.ok .bubble::before { border-color: var(--ok); }
+.mascot.bad .bubble { border-color: var(--danger); box-shadow: 4px 4px 0 var(--danger); } .mascot.bad .bubble::before { border-color: var(--danger); }
+.mascot.alert .bubble { border-color: var(--flame); box-shadow: 4px 4px 0 var(--flame); } .mascot.alert .bubble::before { border-color: var(--flame); }
+
+/* the four steps become small pills */
+.journey { display: flex; gap: 6px; overflow-x: auto; grid-template-columns: none; padding-bottom: 2px; scrollbar-width: none; }
+.journey::-webkit-scrollbar { display: none; }
+.journey li { flex: none; }
+.journey a { display: flex; align-items: center; gap: 6px; padding: 6px 12px 6px 6px; border-radius: 999px; background: #fff; border: 1px solid var(--line); color: var(--muted); grid-template-columns: none; }
+.journey .jn { width: 22px; height: 22px; border-color: var(--line); font-size: 11px; grid-row: auto; }
+.journey .jt b { font-size: 13px; opacity: 1; color: var(--muted); white-space: nowrap; } .journey .jt span, .journey .jon { display: none; }
+.journey li.cur a { background: var(--flame); border-color: var(--flame); box-shadow: 0 4px 12px #f2600c40; }
+.journey li.cur .jn { background: #fff; border-color: #fff; color: var(--flame-2); } .journey li.cur .jt b { color: #fff; }
+.journey li.done .jn { border-color: #b9e8d3; color: var(--ok); background: var(--soft-ok); }
+
+/* keys page as one column */
+.console { display: flex; flex-direction: column; gap: 14px; } .main, .rail { display: contents; }
+#story { order: 1; } #now { order: 2; } #ledgerCard { order: 3; } #keyCard { order: 4; } #lightCard { order: 5; } .main > .sheet { order: 6; }
+.story { border-style: solid; padding: 14px; } .story p { font-size: 13px; }
+.story > div { grid-template-columns: 1fr; }
+.story button { background: var(--night); border: 1.5px solid var(--line); border-radius: 16px; padding: 12px 14px; grid-template-columns: 1fr; }
+.story button:hover:not(:disabled) { border-color: var(--flame); background: var(--soft); }
+.story button span { color: var(--flame-2); } .story button small { color: var(--muted); } .story button.done { border-color: #b9e8d3; background: var(--soft-ok); }
+.now { background: #fff; padding: 18px; min-height: 0; gap: 14px; }
+.now.NEEDS_PRESS { border-color: var(--flame); box-shadow: 0 0 0 4px #f2600c22, var(--shadow); }
+.now.DENIED { border-color: var(--danger); box-shadow: 0 0 0 4px #d92d2018, var(--shadow); }
+.now.ALLOWED { border-color: #b9e8d3; }
+.quiet { color: var(--muted); } .quiet b { color: var(--text); font-size: 20px; } .quiet svg { display: none; }
+.first { color: var(--text); font-size: 14.5px; } .quiet .first b { color: var(--flame-2); }
+.who { color: var(--muted); } .who .tool { color: var(--text); border-color: var(--line); background: var(--night); border-radius: 999px; padding: 2px 10px; }
+.who .bad { color: var(--danger); border-color: #f5c2bc; background: var(--soft-bad); }
+.what { font-size: clamp(22px, 6vw, 28px); } .wire { color: var(--muted); font-size: 12px; }
+.promise { color: var(--muted); border-color: var(--flame); font-size: 13px; }
+.steps { grid-template-columns: 1fr; gap: 8px; }
+.steps li { background: var(--night); border: 1.5px solid var(--line); border-radius: 16px; display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 0 10px; align-items: center; padding: 10px 12px; }
+.steps .k { grid-row: 1 / 3; color: var(--muted); } .steps b { font-size: 16px; } .steps span { font-size: 12.5px; color: var(--muted); }
+.steps li.pass { border-color: #ffd0ad; background: var(--soft); } .steps li.pass b { color: var(--flame-2); } .steps li.pass .k i { background: var(--flame); border-color: var(--flame); box-shadow: none; }
+.steps li.stop { border-color: #f5c2bc; background: var(--soft-bad); } .steps li.stop b { color: var(--danger); }
+.steps li.wait { border-color: var(--flame); background: var(--soft); } .steps li.wait b { color: var(--flame-2); }
+.verdict strong { font-size: clamp(38px, 11vw, 52px); color: var(--muted); }
+.ALLOWED .verdict strong { color: var(--ok); } .DENIED .verdict strong { color: var(--danger); } .NEEDS_PRESS .verdict strong { color: var(--flame); } .STOPPED .verdict strong { color: var(--cold); }
+.verdict .meta { color: var(--muted); } .verdict .meta b { color: var(--text); }
+.led { font-size: 17px; } #ledgerCard.ask { border-color: var(--flame); box-shadow: 0 0 0 4px #f2600c22, var(--shadow); } #ledgerCard.blk { border-color: var(--danger); }
+.onscreen { color: var(--text); border-color: var(--flame); background: var(--night); border-radius: 0 12px 12px 0; padding: 8px 10px; }
+.card .name.human { font-size: 20px; font-weight: 800; }
+.lightcard { border-color: #ffd0ad; background: linear-gradient(180deg, var(--soft), #fff 70%); }
+.trail li { grid-template-columns: 1fr; gap: 0; padding: 8px 0; border-bottom: 1px solid var(--line); } .trail li:last-child { border: 0; }
+.o.ALLOWED { color: var(--ok); } .o.DENIED { color: var(--danger); } .o.NEEDS_PRESS { color: var(--flame-2); } .o.STOPPED { color: var(--cold); }
+.carry { border-color: var(--line); }
+
+/* the sky stays night: it is a window in the app */
+div.stage { background: #0a0f24; border: 0; border-radius: 22px; box-shadow: var(--shadow); }
+div.stage .caption b { color: #fff; } div.stage .caption span { color: #c8d0ee; }
+.toggle { background: #fff; border-color: var(--line); } .toggle button { color: var(--muted); } .toggle button[aria-pressed="true"] { background: var(--flame); color: #fff; }
+.sheet h2 { font-size: 22px; } .dot { color: var(--muted); } .dot.on { color: var(--text); }
+.form input, .form select { background: #fff; border-color: var(--line); color: var(--text); border-radius: 12px; }
+.wsteps li { border-color: var(--line); background: var(--night); border-radius: 12px; } .wsteps li.done { border-color: #ffd0ad; background: var(--soft); color: var(--text); }
+.wsteps li.now { color: var(--flame-2); border-color: var(--flame); } .wsteps li.end { border-color: var(--cold); background: var(--soft-cold); color: var(--text); }
+.code { color: var(--flame-2); }
+.tag { background: #fff; } .tag.ALLOWED, .tag.STAR, .tag.SEALED { border-color: #b9e8d3; background: var(--soft-ok); } .tag.DENIED, .tag.VOUCH_DENIED { border-color: #f5c2bc; background: var(--soft-bad); }
+.chain li::before { background: var(--flame); } .chain li:not(:last-child)::after { background: var(--line); }
+
+/* the way in */
+main.stage { background: var(--night); }
+.s0 .l1 { color: #b9b3c9; } .s0 .l2 { color: var(--text); } .s0 .l3 { color: var(--flame); }
+.chat .me { background: var(--flame); color: #fff; border-radius: 22px 22px 6px 22px; } .chat .ai { background: #fff; border-color: var(--line); border-radius: 22px 22px 22px 6px; box-shadow: var(--shadow); }
+.stars { color: var(--muted); } .ask { background: #fff; border-color: var(--line); border-radius: 22px; box-shadow: var(--shadow); } .ask label { color: var(--muted); }
+.field { background: var(--soft-bad); border-color: var(--danger); color: var(--text); border-radius: 14px; } .caret { background: var(--text); }
+.warn { color: #8f1d14; } .hint { color: var(--muted); }
+.lendbtn { background: var(--flame); color: #fff; border-radius: 999px; box-shadow: 0 10px 28px #f2600c55; }
+.c-paste { color: var(--danger); } .c-lend { color: var(--flame-2); } .nav { color: var(--muted); }
+
+/* the summary on a phone */
+.head .k { color: var(--muted); } .head h1.stopped { color: var(--danger); } .head h1.calm { color: var(--ok); }
+.list li { border-left-width: 6px; } .list li.quiet { border-left-color: #d8d2e6; }
+.bad .tag { background: var(--soft-bad); border-color: #f5c2bc; } .hand .tag { background: var(--soft); border-color: #ffd0ad; color: var(--flame-2); } .list li.hand { border-left-color: var(--flame); }
+
+/* the tab bar */
+.tabbar { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); width: min(448px, calc(100% - 24px)); z-index: 10; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 6px; background: #ffffffee; backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 12px 34px #1b163022; }
+.tabbar a { display: grid; justify-items: center; gap: 2px; padding: 8px 4px; border-radius: 16px; text-decoration: none; color: var(--muted); font: 700 12px var(--sans); }
+.tabbar svg { width: 22px; height: 22px; }
+.tabbar a[aria-current="page"] { background: var(--flame); color: #fff; }
+@media (prefers-reduced-motion: reduce) { .mascot .face { animation: none !important; } }
+
+/* Before anything is lent, the one thing to do comes first. */
+.console.unlent #keyCard { order: 0; border-color: var(--flame); box-shadow: 0 0 0 4px #f2600c22, var(--shadow); }
+.console.unlent #story, .console.unlent .main > .sheet, .console.unlent #lightCard { display: none; }
+.console.unlent #keyCard .btn.primary { font-size: 18px; padding: 16px; }
+
+/* When you are being asked, the asking comes first. */
+.console.asking #ledgerCard { order: 0; }
+.story > div { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; } .story > div::-webkit-scrollbar { display: none; }
+.story button { flex: 0 0 72%; }

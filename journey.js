@@ -25,6 +25,8 @@
         <span class="jt"><b>${x.t}</b><span>${x.s}</span></span>
         <span class="jon">${ICON[x.icon]}${x.on}</span></a></li>`
     }).join('')
+    // On a phone the steps are a strip; keep the current one in view.
+    const cur = el.querySelector('.cur'); if (cur && el.scrollWidth > el.clientWidth) el.scrollLeft = Math.max(0, cur.offsetLeft - 16)
   }
   window.journeyKeep = keep
 })()

@@ -5,10 +5,12 @@
 'use strict'
 const $ = (id) => document.getElementById(id)
 const qs = new URLSearchParams(location.search)
-const BROKER = (qs.get('broker') || 'http://127.0.0.1:8787').replace(/\/$/, '')
-const holder = qs.get('holder') || ''
+// Opened from the tab bar there is no link to read from, so use what the keys page remembered on this device.
+let last = {}; try { last = JSON.parse(localStorage.getItem('tomoshibi.last') || '{}') } catch {}
+const BROKER = (qs.get('broker') || last.broker || 'http://127.0.0.1:8787').replace(/\/$/, '')
+const holder = qs.get('holder') || last.holder || ''
 // Only what happened since the key was last lent (the keys page passes that moment). Without it, everything.
-const since = Date.parse(qs.get('since') || '') || 0
+const since = Date.parse(qs.get('since') || last.since || '') || 0
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
 const WHY = {
   OUT_OF_TARGET: 'It tried to use your key somewhere you did not allow.', OUT_OF_SCOPE: 'It tried to do something you did not allow.',
@@ -29,7 +31,7 @@ const time = (at) => { const d = new Date(at); return isNaN(d) ? '' : d.toLocale
 const link = (t) => `<a href="trace.html?thread=${encodeURIComponent(t)}&broker=${encodeURIComponent(BROKER)}">full record →</a>`
 
 async function load() {
-  if (!holder) { $('headline').textContent = 'No key to look up.'; $('status').textContent = 'no holder'; return }
+  if (!holder) { $('headline').textContent = 'Nothing yet.'; $('subline').textContent = 'Lend a key on the Keys tab. What happens with it shows up here.'; $('status').textContent = 'no key lent'; return }
   let recs
   try { recs = (await (await fetch(`${BROKER}/holder/${encodeURIComponent(holder)}`, { cache: 'no-store' })).json()).records || [] } catch {
     $('headline').textContent = 'Could not read the record.'; $('subline').textContent = `The Broker at ${BROKER} did not answer from here.`
