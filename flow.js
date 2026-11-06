@@ -106,6 +106,7 @@ function onEvents(evs) {
     else if (e.type === 'asking') { ui.pending = null; if (e.via === 'page' && mode === 'live') pipe(e) }
     else if (e.type === 'signed' && e.why === 'lend') { ui.pending = null; ui.ackLit = false }
     else if (e.type === 'declined') ui.pending = null
+    else if (e.type === 'light') { if (e.decision === 'STAR' || e.reason === 'ALREADY_VOUCHED' || (ui.world?.step === 'confirm' && Date.now() - Date.parse(e.at) < 30000)) worldResult(e) }
     else if (e.type === 'notice' && e.via === 'page' && window.Ledger?.connected && Date.now() - Date.parse(e.at) < 15000) Ledger.exchange(e.apdu, 6000).catch(() => {})
   }
   save()
@@ -187,27 +188,42 @@ async function refreshLights() {
   paint()
 }
 // One question, asked once, by World: are you one real person? Three endings, kept apart.
+// On a phone the person leaves this page for World App, and the browser may drop the waiting request meanwhile.
+// So the answer is asked for again until it comes (the tool keeps it), and it also arrives as an event.
+function worldResult(o) {
+  if (ui.world?.step === 'done') return
+  if (o.decision === 'STAR' || o.reason === 'ALREADY_VOUCHED') {
+    if (o.nullifier) try { localStorage.setItem('tomoshibi.me', o.nullifier); const list = people().filter((p) => p.id !== o.nullifier); list.push({ name: 'You', id: o.nullifier, tie: 'me' }); localStorage.setItem('tomoshibi.people', JSON.stringify(list)) } catch {}
+    ui.world = { step: 'done', already: o.reason === 'ALREADY_VOUCHED', simulated: Boolean(o.world?.simulated || o.simulated), checked: Boolean(o.ownerChecked) }
+    ui.tab = 'lights'; refreshLights()
+  } else {
+    const title = o.reason === 'human_denied' ? 'You said no' : o.reason === 'proof_expired' ? 'Nobody confirmed in time' : ['NOT_OWNER', 'NOT_LENT', 'NOT_USED'].includes(o.reason) ? 'Only someone who really used the key can show a light' : (o.message || o.reason || 'Not confirmed')
+    const text = o.reason === 'human_denied' ? 'Nothing was shown. That you declined is on the record too.' : o.reason === 'proof_expired' ? 'The code ran out. Nothing was shown. This is not the same as saying no.' : `${o.message || ''} Nothing was shown.`
+    ui.world = { step: 'end', title, text }
+  }
+  paint()
+}
+async function finishWorld(code) {
+  for (let i = 0; i < 60; i++) {
+    if (ui.world?.step !== 'confirm' || ui.world.deviceCode !== code) return
+    try { return worldResult(await (await fetch(AGENT + '/vouch/finish', { method: 'POST', body: JSON.stringify({ deviceCode: code }) })).json()) }
+    catch { await new Promise((r) => setTimeout(r, 2500)) }   // dropped while the page was in the background: ask again
+  }
+}
 async function startWorld() {
+  if (ui.world && ['starting', 'confirm'].includes(ui.world.step)) return
   if (mode !== 'live') { ui.world = { step: 'preview' }; paint(); return }
   ui.world = { step: 'starting' }; paint()
   try {
     const r = await fetch(BROKER() + '/vouch/start', { method: 'POST', body: '{}' }); const b = await r.json()
     if (r.status !== 200) { ui.world = { step: 'end', title: 'World is not set up on this Broker', text: `${b.error || r.status}. Nothing was shown, and nothing is pretended.` }; paint(); return }
     const uri = String(b.verificationUri || ''), real = /^https:\/\/\S+$/.test(uri) && !b.simulated
-    ui.world = { step: 'confirm', uri, real, code: b.userCode, simulated: Boolean(b.simulated) }; paint()
-    const o = await (await fetch(AGENT + '/vouch/finish', { method: 'POST', body: JSON.stringify({ deviceCode: b.deviceCode }) })).json()
-    if (o.decision === 'STAR' || o.reason === 'ALREADY_VOUCHED') {
-      if (o.nullifier) try { localStorage.setItem('tomoshibi.me', o.nullifier); const list = people().filter((p) => p.id !== o.nullifier); list.push({ name: 'You', id: o.nullifier, tie: 'me' }); localStorage.setItem('tomoshibi.people', JSON.stringify(list)) } catch {}
-      ui.world = { step: 'done', already: o.reason === 'ALREADY_VOUCHED', simulated: Boolean(o.world?.simulated || b.simulated), checked: Boolean(o.ownerChecked) }
-      await refreshLights()
-    } else {
-      const title = o.reason === 'human_denied' ? 'You said no' : o.reason === 'proof_expired' ? 'Nobody confirmed in time' : ['NOT_OWNER', 'NOT_LENT', 'NOT_USED'].includes(o.reason) ? 'Only someone who really used the key can show a light' : (o.message || o.reason || 'Not confirmed')
-      const text = o.reason === 'human_denied' ? 'Nothing was shown. That you declined is on the record too.' : o.reason === 'proof_expired' ? 'The code ran out. Nothing was shown. This is not the same as saying no.' : `${o.message || ''} Nothing was shown.`
-      ui.world = { step: 'end', title, text }
-    }
-  } catch (e) { ui.world = { step: 'end', title: 'Could not reach the Broker', text: `${String(e.message || e)}. Nothing was shown.` } }
-  paint()
+    ui.world = { step: 'confirm', uri, real, code: b.userCode, deviceCode: b.deviceCode, simulated: Boolean(b.simulated) }; paint()
+    finishWorld(b.deviceCode)
+  } catch (e) { ui.world = { step: 'end', title: 'Could not reach the Broker', text: `${String(e.message || e)}. Nothing was shown.` }; paint() }
 }
+// Back from World App (or any other app): look at once, do not wait for the next tick.
+document.addEventListener('visibilitychange', () => { if (!document.hidden && mode === 'live') { live.poll().catch(() => {}); refreshLights() } })
 
 // ── pieces ──
 let cur = ''
@@ -401,7 +417,7 @@ function vLights(st) {
   else if (w.step === 'starting') right = `<div class="card">${waitbox('Asking World for a code', 'You confirm on your own phone, in World App.', 'One real person, one light. That is why a light cannot be faked.')}</div>`
   else if (w.step === 'confirm') right = `<div class="card"><div class="qrrow">${w.real && typeof qrSvg === 'function' ? `<div class="qrbox">${qrSvg(w.uri, 132)}</div>` : ''}<div><b>Confirm you are one real person</b><ol><li>Open World App on your phone</li><li>Scan this code</li><li>Tap Confirm</li></ol></div></div>
       ${w.real ? `<a class="btn ghost" href="${esc(w.uri)}" target="_blank" rel="noopener">Or open World App on this device ↗</a><small>Code <b>${esc(w.code)}</b></small>` : '<small>Simulated on this Broker: no phone is asked.</small>'}
-      ${waitbox('Waiting for you in World App', 'Your light becomes visible to people who know you.', 'They can choose a tool because you really use it.')}</div>`
+      ${waitbox('Waiting for you in World App', 'Confirm there, then come back to this page. Your light becomes visible to people who know you.', 'They can choose a tool because you really use it.')}</div>`
   else if (w.step === 'preview') right = '<div class="card soft">This is the preview: no Broker is connected, so World is not asked. In the live app, World App confirms you here.</div>'
   else right = `<div class="card">${tag(esc(w.title), 'no')}<small>${esc(w.text)}</small><button class="ghost" data-act="show-light">Ask again</button></div>`
   return frame({ tabs: 1, loading: w && (w.step === 'starting' || w.step === 'confirm'), now: 'Show your light', why: 'Others choose by whose light it is, not by how many.',
@@ -551,11 +567,11 @@ function goLive(h) {
 async function init() {
   paint()
   let h = await probeAgent(3000)
-  if (!h && !window.appAgentIsRemote) {
+  if (!h) {
     // No AI tool on this device. If the site itself names a live one (live.json next to this page), use it:
     // that is how the same address becomes the live app on any device. Without that file, nothing changes.
     try { const r = await fetch('live.json', { cache: 'no-store' }); const j = r.ok ? await r.json() : null
-      if (j && /^https:\/\/\S+$/.test(j.agent || '')) { AGENT = j.agent.replace(/\/$/, ''); window.appAgent = AGENT; window.appAgentIsRemote = true; h = (await probeAgent(5000)) || (await probeAgent(9000)) } } catch {}
+      if (j && /^https:\/\/\S+$/.test(j.agent || '') && j.agent.replace(/\/$/, '') !== AGENT) { AGENT = j.agent.replace(/\/$/, ''); window.appAgent = AGENT; window.appAgentIsRemote = true; h = (await probeAgent(5000)) || (await probeAgent(9000)) } } catch {}
   }
   if (!h) h = await probeAgent(7000)
   if (h) goLive(h)
