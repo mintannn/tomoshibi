@@ -138,3 +138,57 @@ main.stage { background: var(--night); }
 .console.asking #ledgerCard { order: 0; }
 .story > div { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; } .story > div::-webkit-scrollbar { display: none; }
 .story button { flex: 0 0 72%; }
+
+/* ── Flat. No side stripes, no outlines doing the work of colour, no drop shadows. Colour is the surface. ── */
+:root { --shadow: none; --pink: #FF5C8A; --sun: #FFC83D; --mint: #19C28E; --sky: #4C7DFF; }
+.card, .sheet, .now, .scene, .story, .list li, .ask, .chat .ai { border: 0; box-shadow: none; }
+.note, .note.warn, .onscreen, .promise { border: 0; border-radius: 14px; padding: 10px 12px; }
+.note { background: #F3EEE6; color: var(--muted); } .note.warn { background: var(--soft-bad); color: #8f1d14; }
+.onscreen { background: var(--text); color: #fff; font-size: 13.5px; padding: 12px 14px; }
+.promise { background: var(--soft); color: #8a3a0b; margin: 0; }
+.banner { border: 0; }
+.top { border-bottom: 0; }
+.chip { border: 0; background: #F3EEE6; } .chip.live { background: var(--soft-ok); } .chip.warn { background: var(--soft-bad); }
+.btn { border: 0; background: #F3EEE6; } .btn.primary, a.btn.primary { box-shadow: none; }
+.journey a { border: 0; background: #F3EEE6; } .journey li.cur a { box-shadow: none; } .journey .jn { border: 0; background: #fff; }
+.journey li.done .jn { background: var(--mint); color: #fff; }
+.tabbar { border: 0; box-shadow: none; background: #fff; }
+
+/* the flame's bubble is a block of colour */
+.bubble { border: 0; box-shadow: none; background: #fff; border-radius: 22px; padding: 14px 16px; }
+.bubble::before { border: 0; background: inherit; left: -6px; }
+.bubble b { font-size: 21px; }
+.mascot.alert .bubble { background: var(--flame); box-shadow: none; } .mascot.alert .bubble b { color: #fff; } .mascot.alert .bubble span { color: #ffe3d0; }
+.mascot.bad .bubble { background: var(--danger); box-shadow: none; } .mascot.bad .bubble b { color: #fff; } .mascot.bad .bubble span { color: #ffd9d5; }
+.mascot.ok .bubble { background: var(--mint); box-shadow: none; } .mascot.ok .bubble b { color: #fff; } .mascot.ok .bubble span { color: #dbfff2; }
+.mascot .face svg { filter: none; }
+
+/* state is a filled card, not an outline */
+.now.NEEDS_PRESS, #ledgerCard.ask, .console.unlent #keyCard { box-shadow: none; border: 0; background: var(--soft); }
+.now.DENIED, #ledgerCard.blk { box-shadow: none; border: 0; background: var(--soft-bad); }
+.now.ALLOWED { border: 0; background: var(--soft-ok); }
+.steps li { border: 0; background: #fff; } .now:not(.ALLOWED):not(.DENIED):not(.NEEDS_PRESS) .steps li { background: var(--night); }
+.steps li.pass, .steps li.wait, .steps li.stop { background: #fff; }
+.steps .k i { border: 0; background: #d8d2e6; } .steps li.pass .k i { background: var(--mint); } .steps li.stop .k i { background: var(--danger); } .steps li.wait .k i { background: var(--flame); }
+.steps li.pass b { color: var(--text); }
+.story button { border: 0; background: var(--night); } .story button.done { background: var(--soft-ok); }
+.story button:hover:not(:disabled) { background: var(--soft); }
+.who .tool, .who .bad { border: 0; }
+.lightcard { background: var(--soft); }
+.trail li { border-bottom: 0; background: var(--night); border-radius: 14px; padding: 10px 12px; margin: 0; }
+.carry { border-top: 0; }
+.toggle { border: 0; }
+.wsteps li, .wsteps li.done, .wsteps li.now, .wsteps li.end { border: 0; }
+.tag, .tag.ALLOWED, .tag.STAR, .tag.SEALED, .tag.DENIED, .tag.VOUCH_DENIED { border: 0; }
+.form input, .form select { border: 0; background: #F3EEE6; }
+
+/* the summary: each line is a tinted card with a round badge */
+.list li, .list li.bad, .list li.hand, .list li.quiet, .list li.stop { border: 0; border-left-width: 0; border-radius: 22px; padding: 14px 16px; background: #fff; }
+.list li.bad { background: var(--soft-bad); } .list li.hand { background: var(--soft); } .list li.stop { background: var(--soft-cold); }
+.list .tag { border: 0; border-radius: 999px; padding: 4px 10px; color: #fff; background: var(--muted); }
+.bad .tag { background: var(--danger); color: #fff; } .hand .tag { background: var(--flame); color: #fff; } .stop .tag { background: var(--sky); color: #fff; } .quiet .tag { background: #b9b3c9; color: #fff; }
+.head h1.stopped { color: var(--danger); } .head h1.calm { color: var(--mint); }
+
+/* the way in */
+.field { border: 0; background: var(--soft-bad); } .lendbtn { box-shadow: none; } .ask { background: #fff; } .chat .ai { background: #fff; }
+.kbd, .foot kbd { border: 0; background: #F3EEE6; }
