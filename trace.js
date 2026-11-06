@@ -13,7 +13,7 @@ const short = (h, n = 10) => (typeof h === 'string' && h.length > 2 * n + 2 ? `$
 // How each decision reads to a person. The tiers come from the Broker in Japanese.
 const TITLE = {
   ALLOWED: 'Let through', DENIED: 'Stopped', STOPPED: 'Stopped, on purpose', NEEDS_PRESS: 'Waiting for a press on the Ledger',
-  SEALED: 'Written to 0G Storage', STAR: 'A star was lit', VOUCH_DENIED: 'No star was lit',
+  SEALED: 'Written to 0G Storage', STAR: 'A light was lit', VOUCH_DENIED: 'No light was lit',
 }
 const TIER = { 'ふだん': 'routine', '大事': 'significant', '決定的': 'decisive' }
 const REASON = {

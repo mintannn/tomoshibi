@@ -224,3 +224,19 @@ button,.aibtn,a.btn{transition:transform .12s ease,box-shadow .12s ease,backgrou
 @media(max-width:800px){.vbar{padding:9px 14px;gap:8px}.vbar b{font-size:15.5px}.l h1{font-size:30px}}
 .logo img{display:block;height:26px;width:auto}.tabs button img{display:block}.aibtn img{display:block}
 .qrrow small{display:block;color:var(--mut);font-size:12.5px;margin-top:2px}.qrrow b{font-size:15.5px}
+
+/* the switchboard: the list of APIs, the table of labels, a call being put through, the label's code, the AI reading */
+.apis{display:flex;flex-wrap:wrap;gap:6px}.apis span{display:flex;align-items:center;gap:6px;border:2.5px solid var(--ink);border-radius:99px;padding:5px 13px;font-size:13.5px;font-weight:800;background:#fff}
+.apis span.on{background:var(--ink);color:#fff}.apis span.off{border-style:dashed;border-color:#cfc6b6;color:#a39c8d;font-weight:700}.apis i{font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.04em}
+.kv code{font-family:ui-monospace,Menlo,monospace;font-size:13px}.kv .fixed{font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--mut);border:1.5px solid #cfc6b6;border-radius:99px;padding:1px 7px;margin-left:4px;vertical-align:1px}
+.tbl{border:2.5px solid var(--ink);border-radius:14px;overflow:hidden;font-size:12.5px}.tbl .th,.tbl .tr{display:grid;grid-template-columns:1.05fr 1.25fr 1.35fr .8fr;gap:8px;padding:7px 11px;align-items:center}
+.tbl .th{background:var(--ink);color:#fff;font-size:10px;font-weight:800;letter-spacing:.1em}.tbl .tr{background:#fff}.tbl .tr b{font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:nowrap}.tbl .tr span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tbl .tr span:last-child{font-family:ui-monospace,Menlo,monospace;color:var(--mut)}
+.pipe{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12.5px;background:#f7f2ea;border-radius:12px;padding:8px 11px}.pipe span,.pipe b{background:#fff;border:2px solid var(--ink);border-radius:9px;padding:2px 8px;white-space:nowrap}
+.pipe b{background:var(--or);color:#fff}.pipe i{font-style:normal;font-size:10.5px;color:var(--mut);display:flex;align-items:center;gap:3px}.pipe i::after{content:'→';font-size:14px;color:var(--ink)}.pipe em{font-style:normal;font-weight:800;margin-left:auto}
+pre.code{margin:0;background:var(--ink);color:#f3efe7;border-radius:14px;padding:11px 13px;font:12px/1.55 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-word}pre.code i{font-style:normal;color:#a59fb8}pre.code b{color:var(--glow)}
+.readlist{display:flex;flex-direction:column;gap:5px;font-size:13.5px}.readlist div{display:flex;align-items:center;gap:8px;color:#9a94ab}.readlist em{font-style:normal;width:18px;height:18px;border-radius:50%;border:2px solid #c9c3d6;display:grid;place-items:center;font-size:11px;font-weight:800;flex:none}
+.readlist .ok{color:inherit}.readlist .ok em{background:var(--ok);border-color:var(--ok);color:#fff}.readlist .now{color:inherit}.readlist .now em{border-color:var(--or);border-top-color:transparent;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.m a.link,.suggest a.link{color:#a8410a;text-decoration:underline;text-underline-offset:2px}
+.trust{display:flex;align-items:center;gap:10px;background:var(--peach);border:2.5px solid var(--ink);border-radius:14px;padding:8px 12px}.trust i{display:block;font-style:normal;font-size:10px;font-weight:800;letter-spacing:.1em;color:#a8410a}.trust b{font-size:15px}
+.seal{font-size:11.5px;font-weight:700;color:#17694a;margin-left:auto;white-space:nowrap}.seal.off{color:#a39c8d;font-weight:600}.li .seal+.rec{margin-left:8px}
+@media (prefers-reduced-motion: reduce){.readlist .now em{animation:none}}

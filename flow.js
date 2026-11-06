@@ -11,7 +11,7 @@
 const $ = (id) => document.getElementById(id)
 let AGENT = window.appAgent
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
-const TOOL = 'Billing assistant'
+const TOOL = 'AI assistant'
 
 // ── the flame on its dish: the same character that lives on the Ledger, in colour ──
 const INK = '#1B1630'
@@ -123,6 +123,7 @@ function reduce() {
     else if (e.type === 'waiting-device') st.waitingDevice = true
     else if (e.type === 'signed') { st.asking = null; st.waitingDevice = false; if (e.why === 'lend') st.lent = { holder: e.holder, device: e.device, uses: e.uses, left: e.uses, at: e.at, lines: e.lines } }
     else if (e.type === 'declined') { st.asking = null; st.waitingDevice = false; const c = card(e.rid); if (c) c.declined = true; else st.lendDeclined = e.error || true }
+    else if (e.type === 'sealed') { const c = card(e.rid); if (c) c.sealed = e }
     else if (e.type === 'device' || e.type === 'notice') { const c = card(e.rid); if (c) c.onDevice = e.type === 'notice' ? true : e.ok }
     else if (e.type === 'error') st.error = e.error
   }
@@ -131,9 +132,11 @@ function reduce() {
 }
 const final = (c) => c.verdicts[c.verdicts.length - 1]
 function dec(c) { const v = final(c); if (!v) return 'checking'; if (c.declined) return 'DECLINED'; const d = v.response.decision; return d === 'ALLOWED' ? (v.pressed ? 'BYHAND' : 'ALLOWED') : d === 'NEEDS_PRESS' ? 'NEEDS' : d }
+/** What 0G has been asked so far in this session: calls and tokens, read off the Broker's own answers. */
+const zgUsed = (st) => { let n = 0, t = 0; for (const c of st.cards) for (const v of c.verdicts) { const z = v.response?.zg; if (z && !z.simulated && z.requestId) { n += 1; t += z.usage?.total_tokens || 0 } } return n ? `0G asked ${n}× · ${t} tokens` : '' }
 const thread = (c) => c.verdicts.map((x) => x.response.thread).filter(Boolean).pop()
 const recLink = (c) => { const t = thread(c); return t && mode === 'live' ? `<a class="rec" href="trace.html?thread=${encodeURIComponent(t)}&broker=${encodeURIComponent(BROKER())}" target="_blank" rel="noopener">record →</a>` : '' }
-const zgLine = (c) => { const z = c && final(c)?.response.zg; return !z ? '' : z.simulated ? '0G is simulated on this Broker.' : `Read by a sealed model on 0G${z.requestId ? ` · request ${esc(String(z.requestId).slice(0, 18))}` : ''}` }
+const zgLine = (c) => { const z = c && final(c)?.response.zg; return !z ? '' : z.simulated ? '0G is simulated on this Broker.' : `Read by a sealed model on 0G${z.requestId ? ` · request ${esc(String(z.requestId).slice(0, 16))}` : ''}${z.usage?.total_tokens ? ` · ${z.usage.total_tokens} tokens` : ''}` }
 function money(c) { const m = /^Refund (\S+) for (order #\d+)(?: \((.+)\))?/.exec(c.what || ''); return m ? { amount: m[1], order: m[2][0].toUpperCase() + m[2].slice(1), note: m[3] || '' } : null }
 
 // ── the Ledger, when this page is the one connected to it (USB or Bluetooth from the browser) ──
@@ -198,8 +201,8 @@ function worldResult(o) {
     ui.world = { step: 'done', already: o.reason === 'ALREADY_VOUCHED', simulated: Boolean(o.world?.simulated || o.simulated), checked: Boolean(o.ownerChecked) }
     ui.tab = 'lights'; refreshLights()
   } else {
-    const title = o.reason === 'human_denied' ? 'You said no' : o.reason === 'proof_expired' ? 'Nobody confirmed in time' : ['NOT_OWNER', 'NOT_LENT', 'NOT_USED'].includes(o.reason) ? 'Only someone who owned the key and used it can light a star' : (o.message || o.reason || 'Not confirmed')
-    const text = o.reason === 'human_denied' ? 'No star was lit. That you declined is on the trail too.' : o.reason === 'proof_expired' ? 'The code ran out. No star was lit. This is not the same as saying no.' : `${o.message || ''} No star was lit.`
+    const title = o.reason === 'human_denied' ? 'You said no' : o.reason === 'proof_expired' ? 'Nobody confirmed in time' : ['NOT_OWNER', 'NOT_LENT', 'NOT_USED'].includes(o.reason) ? 'Only someone who really ran it can light it' : (o.message || o.reason || 'Not confirmed')
+    const text = o.reason === 'human_denied' ? 'No light was lit. That you declined is on the trail too.' : o.reason === 'proof_expired' ? 'The code ran out. No light was lit. This is not the same as saying no.' : `${o.message || ''} No light was lit.`
     ui.world = { step: 'end', title, text }
   }
   paint()
@@ -239,9 +242,9 @@ const stepsDone = (a) => (a && a.device ? 3 : hasDevice() ? 3 : dev.on ? (dev.ap
 const strip = (a) => { const n = stepsDone(a); return `<div class="steps"><b class="lt">ON YOUR LEDGER</b>${LS.map((t, j) => `<div class="st ${j < n ? 'ok' : j === n ? 'now' : ''}"><em>${j < n ? '✓' : j + 1}</em><span>${t}</span></div>`).join('')}</div>` }
 function frame(o) {
   const nav = o.steps !== undefined
-    ? `<div class="stepper">${['Custody', 'Permit', 'Hold your Ledger'].map((t, i) => `<span class="${i === o.steps ? 'on' : i < o.steps ? 'done' : ''}"><em>${i < o.steps ? '✓' : i + 1}</em>${t}</span>`).join('')}</div>`
-    : o.tabs ? `<div class="links">${['home', 'activity', 'lights'].map((t) => `<span class="${t === ui.tab ? 'on' : ''}" data-act="tab:${t}">${{ home: 'Home', activity: 'Trail', lights: 'Flame' }[t]}${t === 'lights' ? '<i class="wld">World</i>' : ''}</span>`).join('')}</div>` : '<div class="links"></div>'
-  return `<div class="frame ${o.cls || ''} ${o.loading ? 'loading' : ''}" data-view="${cur}"><div class="nav"><div class="logo"><img src="logo.svg" alt="tomoshibi"></div>${nav}<div class="who">${o.who || 'Priya’s shop'}</div></div>`
+    ? `<div class="stepper">${['Add a row', 'Approve on your Ledger', 'Give the label'].map((t, i) => `<span class="${i === o.steps ? 'on' : i < o.steps ? 'done' : ''}"><em>${i < o.steps ? '✓' : i + 1}</em>${t}</span>`).join('')}</div>`
+    : o.tabs ? `<div class="links">${['home', 'activity', 'lights'].map((t) => `<span class="${t === ui.tab ? 'on' : ''}" data-act="tab:${t}">${{ home: 'Home', activity: 'Trail', lights: 'Lights' }[t]}${t === 'lights' ? '<i class="wld">World</i>' : ''}</span>`).join('')}</div>` : '<div class="links"></div>'
+  return `<div class="frame ${o.cls || ''} ${o.loading ? 'loading' : ''}" data-view="${cur}"><div class="nav"><div class="logo"><img src="logo.svg" alt="tomoshibi"></div>${nav}<div class="who">${o.who || 'Priya · builder'}</div></div>`
     + `<div class="vbar"><i>${o.now}</i><b>${o.why}</b></div>`
     + (o.gain ? `<div class="gain"><i>${o.gainLabel || 'NOW YOU CAN'}</i>${o.gain}</div>` : '')
     + (o.stage || `<div class="body" style="background:${o.bg || '#FFF3E4'}"><div class="l">${o.left}</div><div class="r">${o.right}</div></div>`)
@@ -266,53 +269,65 @@ function ledgerLine() {
 }
 
 // ── TOMOSHIBI: the views ──
+// TOMOSHIBI is the switchboard between her tools and her keys. A tool calls by label; the key is swapped in when the
+// call is put through. Only the Ledger can add a row, and only the Ledger can approve a heavy call.
+const BUILT = 'billing-assistant'
+const LABEL = () => agent?.range?.key || 'stripe-live'
+// The APIs TOMOSHIBI can put a call through to. The tool reports the Broker's list; this is the same list for a preview.
+const APIS = () => agent?.apis || [{ id: 'stripe', name: 'Stripe', target: 'api.stripe.com', keyHint: 'sk_live_…', where: 'https://dashboard.stripe.com/apikeys', ready: true }, { id: 'model', name: 'Model API', ready: false }, { id: 'mail', name: 'Mail', ready: false }]
+const API = () => APIS().find((a) => a.ready) || APIS()[0]
+const left = (st) => (typeof st.lent?.left === 'number' ? st.lent.left : st.lent?.uses)
+/** The switchboard's table: one row per label. The key column is never shown. */
+const table = (st) => `<div class="tbl"><div class="th"><span>LABEL</span><span>GOES TO</span><span>UNTIL</span><span>KEY</span></div><div class="tr"><b>${esc(LABEL())}</b><span>${esc(API().target)}</span><span>${untilDay(CHO[ui.choice].days)} · ${left(st)} left</span><span>sk_••••</span></div></div>`
+const wire = (n) => `<div class="pipe"><span>${BUILT}</span><i>label</i><b>TOMOSHIBI</b><i>key</i><span>Stripe</span><em>${n ? `× ${n}` : ''}</em></div>`
+
 function vWelcome() {
   cur = 'welcome'
-  const pre = [['Custody', 'The key stays here'], ['Permit', 'One use, not the key'], ['Hold your Ledger', 'Your AI cannot press it']]
-  return frame({ now: 'WELCOME', why: 'You never hand the key over. You hand over one use of it.',
-    left: hero('happy', 'Welcome!', 'The key stays<br>with me.', '3 steps · 2 minutes'),
-    right: `<div class="card">${pre.map(([t, g], i) => `<div class="pre"><em>${i + 1}</em><div><b>${t}</b><span>${g}</span></div></div>`).join('')}<div class="pre later"><em>+</em><div><b>Later: light a star <i class="wld">World</i></b></div></div><button data-act="onb:key">Let’s go →</button></div>` })
+  const pre = [['Add a row', 'Pick an API. Park its key'], ['Approve on your Ledger', 'Only the Ledger can add a row'], ['Give your tool the label', 'It calls by label, never by key']]
+  return frame({ now: 'WELCOME', why: 'The switchboard between your tools and your keys.',
+    left: hero('happy', 'Hello, builder!', 'Your API keys<br>live here.', '3 steps · 2 minutes'),
+    right: `<div class="card">${pre.map(([t, g], i) => `<div class="pre"><em>${i + 1}</em><div><b>${t}</b><span>${g}</span></div></div>`).join('')}<div class="pre later"><em>+</em><div><b>Later: light the tool you built <i class="wld">World</i></b></div></div><button data-act="onb:key">Start →</button></div>` })
 }
-function vKey() {
+function vKey(st) {
   cur = 'key'
-  return frame({ steps: 0, now: 'CUSTODY', why: 'Your AI gets a handle. Never the key.',
-    left: hero('awake', 'I’ll keep it.', 'Paste it once.<br>Done.', 'No files. No folders.'),
-    right: `<div class="card"><div class="how1"><a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener"><u>Stripe → API keys ↗</u></a> · copy the <b>Secret key</b> · paste</div>
-      <label class="inp"><input id="keyIn" type="password" placeholder="sk_live_…" autocomplete="off" spellcheck="false"></label><button data-act="key-keep" disabled>Keep it with me</button>
-      <small>Demo: nothing is sent or stored. <button class="link" data-act="key-test">Use a test key</button></small></div>` })
-}
-function vChoose(st) {
-  cur = 'choose'
-  const c = CHO[ui.choice]
-  return frame({ steps: 1, now: 'PERMIT', why: 'You never hand the key over. You hand over one use of it.',
-    gain: ui.gain === 'key' ? 'forget this key.' : '',
-    left: hero('awake', 'What may it do?', 'Hand over<br>one use.'),
-    right: `<div class="card">${kv('Key', 'Stripe')}${kv('To', 'api.stripe.com')}${kv('Scope', 'Work with your orders')}<div class="kv"><span>Until</span><select id="ends">${CHO.map((x, i) => `<option value="${i}" ${i === ui.choice ? 'selected' : ''}>${choLabel(x)}</option>`).join('')}</select></div>
-      <div class="sentence"><b>${c.uses} times</b>, until <b>${untilDay(c.days)}</b>. <b>Anything heavy still waits for your press.</b></div>
+  const a = API(), c = CHO[ui.choice]
+  return frame({ steps: 0, now: 'ADD A ROW', why: 'Your tool gets a label. Never the key.',
+    left: hero('awake', 'Which API?', 'Park the key<br>once.', 'No .env. No copies.'),
+    right: `<div class="card"><div class="apis">${APIS().map((x) => `<span class="${x.id === a.id ? 'on' : ''} ${x.ready ? '' : 'off'}">${esc(x.name)}${x.ready ? '' : '<i>not yet</i>'}</span>`).join('')}</div>
+      <label class="inp"><input id="keyIn" type="password" placeholder="${esc(a.keyHint || 'the key')}" autocomplete="off" spellcheck="false"></label>
+      ${kv('Label', `<code>${esc(LABEL())}</code>`)}${kv('Goes to', `${esc(a.target)} <i class="fixed">fixed</i>`)}<div class="kv"><span>Until</span><select id="ends">${CHO.map((x, i) => `<option value="${i}" ${i === ui.choice ? 'selected' : ''}>${x.days} day${x.days === 1 ? '' : 's'} · ${x.uses} calls</option>`).join('')}</select></div>
       ${st.lendDeclined ? '<div class="err">Nothing was signed. Try again.</div>' : ''}${ui.err ? `<div class="err">${esc(ui.err)}</div>` : ''}
-      <button data-act="lend">Continue on my Ledger →</button>${ledgerLine()}</div>` })
+      <button data-act="park" disabled>Approve on my Ledger →</button>${ledgerLine()}
+      <small>Demo: the key field sends and stores nothing. <button class="link" data-act="key-test">Use a test key</button></small></div>` })
 }
 function vHold(st) {
   cur = 'hold'
   const a = st.asking, c = CHO[ui.choice], n = stepsDone(a), soft = a && !a.device
   const status = !a ? 'Sending to your Ledger…' : st.waitingDevice ? 'Looking for your Ledger…' : soft ? 'No Ledger connected' : 'Waiting for your Ledger…'
-  const lines = a?.lines ? `<div class="codes">${a.lines.map((l) => `<code>${esc(l)}</code>`).join('')}</div>` : `<div>Stripe · ${c.uses} times · until ${untilDay(c.days)}</div>`
-  return frame({ steps: 2, cls: 'hero5', loading: !a, now: 'PERMIT', why: 'Approved on something your AI cannot press.',
-    stage: `<div class="stage"><div class="headline"><small class="eyebrow">PICK UP YOUR LEDGER</small><h3>Nothing starts until you hold.</h3><p>Your AI cannot press this button.</p></div>
+  const lines = a?.lines ? `<div class="codes">${a.lines.map((l) => `<code>${esc(l)}</code>`).join('')}</div>` : `<div>${esc(LABEL())} · ${esc(API().target)} · until ${untilDay(c.days)}</div>`
+  return frame({ steps: 1, cls: 'hero5', loading: !a, now: 'APPROVE', why: 'Only your Ledger can add a row.',
+    stage: `<div class="stage"><div class="headline"><small class="eyebrow">PICK UP YOUR LEDGER</small><h3>Nothing is added until you hold.</h3><p>Your AI cannot press this button.</p></div>
       <div class="cols2"><ol class="st5">${LS.map((t, i) => `<li class="${i < n ? 'ok' : i === n ? 'now' : ''}"><em>${i < n ? '✓' : i + 1}</em><div><b>${t}</b></div></li>`).join('')}</ol>
         <div class="mid"><div class="hold"><svg viewBox="0 0 220 220" class="ring" aria-hidden="true"><circle cx="110" cy="110" r="98" class="tr"/></svg><svg viewBox="0 0 120 120" class="lamp" aria-hidden="true">${WICK}${DISH}</svg></div><div class="status">${status}</div></div></div>
-      ${soft ? softHold('Hold here to sign') : a && a.device ? '' : connectRow()}
-      <div class="chosen"><i>YOU ARE SIGNING</i>${lines}<small>Your Ledger shows the same. Different? Do not hold.</small></div></div>` })
+      ${soft ? softHold('Hold here to approve') : a && a.device ? '' : connectRow()}
+      <div class="chosen"><i>YOU ARE APPROVING</i>${lines}<small>Your Ledger shows the same. Different? Do not hold.</small></div></div>` })
 }
 function vLit(st) {
   cur = 'lit'
-  return frame({ steps: 3, cls: 'lit-in', now: 'PERMIT SIGNED', why: 'Your AI has a handle. It never got the key.', gain: 'forget about keys.', bg: '#EAF7EF',
-    left: `<div class="hero m-happy"><div class="c"><svg viewBox="0 0 120 120" width="150" height="150" aria-hidden="true">${WICK}<g id="hf" style="transform-origin:60px 92px">${BODY}${FACE.happy}${SPK}</g>${DISH}</svg></div><div class="say">Signed!</div></div><h1>You did it.</h1>`,
-    right: `<div class="card"><div class="did"><div><i>YOU DID</i><span class="y">Pasted once</span><span class="y">Signed one permit</span><span class="y">Held your Ledger</span></div><div><i>YOU DID NOT</i><span class="x">Create a file</span><span class="x">Find a folder</span><span class="x">Give an AI your key</span></div></div>
-      <button data-act="back-ai">Back to ${TOOL} ↗</button>${st.lent.device ? '' : '<small>Signed by a software key: no Ledger was connected.</small>'}</div><div class="card soft">Later, under <b>Flame</b>: light a star with <b>World</b>.</div>` })
+  return frame({ steps: 2, cls: 'lit-in', now: 'THE LABEL', why: 'Your tool calls by label. The key stays here.', gain: 'delete that .env file.', bg: '#EAF7EF',
+    left: `<div class="hero m-happy"><div class="c"><svg viewBox="0 0 120 120" width="150" height="150" aria-hidden="true">${WICK}<g id="hf" style="transform-origin:60px 92px">${BODY}${FACE.happy}${SPK}</g>${DISH}</svg></div><div class="say">Row added!</div></div><h1>Give your tool<br>the label.</h1>`,
+    right: `<div class="card">${table(st)}
+      <pre class="code"><i>// what ${BUILT} sends. No key in it.</i>
+POST <b>tomoshibi</b>/use
+{ permit, signature,
+  request: { method: "GET",
+    url: "https://${esc(API().target)}/v1/invoices",
+    keyRef: <b>${esc(LABEL())}</b> } }   <i>// the label</i>
+<i>// → Stripe's answer, passed back</i></pre>
+      <button data-act="back-ai">Back to the AI ↗</button>${st.lent.device ? '' : '<small>Signed by a software key: no Ledger was connected.</small>'}</div>` })
 }
 const shownMine = () => Boolean(me() && lights.who.includes(me())) || ui.world?.step === 'done'
-const nudge = (st) => (st.uses && !shownMine() ? `<div class="card nudge">${lamp('happy', 46)}<div><b>It worked for you. Light a star?</b></div><button data-act="tab:lights">Light a star →</button></div>` : '')
+const nudge = (st) => (st.uses && !shownMine() ? `<div class="card nudge">${lamp('happy', 46)}<div><b>It works. Light the tool you built?</b></div><button data-act="tab:lights">Light it →</button></div>` : '')
 function vHome(st) {
   const c = st.cards[st.cards.length - 1], a = st.asking
   const d = c && ui.seenRid !== c.rid ? dec(c) : null
@@ -322,97 +337,101 @@ function vHome(st) {
   if ((a && a.why === 'press') || d === 'NEEDS') {
     cur = 'money'
     const m = money(c) || { amount: '', order: '', note: '' }, soft = a && !a.device, signed = !a && d === 'NEEDS'
-    return frame({ tabs: 1, loading: signed, now: 'PRESS', why: 'Money cannot move while you are away.', bg: '#FFE9DC',
-      left: hero('alert', 'Your call!', m.amount ? `${esc(m.amount)} refund<br>is waiting.` : 'This one<br>is waiting.', 'Nothing happens until you hold the button on your Ledger.'),
+    return frame({ tabs: 1, loading: signed, now: 'YOUR APPROVAL', why: 'A heavy call waits for your Ledger.', bg: '#FFE9DC',
+      left: hero('alert', 'Your call!', m.amount ? `${esc(m.amount)} refund<br>is waiting.` : 'This call<br>is waiting.', 'Nothing happens until you hold the button on your Ledger.'),
       right: `<div class="card">${tag('NEEDS_PRESS', 'hand')}${kv('What', esc(m.amount ? 'Refund ' + m.amount : c.what))}${m.order ? kv('For', esc(m.order + (m.note ? ' · ' + m.note : ''))) : ''}${kv('Times', 'Once')}
-        ${signed ? waitbox('Sending it, once', 'It cannot be repeated.') : st.waitingDevice ? '<div class="wstatus">Looking for your Ledger…</div>' : soft ? softHold('Hold here to approve') : `<div class="wstatus">Waiting for your Ledger…</div>${a && a.device ? '' : connectRow()}`}
+        ${signed ? waitbox('Putting it through, once', 'It cannot be repeated.') : st.waitingDevice ? '<div class="wstatus">Looking for your Ledger…</div>' : soft ? softHold('Hold here to approve') : `<div class="wstatus">Waiting for your Ledger…</div>${a && a.device ? '' : connectRow()}`}
         ${zg(c)}</div>`, strip: soft || signed ? '' : strip(a) })
   }
   if (d === 'checking') {
     cur = 'checking'
-    return frame({ tabs: 1, loading: 1, now: 'WEIGHT', why: 'It only asks when it should.',
-      left: hero('awake', 'Reading it…', 'Checking<br>this one.', esc(c.what)),
-      right: `<div class="card">${waitbox('0G is weighing it', 'Routine: it goes through. Heavier: it waits for your press.')}</div>` })
+    return frame({ tabs: 1, loading: 1, now: 'WEIGHING', why: 'It only comes to you when a call is heavy.',
+      left: hero('awake', 'Reading it…', 'Weighing<br>this call.', esc(c.what)),
+      right: `<div class="card">${waitbox('0G is weighing it', 'Routine: it goes through. Heavy: it comes to you.')}</div>` })
   }
   if (d === 'DENIED') {
     cur = 'blocked'
     let host = ''; try { host = new URL(c.url).hostname } catch {}
-    return frame({ tabs: 1, now: 'SCOPE + ATTRIBUTION', why: 'It did not get anywhere, and it has a name on it.', gainLabel: 'YOU DID NOTHING', gain: 'Nothing got out.', bg: '#ECEAFB',
-      left: hero('guard', 'Refused.', 'Stopped while<br>you slept.', 'Outside the scope you signed.'),
-      right: `<div class="card">${tag('DENIED', 'no')}${kv('Tried', esc(`${c.method} ${host}`))}${kv('You signed', 'api.stripe.com only')}${kv('Whose code', esc(`${c.tool} ${agent?.version || '1.0.0'}`))}
+    return frame({ tabs: 1, now: 'REFUSED', why: `This label only reaches ${esc(API().target)}.`, gainLabel: 'YOU DID NOTHING', gain: 'Nothing got out.', bg: '#ECEAFB',
+      left: hero('guard', 'Refused.', 'Stopped while<br>you slept.', 'Not where this label goes.'),
+      right: `<div class="card">${tag('DENIED', 'no')}${kv('Tried', esc(`${c.method} ${host}`))}${kv('This label goes to', `${esc(API().target)} only`)}${kv('Whose code', esc(`${c.tool} ${agent?.version || '1.0.0'}`))}
         <small>Nothing sent. Nothing charged.${c.onDevice ? ' Your Ledger shows it too.' : ''}</small><div class="two">${ok}${recLink(c)}</div></div>` })
   }
   if (d === 'STOPPED') {
     cur = 'noverdict'
-    return frame({ tabs: 1, now: 'WEIGHT', why: 'No verdict exists, so nothing ran.', gainLabel: 'NOTHING CHARGED', gain: 'I stop rather than guess.', bg: '#ECEAFB',
+    return frame({ tabs: 1, now: 'STOPPED', why: 'No verdict from 0G, so nothing ran.', gainLabel: 'NOTHING CHARGED', gain: 'I stop rather than guess.', bg: '#ECEAFB',
       left: hero('guard', 'No guessing.', 'No verdict.<br>Nothing ran.', '0G did not answer.'),
       right: `<div class="card">${tag('STOPPED', 'no')}${kv('What', esc(c.what))}<div class="two">${ok}${recLink(c)}</div></div>` })
   }
   if (d === 'BYHAND') {
     cur = 'paid'
     const m = money(c)
-    return frame({ tabs: 1, now: 'PRESS', why: 'One press. It goes out once.', gain: 'trust that money waits for you.', bg: '#EAF7EF',
+    return frame({ tabs: 1, now: 'APPROVED ONCE', why: 'One hold. It goes out once.', gain: 'trust that heavy calls wait for you.', bg: '#EAF7EF',
       left: hero('happy', 'Done. Once.', m ? `${esc(m.amount)} refunded.<br>Once.` : 'Done. Once.'),
-      right: `<div class="card">${tag('BY HAND', 'hand')}${kv('What', esc(c.what))}${zg(c)}<div class="two"><button data-act="open-ai">Back to ${TOOL} ↗</button>${ok}</div>${recLink(c)}</div>${nudge(st)}` })
+      right: `<div class="card">${tag('BY HAND', 'hand')}${kv('What', esc(c.what))}${zg(c)}<div class="two"><button data-act="open-ai">Back to the AI ↗</button>${ok}</div>${recLink(c)}</div>${nudge(st)}` })
   }
   if (d === 'DECLINED') {
     cur = 'refused'
-    return frame({ tabs: 1, now: 'PRESS', why: 'Saying no is always allowed.', bg: '#ECEAFB',
+    return frame({ tabs: 1, now: 'YOUR APPROVAL', why: 'Saying no is always allowed.', bg: '#ECEAFB',
       left: hero('guard', 'Not sent.', 'You said no.<br>Nothing moved.'),
       right: `<div class="card">${tag('YOU SAID NO', 'no')}${kv('What', esc(c.what))}<div class="two">${ok}${recLink(c)}</div></div>` })
   }
   cur = 'quiet'
   const n = through.length
-  return frame({ tabs: 1, now: 'WEIGHT', why: 'On an ordinary day it asks you nothing.', bg: '#EAF7EF',
-    left: hero('asleep', 'zzz…', 'All quiet.', n ? `${n} went through without asking you.` : 'Nothing asked yet.'),
-    right: `<div class="card">${n ? tag('ROUTINE', 'ok') + kv(esc(through[n - 1].what), '× ' + n) + zg(through[n - 1]) : '<small>Nothing yet.</small>'}</div>${nudge(st) || '<div class="card soft">Anything heavier waits for your press.</div>'}` })
+  return frame({ tabs: 1, now: 'SWITCHBOARD', why: 'Routine calls go through. You are not asked.', bg: '#EAF7EF',
+    left: hero('asleep', 'zzz…', 'All quiet.', n ? `${n} call${n === 1 ? '' : 's'} put through. You were not asked.` : 'No calls yet.'),
+    right: `<div class="card">${table(st)}${n ? wire(n) + `<small>${esc(through[n - 1].what)}</small>` + zg(through[n - 1]) : '<small>No calls yet.</small>'}</div>${nudge(st) || '<div class="card soft">A heavy call comes to your Ledger. Nothing else does.</div>'}` })
 }
 function vActivity(st) {
   cur = 'activity'
   const k = (x) => st.cards.filter((c) => x.includes(dec(c))).length
   const T = { ALLOWED: ['ALLOWED', 'ok'], BYHAND: ['BY HAND', 'hand'], DENIED: ['DENIED', 'no'], STOPPED: ['STOPPED', 'no'], DECLINED: ['YOU SAID NO', 'no'], NEEDS: ['NEEDS_PRESS', 'hand'], checking: ['WEIGHING', 'ok'] }
-  const rows = st.cards.slice().reverse().map((c) => { const t = T[dec(c)]; return `<div class="li">${tag(t[0], t[1])} ${esc(c.what)}${recLink(c)}</div>` }).join('')
+  // A finished thread is put into 0G Storage by the tool. The line says whether that really happened.
+  const seal = (c) => (!c.sealed ? '' : c.sealed.uploaded ? (c.sealed.url ? `<a class="seal" href="${esc(c.sealed.url)}" target="_blank" rel="noopener">0G Storage ↗</a>` : '<span class="seal">0G Storage ✓</span>') : '<span class="seal off" title="' + esc(c.sealed.reason || '') + '">not stored</span>')
+  const rows = st.cards.slice().reverse().map((c) => { const t = T[dec(c)]; return `<div class="li">${tag(t[0], t[1])} ${esc(c.what)}${seal(c)}${recLink(c)}</div>` }).join('')
   const num = (cls, v, t) => `<div><b class="n ${cls}" data-n="${v}">${v}</b>${t}</div>`
-  return frame({ tabs: 1, now: 'TRAIL', why: 'You can say what was stopped, and whose code tried it.',
-    left: hero('awake', 'Nothing hidden.', 'The trail.'),
-    right: `<div class="nums">${num('no', k(['DENIED', 'STOPPED', 'DECLINED']), 'stopped')}${num('ok', k(['ALLOWED']), 'without asking you')}${num('hand', k(['BYHAND']), 'by hand')}</div><div class="card">${rows || '<small>Nothing yet.</small>'}</div>` })
+  return frame({ tabs: 1, now: 'TRAIL', why: 'Every call, put through or refused, with its reason.',
+    left: hero('awake', 'Nothing hidden.', 'The trail.', `Label ${esc(LABEL())}`),
+    right: `<div class="nums">${num('no', k(['DENIED', 'STOPPED', 'DECLINED']), 'stopped')}${num('ok', k(['ALLOWED']), 'put through')}${num('hand', k(['BYHAND']), 'by hand')}</div><div class="card">${rows || '<small>Nothing yet.</small>'}</div>` })
 }
 const field = (names, others) => `<div class="field">${names.map((nm, i) => `<div class="me">${lamp(i === 0 ? 'happy' : 'awake', 66)}<b>${esc(nm)}</b></div>`).join('')}${Array.from({ length: Math.min(40, others) }, () => `<div class="an">${lamp('awake', 34)}</div>`).join('')}</div>`
 const tgl = (on, act) => `<div class="tgl">${[['all', 'Everyone'], ['known', 'People I know']].map(([k, t]) => `<span class="${k === on ? 'on' : ''}" ${act ? `data-act="lights-mode:${k}"` : ''}>${t}</span>`).join('')}</div>`
+/** What the lights add up to: the builder's name. Counted per tool today; the number is this tool's. */
+const trust = (n) => `<div class="trust">${lamp('happy', 34)}<div><i>YOUR NAME AS A BUILDER</i><b>1 tool · ${n} light${n === 1 ? '' : 's'}</b></div></div>`
 function vLights(st) {
-  const name = `billing-assistant ${agent?.version || '1.0.0'}`, w = ui.world
+  const name = `${BUILT} ${agent?.version || '1.0.0'}`, w = ui.world
   if (ui.friend === 1) {
     cur = 'friend'
-    return frame({ tabs: 1, who: 'Arjun’s shop', now: 'FLAME · SAMPLE', why: 'You choose by whose star it is, not by how many.',
-      left: hero('awake', 'Someone you know!', 'Priya’s star<br>is on this one.', 'She really uses this one.'),
-      right: `<div class="card"><div class="cardh2"><b>Tools for unpaid orders</b>${tgl('known')}</div><div class="tool"><b>invoice-wizard 2.3</b><span>212 stars</span><em>nobody you know</em></div><div class="tool pick"><b>${name}</b><span>14 stars</span><em>${lamp('happy', 30)} Priya</em></div><div class="tool"><b>pay-helper 0.9</b><span>3 stars</span><em>nobody you know</em></div><button data-act="friend:2">Use it with TOMOSHIBI →</button></div>` })
+    return frame({ tabs: 1, who: 'Arjun', now: 'LIGHTS · SAMPLE', why: 'People choose a tool by who built it and who really runs it.',
+      left: hero('awake', 'Someone you know!', 'Built and run<br>by Priya.', 'She runs it with her own key.'),
+      right: `<div class="card"><div class="cardh2"><b>Tools for unpaid invoices</b>${tgl('known')}</div><div class="tool"><b>invoice-wizard 2.3</b><span>212 lights</span><em>nobody you know</em></div><div class="tool pick"><b>${name}</b><span>14 lights · built by Priya</span><em>${lamp('happy', 30)} Priya</em></div><div class="tool"><b>pay-helper 0.9</b><span>3 lights</span><em>nobody you know</em></div><button data-act="friend:2">Use it with TOMOSHIBI →</button></div>` })
   }
   if (ui.friend === 2) {
     cur = 'ending'
-    return frame({ tabs: 1, now: 'FLAME · SAMPLE', why: 'You choose by whose star it is, not by how many.', gainLabel: 'BECAUSE OF YOU', gain: 'one more person skips the key file.',
-      left: hero('happy', 'Look who’s here!', 'Arjun chose it<br>by your star.'),
-      right: `<div class="card"><div class="cardh2"><b>${name}</b>${tgl('known')}</div>${field(['You', 'Arjun'], 0)}<small>15 stars · 2 you know</small></div>` })
+    return frame({ tabs: 1, now: 'LIGHTS · SAMPLE', why: 'Every light on your tool is trust in you.', gainLabel: 'BECAUSE OF YOU', gain: 'one more builder skips the .env file.',
+      left: hero('happy', 'Look who’s here!', 'Arjun chose it<br>because of you.'),
+      right: `<div class="card"><div class="cardh2"><b>${name}</b>${tgl('known')}</div>${field(['You', 'Arjun'], 0)}<small>15 lights · 2 you know</small>${trust(15)}</div>` })
   }
   if (shownMine()) {
     cur = 'shown'
     const others = Math.max(0, lights.count - 1), known = people().filter((p) => p.tie !== 'me' && lights.who.includes(p.id)).map((p) => p.name)
-    return frame({ tabs: 1, now: 'FLAME', why: 'One star = one real person who used it.', gainLabel: 'BECAUSE OF YOU', gain: 'the next person chooses by whose star it is.',
-      left: hero('happy', 'Thank you!', 'Your star<br>is lit.', others ? `${others} other${others === 1 ? '' : 's'} use${others === 1 ? 's' : ''} it too.` : ''),
-      right: `<div class="card"><div class="cardh2"><b>${name}</b>${tgl(ui.lightsMode, true)}</div>${field(['You', ...known], ui.lightsMode === 'all' ? Math.max(0, others - known.length) : 0)}
-        <small>Stars can’t be bought. Every star goes out when the version changes.${w?.simulated ? ' (World was simulated here.)' : ''}</small></div>` })
+    return frame({ tabs: 1, now: 'YOUR LIGHTS', why: 'Lights add up to your name as a builder.', gainLabel: 'BECAUSE OF YOU', gain: 'people can choose this tool with confidence.',
+      left: hero('happy', 'Thank you!', 'Your tool<br>is lit.', others ? `${others} other${others === 1 ? '' : 's'} run${others === 1 ? 's' : ''} it too.` : 'A real person really runs it: you.'),
+      right: `<div class="card"><div class="cardh2"><b>${name}</b>${tgl(ui.lightsMode, true)}</div>${field(['You', ...known], ui.lightsMode === 'all' ? Math.max(0, others - known.length) : 0)}${trust(Math.max(1, lights.count))}
+        <small>Lights can’t be bought. A new version starts again.${w?.simulated ? ' (World was simulated here.)' : ''}</small></div>` })
   }
   if (!st.uses) {
     cur = 'lights-early'
     const last = st.cards[st.cards.length - 1], down = last && dec(last) === 'STOPPED'
     const row = (state, n, t, g = '') => `<div class="pre ${state}"><em>${state === 'ok' ? '✓' : n}</em><div><b>${t}</b>${g ? `<span>${g}</span>` : ''}</div></div>`
-    return frame({ tabs: 1, now: 'FLAME', why: 'Only someone who owned the key and used it can light a star.',
-      left: hero('awake', 'World comes in here.', 'Light a star<br>with World.', 'Unlocks after one real use.'),
-      right: `<div class="card">${row('ok', 1, 'You signed the permit')}${row('now', 2, `${TOOL} uses it once`, down ? '0G is not answering yet.' : 'Press “Routine” below.')}${row('', 3, 'Press “Light a star”')}${row('', 4, 'Confirm in World App')}
-        <button disabled>Light a star with World →</button></div>` })
+    return frame({ tabs: 1, now: 'LIGHTS', why: 'Only someone who really ran it can light it.',
+      left: hero('awake', 'World comes in here.', 'Light the tool<br>you built.', 'Unlocks after one real call.'),
+      right: `<div class="card">${row('ok', 1, 'You added a row')}${row('now', 2, `${BUILT} makes one real call`, down ? '0G is not answering yet.' : 'Press “Routine call” below.')}${row('', 3, 'Press “Light it”')}${row('', 4, 'Confirm in World App')}
+        <button disabled>Light it with World →</button></div>` })
   }
   cur = 'lights'
   let right
-  if (!w) right = `<div class="card">${kv('Tool', name)}${kv('You used it', `${st.uses} time${st.uses === 1 ? '' : 's'}`)}<button data-act="show-light">Light a star with World →</button><small>World only checks you are one real person.</small></div>`
+  if (!w) right = `<div class="card">${kv('Tool', name)}${kv('Built by', 'You')}${kv('You ran it', `${st.uses} time${st.uses === 1 ? '' : 's'}`)}<button data-act="show-light">Light it with World →</button><small>World only checks you are one real person.</small></div>`
   else if (w.step === 'starting') right = `<div class="card">${waitbox('Asking World for a code', 'You confirm on your phone.')}</div>`
   // The phone does it: scan our code, World's page opens on the phone, World App confirms. The step that is easy to
   // miss is the last one. It is World's page (in the phone's browser), not World App alone, that completes the
@@ -429,15 +448,15 @@ function vLights(st) {
   }
   else if (w.step === 'preview') right = '<div class="card soft">Preview: World is not asked here.</div>'
   else right = `<div class="card">${tag(esc(w.title), 'no')}<small>${esc(w.text)}</small><button class="ghost" data-act="show-light">Ask again</button></div>`
-  return frame({ tabs: 1, loading: w && (w.step === 'starting' || w.step === 'confirm'), now: 'FLAME', why: 'You choose by whose star it is, not by how many.',
-    left: hero('happy', 'It worked for you.', 'Light a star<br>on this version.', 'Only someone who used it can.'), right })
+  return frame({ tabs: 1, loading: w && (w.step === 'starting' || w.step === 'confirm'), now: 'LIGHTS', why: 'A light says: a real person really runs this tool.',
+    left: hero('happy', 'It works for you.', 'Light the tool<br>you built.', 'Only someone who ran it through TOMOSHIBI can.'), right })
 }
 function tomo(st) {
   if (mode === 'boot') { cur = 'boot'; return boot() }
   if (ui.busy) { cur = 'busy'; return frame({ steps: ui.busy.steps, loading: 1, now: ui.busy.now, why: ui.busy.why, left: hero('awake', 'One moment!', ui.busy.h), right: `<div class="card">${waitbox(ui.busy.doing, ui.busy.next)}</div>` }) }
   if (!st.lent) {
     if (st.asking || ui.pending === 'lend') return vHold(st)
-    return ui.onb === 'welcome' ? vWelcome() : ui.onb === 'key' ? vKey() : vChoose(st)
+    return ui.onb === 'welcome' ? vWelcome() : vKey(st)
   }
   if (!ui.ackLit && !st.cards.length) return vLit(st)
   if (st.asking?.why === 'press') return vHome(st)
@@ -445,26 +464,31 @@ function tomo(st) {
 }
 
 let chatSeen = 99, chatNext = 0   // only messages that were not there at the last paint slide in
-// ── the AI tool's chat. The first two messages are scripted; what it does afterwards is real. ──
+// ── the chat with the AI that helps her build. The first messages are scripted; what the tool does afterwards is real. ──
+const GUIDE = 'llms.txt'
 function chat(st) {
   cur = 'chat' + ui.chat
-  const M = [['me', 'Chase the unpaid orders from last week.'], ['bot', 'Happy to. First I need to connect to Stripe:<ol><li>Open the folder <code>shop-tools</code></li><li>Create a file named <code>.env</code></li><li>Add the line <code>STRIPE_SECRET_KEY=sk_live_…</code></li><li>Tell me when it is done</li></ol>']]
+  const link = `<a class="link" href="${GUIDE}" target="_blank" rel="noopener">tomoshibi/${GUIDE}</a>`
+  const M = [['me', 'Build me a tool that chases unpaid invoices on Stripe.'], ['bot', `On it: <code>${BUILT}</code>. To call Stripe I need your API key:<ol><li>Create a file named <code>.env</code> in the project</li><li>Add the line <code>STRIPE_SECRET_KEY=sk_live_…</code></li><li>Tell me when it is done</li></ol>`]]
   let extra = ''
-  if (ui.chat === 0) extra = '<div class="thoughts"><span>What is a .env?</span><span>Which folder…?</span><span>How do I even write that?</span></div><div class="suggest">Can you use TOMOSHIBI instead? <span class="link">tomoshibi.app/priya</span><button data-act="chat-send">Send</button></div>'
+  if (ui.chat === 0) extra = `<div class="thoughts"><span>Another key in another .env…</span><span>Which project has which key?</span><span>What if it ends up in a commit?</span></div><div class="suggest">Use TOMOSHIBI instead: ${link}<button data-act="chat-send">Send</button></div>`
   else {
-    M.push(['me', 'Can you use TOMOSHIBI instead? <span class="link">tomoshibi.app/priya</span>'])
-    M.push(ui.typing ? ['bot typing', '<span class="typing"><i></i><i></i><i></i></span>'] : ['bot', 'Yes. Then there is no file to create, and I never hold your key.' + (st.lent ? '' : `<br>Approve what I may do here:<button class="aibtn" data-act="open-tomo"><img src="logo-mark-light.svg" alt="" width="20" height="20"> Approve in TOMOSHIBI ↗</button>`)])
+    const rd = ui.reading ?? 4
+    const READ = [`Reading ${link}`, 'Stripe is on the supported list', 'I call by label, through TOMOSHIBI', 'I never hold the key']
+    M.push(['me', `Use TOMOSHIBI instead: ${link}`])
+    M.push(['bot', `<div class="readlist">${READ.map((t, i) => `<div class="${i < rd ? 'ok' : i === rd ? 'now' : ''}"><em>${i < rd ? '✓' : ''}</em>${t}</div>`).join('')}</div>`])
+    if (rd >= 4) M.push(['bot', 'I’ll use TOMOSHIBI. No <code>.env</code> file, and I never see your key.' + (st.lent ? '' : `<br>Add a row for Stripe and approve it on your Ledger:<button class="aibtn" data-act="open-tomo"><img src="logo-mark-light.svg" alt="" width="20" height="20"> Add the row in TOMOSHIBI ↗</button>`)])
   }
-  if (st.lent) M.push(['bot', 'Thank you. I am connected through TOMOSHIBI, no file needed. I will start on the unpaid orders.'])
+  if (st.lent) M.push(['bot', `Connected. <code>${BUILT}</code> calls Stripe by the label <code>${esc(LABEL())}</code>. I never saw your key. Starting on the unpaid invoices.`])
   for (const c of st.cards.slice(-8)) {
     const d = dec(c)
-    const state = d === 'checking' ? '<span class="state wait">TOMOSHIBI is checking <span class="typing"><i></i><i></i><i></i></span></span>' : d === 'ALLOWED' ? '<span class="state ok">Done. It went through TOMOSHIBI.</span>'
-      : d === 'NEEDS' ? '<span class="state wait">Waiting: this one needs your press. <button class="link" data-act="open-tomo">Open TOMOSHIBI ↗</button></span>' : d === 'BYHAND' ? '<span class="state ok">Sent once, because you approved it.</span>'
-      : d === 'DECLINED' ? '<span class="state bad">Not sent. You said no.</span>' : d === 'DENIED' ? '<span class="state bad">I could not. It was outside the permit.</span>' : '<span class="state bad">No verdict exists, so nothing ran.</span>'
+    const state = d === 'checking' ? '<span class="state wait">TOMOSHIBI is weighing it <span class="typing"><i></i><i></i><i></i></span></span>' : d === 'ALLOWED' ? '<span class="state ok">Done. TOMOSHIBI put it through.</span>'
+      : d === 'NEEDS' ? '<span class="state wait">Waiting: a heavy call needs your approval. <button class="link" data-act="open-tomo">Open TOMOSHIBI ↗</button></span>' : d === 'BYHAND' ? '<span class="state ok">Sent once, because you approved it.</span>'
+      : d === 'DECLINED' ? '<span class="state bad">Not sent. You said no.</span>' : d === 'DENIED' ? '<span class="state bad">Refused. My label does not go there.</span>' : '<span class="state bad">No verdict from 0G, so nothing ran.</span>'
     M.push(['bot', `${esc(c.what)}…${state}`])
   }
-  return `<div class="frame ai" data-view="${cur}"><div class="aibody"><div class="aihd"><span class="bot"></span>${TOOL} <small>an AI tool for small shops</small></div>${(chatNext = M.length, M).map(([c, t], i) => `<div class="m ${c} ${i >= chatSeen ? 'new' : ''}">${t}</div>`).join('')}${extra}<div class="aiin">Message ${TOOL}…</div>
-    <div class="foot">A demo AI tool. Its first two messages are scripted; the rest is real.</div></div></div>`
+  return `<div class="frame ai" data-view="${cur}"><div class="aibody"><div class="aihd"><span class="bot"></span>${TOOL} <small>helping you build ${BUILT}</small></div>${(chatNext = M.length, M).map(([c, t], i) => `<div class="m ${c} ${i >= chatSeen ? 'new' : ''}">${t}</div>`).join('')}${extra}<div class="aiin">Message ${TOOL}…</div>
+    <div class="foot">A demo AI. Its first messages are scripted; every call the tool makes after that is real.</div></div></div>`
 }
 
 // ── the page ──
@@ -476,7 +500,7 @@ function paint() {
   const tabs = `<div class="tabs"><button class="${ui.surface === 'ai' ? 'on' : ''}" data-act="open-ai"><span class="bot"></span>${TOOL}</button>${showTomo ? `<button class="${ui.surface === 'tomo' ? 'on' : ''}" data-act="open-tomo"><img src="logo-mark.svg" alt="" width="18" height="18">tomoshibi${needs && ui.surface !== 'tomo' ? '<i class="dot"></i>' : ''}</button>` : ''}</div>`
   const main = ui.surface === 'ai' ? chat(st) : tomo(st)
   const c = st.cards[st.cards.length - 1], m = c && money(c)
-  const toast = ui.surface === 'ai' && st.lent && (st.asking?.why === 'press' || (c && dec(c) === 'NEEDS')) ? `<div class="toast" data-act="open-tomo">${lamp('alert', 34)}<div><b>TOMOSHIBI</b><br>${m ? `A refund of ${esc(m.amount)} is waiting for you.` : 'Something is waiting for you.'}</div><span>Open ↗</span></div>` : ''
+  const toast = ui.surface === 'ai' && st.lent && (st.asking?.why === 'press' || (c && dec(c) === 'NEEDS')) ? `<div class="toast" data-act="open-tomo">${lamp('alert', 34)}<div><b>TOMOSHIBI</b><br>${m ? `A refund of ${esc(m.amount)} waits for your approval.` : 'A heavy call waits for your approval.'}</div><span>Open ↗</span></div>` : ''
   // A hosted copy keeps one session for everybody who has the page open. Say so before anything else.
   const shared = mode === 'live' && window.appAgentIsRemote ? '<div class="shared"><b>Shared demo.</b> One session for everyone. <b>Start over</b> resets it for all.</div>' : ''
   const html = shared + tabs + main + toast
@@ -498,9 +522,9 @@ function paint() {
   const busy = Boolean(st.asking) || st.cards.some((x) => !final(x)) || Boolean(ui.pending)
   const b = (id, t) => `<button data-act="run:${id}" ${!st.lent || busy ? 'disabled' : ''}>${t}</button>`
   const chip = (t, k) => `<span class="chip ${k}">${t}</span>`
-  const demo = `<b>DEMO</b><span>Make the AI do something now:</span>${b('usual', 'Routine')}${b('heavy', 'Something heavy')}${b('denied-host', 'The accident')}${mode === 'live' && agent?.deaf ? b('stopped', '0G unreachable') : ''}
-    <button data-act="friend:${ui.friend === 0 ? 1 : 0}">${ui.friend ? 'Back to Priya' : 'Later: a friend chooses'}</button><span class="sp"></span>`
-    + (mode === 'live' ? chip(agent.simulated ? '0G simulated' : `0G live${agent.model ? ' · ' + esc(agent.model) : ''}`, agent.simulated ? 'warn' : 'live') + chip(hasDevice() ? 'Ledger connected' : 'no Ledger', hasDevice() ? 'live' : 'warn') + chip(agent.worldSimulated ? 'World simulated' : 'World live', agent.worldSimulated ? 'warn' : 'live') + chip(agent.execute ? 'execution on' : 'execution off', '')
+  const demo = `<b>DEMO</b><span>Make the tool call now:</span>${b('usual', 'Routine call')}${b('heavy', 'Heavy call')}${b('denied-host', 'Wrong destination')}${mode === 'live' && agent?.deaf ? b('stopped', '0G unreachable') : ''}
+    <button data-act="friend:${ui.friend === 0 ? 1 : 0}">${ui.friend ? 'Back to Priya' : 'Later: someone chooses'}</button><span class="sp"></span>`
+    + (mode === 'live' ? chip(agent.simulated ? '0G simulated' : `0G live${agent.model ? ' · ' + esc(agent.model) : ''}`, agent.simulated ? 'warn' : 'live') + chip(hasDevice() ? 'Ledger connected' : 'no Ledger', hasDevice() ? 'live' : 'warn') + chip(agent.worldSimulated ? 'World simulated' : 'World live', agent.worldSimulated ? 'warn' : 'live') + chip(agent.execute ? 'Stripe: real calls' : 'Stripe: stand-in', '') + (zgUsed(st) ? chip(zgUsed(st), 'live') : '') + (agent.storage ? chip('0G Storage on', 'live') : '')
       : mode === 'preview' ? chip('PREVIEW · recorded answers, nothing is sent', 'warn') + (ui.connect ? '<input id="agentIn" placeholder="https://… address of your TOMOSHIBI" autocomplete="off" spellcheck="false"><button data-act="connect-live">Connect</button>' : '<button data-act="connect-open">Connect to a live TOMOSHIBI</button>') : chip('starting…', ''))
     + (mode === 'live' && window.appAgentIsRemote ? `<button data-act="disconnect">Disconnect (${esc(new URL(AGENT).hostname.split('.')[0])}…)</button>` : '')
     + (ui.confirmReset ? '<span class="chip warn">Reset for everyone?</span><button data-act="reset">Yes, start over</button><button data-act="reset-no">No</button>' : '<button data-act="reset">Start over</button>') + (st.error ? `<span class="chip warn">${esc(st.error)}</span>` : '')
@@ -516,13 +540,14 @@ function step(o, ms, then) { ui.busy = o; paint(); setTimeout(() => { ui.busy = 
 async function restart() { await src().post('/reset'); epoch = null; all = []; ui = fresh(); save(); paint() }
 
 const ACT = {
-  'chat-send': () => { ui.chat = 1; ui.typing = true; setTimeout(() => { ui.typing = false; paint() }, 1200) },
+  // She sends the link. The AI reads the page (llms.txt), finds the API on the list, and decides: one line at a time.
+  'chat-send': () => { ui.chat = 1; ui.reading = 0; const t = setInterval(() => { ui.reading += 1; if (ui.reading >= 4) clearInterval(t); paint() }, 750) },
   'open-tomo': () => { ui.surface = 'tomo'; ui.opened = true; if (ui.chat === 0) ui.chat = 1 },
   'open-ai': () => { ui.surface = 'ai' },
   onb: (a) => { ui.onb = a },
   'key-test': () => { const i = $('keyIn'); if (i) { i.value = 'sk_test_demo_not_a_real_key'; i.dispatchEvent(new Event('input', { bubbles: true })) } return false },
-  'key-keep': () => { const i = $('keyIn'); if (!i || !i.value.trim()) return false; i.value = ''
-    step({ steps: 0, now: 'CUSTODY', why: 'Your AI gets a handle. Never the key.', h: 'Putting your<br>key away.', doing: 'Putting your key away', next: 'Choose what it may do.' }, 1500, () => { ui.onb = 'choose'; ui.gain = 'key' }); return false },
+  // The key field is cleared and nothing is sent: this demo keeps no real key. Then the row goes to the Ledger.
+  park: () => { const i = $('keyIn'); if (!i || !i.value.trim()) return false; i.value = ''; ACT.lend() },
   lend: () => { ui.pending = 'lend'; ui.err = null; ui.gain = null; src().post('/lend', CHO[ui.choice]); setTimeout(() => { if (ui.pending === 'lend') { ui.pending = null; ui.err = `${TOOL} did not answer. Try again.`; paint() } }, 15000) },
   'soft-no': () => { src().post('/hold', { ok: false }) },
   'back-ai': () => { ui.ackLit = true; ui.surface = 'ai' },
@@ -545,7 +570,7 @@ document.addEventListener('click', (e) => {
   if (ACT[act](arg) !== false) { save(); paint() }
 })
 document.addEventListener('change', (e) => { if (e.target.id === 'ends') { ui.choice = Number(e.target.value); save(); paint() } })
-document.addEventListener('input', (e) => { if (e.target.id === 'keyIn') { const b = document.querySelector('[data-act="key-keep"]'); if (b) b.disabled = !e.target.value.trim() } })
+document.addEventListener('input', (e) => { if (e.target.id === 'keyIn') { const b = document.querySelector('[data-act="park"]'); if (b) b.disabled = !e.target.value.trim() } })
 // The stand-in for the Ledger: a real hold, a little over a second.
 let ht = null
 document.addEventListener('pointerdown', (e) => { const b = e.target.closest('[data-hold]'); if (!b) return; b.classList.add('down'); ht = setTimeout(() => { src().post('/hold', { ok: true }) }, 1150) })
