@@ -16,6 +16,7 @@ Static pages. No build step, no web fonts, no trackers. The only other host the 
    (World confirms you are one real person).
 
 **Words.** The app uses the function names fixed in the README and the journey, one per screen:
+(the parts, the functions and the sequences are drawn in [`docs/STRUCTURE.md`](../docs/STRUCTURE.md))
 
 | Screen (bar under the name) | Function | What the screen says |
 |---|---|---|
