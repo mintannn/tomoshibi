@@ -14,8 +14,8 @@ Static pages. No build step, no web fonts, no trackers, no third-party requests.
 4. *Activity* is the week in three numbers. *Lights* lets other people see the light you lit
    (World confirms you are one real person). One light, two verbs: **lit** by the hold, **shown** through World.
 
-Every TOMOSHIBI screen carries a bar with **NOW** (what is happening) and **WHY IT MATTERS** (what it gives
-you), says what you gained after each step, and says what comes next while something is on its way.
+Every TOMOSHIBI screen says one thing: a bar under the name states the value in a few words, the headline states the
+moment. After each step a green line says what you gained; while something is on its way the screen says what comes next.
 
 | Mode | When | What it means |
 |---|---|---|
@@ -25,6 +25,7 @@ you), says what you gained after each step, and says what comes next while somet
 
 The dark bar at the bottom is the demo's remote control: it makes the AI tool do something *now* (keys `1` `2` `3` `5`, `R` to start over).
 In real life the tool does these on its own. `start.html` opens `app.html`; the earlier pages below are kept.
+`?preview=1` keeps the page on the recorded answers whatever is reachable.
 
 `window.tomoshibi` in the console shows the page's own state. `node tools/shots.mjs` renders `assets/tomoshibi-cover.png`
 and `assets/shots/*.png` from these screens (sample data, real screens).
