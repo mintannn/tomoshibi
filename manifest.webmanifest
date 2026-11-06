@@ -2,7 +2,7 @@
   "name": "TOMOSHIBI",
   "short_name": "Tomoshibi",
   "description": "Lend an AI tool one use of your key, not the key.",
-  "start_url": "gate.html",
+  "start_url": "app.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#FBF7F1",

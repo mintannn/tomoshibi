@@ -1,69 +1,9 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>TOMOSHIBI — don't paste the key</title>
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="start.css">
-<link rel="stylesheet" href="pop.css">
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#F2600C">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Tomoshibi">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="icon" href="icon-192.png">
-
-<main class="stage" id="stage" data-step="0">
-  <!-- 0: the one slide. Three lines, nothing else. -->
-  <section class="s s0" aria-label="The idea">
-    <p class="l1">You wouldn’t hand someone your credit card.</p>
-    <p class="l2">But we paste API keys into AI.</p>
-    <p class="l3">Don’t hand over the key. Approve one use at a time.</p>
-  </section>
-
-  <!-- 1: the moment everyone knows. The AI asks for the key. -->
-  <section class="s s1" aria-label="The AI asks for your key">
-    <div class="chat">
-      <p class="me">Every morning, remind customers who haven’t paid yet.</p>
-      <p class="ai">Done. I’ll use <b>billing-assistant</b>. <span class="stars">★ 4.9 · 1,284 reviews</span></p>
-      <p class="ai">To run it I need your shop’s payment key.</p>
-      <div class="ask paste">
-        <label>Paste your secret key here</label>
-        <div class="field">sk_live_<i class="caret"></i></div>
-        <p class="warn">Your payment dashboard says: <b>never share this key with anyone.</b></p>
-      </div>
-      <div class="ask lend">
-        <a class="lendbtn" id="lend" href="gate.html">
-          <svg viewBox="0 0 120 152" aria-hidden="true"><rect x="31" y="96" width="58" height="48" rx="19" fill="#27407a"/><path d="M60 10 C62.2 10 63.8 12.2 64.8 14.8 C70.5 28 90 49 90 68 A30 30 0 1 1 30 68 C30 49 49.5 28 55.2 14.8 C56.2 12.2 57.8 10 60 10 Z" fill="#f0a73b"/><path d="M60 46 C61.3 46 62.2 47.2 62.8 48.6 C65.6 55 75 65.5 75 75 A15 15 0 1 1 45 75 C45 65.5 54.4 55 57.2 48.6 C57.8 47.2 58.7 46 60 46 Z" fill="#ffd98a"/></svg>
-          Lend it with TOMOSHIBI
-        </a>
-        <p class="hint">The tool never gets the key. You choose where it may go, what it may do, how many times, until when.</p>
-      </div>
-    </div>
-    <p class="cap c-paste">A spare key that works until you cancel it. No limits. No record.</p>
-    <p class="cap c-lend">Same place. A button instead of a box.</p>
-  </section>
-
-  <p class="nav"><span id="dots"></span><span class="kbd">Space</span></p>
-</main>
-
-<script>document.documentElement.dataset.tabs = "off"</script>
-<script src="app.js"></script>
-<script>
-// Three beats: the slide, the paste box, the lend button. Space or a click moves on; the last one opens the keys page.
-'use strict'
-const stage = document.getElementById('stage'), q = location.search
-document.getElementById('lend').href = 'gate.html' + q
-let step = Number(new URLSearchParams(q).get('step') || 0)
-const show = () => { stage.dataset.step = step; document.getElementById('dots').textContent = ['●○○', '○●○', '○○●'][step] }
-const next = () => { if (step < 2) { step++; show() } else location.href = 'gate.html' + q }
-const back = () => { if (step > 0) { step--; show() } }
-document.addEventListener('keydown', (e) => {
-  if (e.repeat) return
-  if (e.code === 'Space' || e.code === 'ArrowRight' || e.code === 'Enter') { e.preventDefault(); next() }
-  if (e.code === 'ArrowLeft') back()
-})
-stage.addEventListener('click', (e) => { if (!e.target.closest('a')) next() })
-show()
-</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TOMOSHIBI</title>
+<!-- The app starts at app.html. This address is kept because it is the one that was shared. -->
+<script>location.replace('app.html' + location.search + location.hash)</script>
+<a href="app.html">Open TOMOSHIBI</a>
 </html>
