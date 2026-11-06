@@ -288,8 +288,13 @@ async function light(s) {
   const uri = String(b.verificationUri || ''), real = /^https:\/\/\S+$/.test(uri) && !b.simulated
   const until = Date.now() + (Number(b.expiresIn) || 600) * 1000
   const left = () => { const m = Math.max(0, Math.ceil((until - Date.now()) / 60000)); return `${m} minute${m === 1 ? '' : 's'} left` }
-  flow.innerHTML = worldSteps(1) + `<div class="worldrow">${real && typeof qrSvg === 'function' ? `<div class="qrbox">${qrSvg(uri, 132)}</div>` : ''}
-      <div><p class="code">${esc(b.userCode)}</p><p class="sub">${b.simulated ? 'Simulated: no phone is asked.' : esc(uri)}</p><p class="sub" id="wleft">${left()}</p></div></div>
+  const small = matchMedia('(max-width: 700px)').matches
+  flow.innerHTML = worldSteps(1) + `<div class="worldgo">
+      <p class="wq">One question, once: are you one real person?</p>
+      ${real ? `<a class="btn primary big" href="${esc(uri)}" target="_blank" rel="noopener">Open World App to confirm</a>` : '<p class="sub">Simulated: no phone is asked.</p>'}
+      <p class="sub">Then come back here. Code <b class="code">${esc(b.userCode)}</b> · <span id="wleft">${left()}</span></p>
+      ${real && !small && typeof qrSvg === 'function' ? `<div class="worldrow"><div class="qrbox">${qrSvg(uri, 132)}</div><p class="sub">Or scan this with the phone that has World App.</p></div>` : ''}
+    </div>
     <p class="note">World learns that you are a person, and the same person as before. It does not learn which tool you are lighting, which key, or when you use it.</p>`
   const tick = setInterval(() => { const el = $('wleft'); if (el) el.textContent = left(); else clearInterval(tick) }, 15000)
   // Only the person who lent the key may light it. The agent on this computer adds the Permit that
@@ -305,7 +310,7 @@ async function light(s) {
   if (o.decision === 'STAR') {
     const list = store.people.filter((p) => p.id !== o.nullifier)
     list.push({ name: 'You', id: o.nullifier, tie: 'me' }); store.people = list; paintPeople()
-    flow.innerHTML = worldSteps(4) + `<p class="note">Lit${o.world?.simulated || b.simulated ? ' (World was simulated)' : ''}.${o.ownerChecked ? ' The Broker checked that you signed for this version and that the tool really used it.' : ''} Only a pseudonym is kept. It stays on while you keep using this exact version, and goes out by itself when the tool changes.</p>`
+    flow.innerHTML = `<div class="mascot ok"><div class="face">${typeof flameFace === 'function' ? flameFace('happy') : ''}</div><div class="bubble"><b>Your light is on.</b><span>One real person, really using it.</span></div></div>` + worldSteps(4) + `<p class="note">Lit${o.world?.simulated || b.simulated ? ' (World was simulated)' : ''}.${o.ownerChecked ? ' The Broker checked that you signed for this version and that the tool really used it.' : ''} Only a pseudonym is kept. It stays on while you keep using this exact version, and goes out by itself when the tool changes.</p>`
   } else if (o.reason === 'ALREADY_VOUCHED') {
     flow.innerHTML = worldSteps(3, 'This person has already lit this version') + '<p class="note">One person, one light. Nothing was added.</p>'
   } else {
@@ -347,5 +352,13 @@ refresh(); setInterval(refresh, 3000)
 
 // Arriving from the keys page to name yourself: open the tool you just used.
 const wantLight = new URLSearchParams(location.search).get('light') === '1'
-if (wantLight) { selected = CATALOG[0]; setMode('mine'); setTimeout(() => { paintSheet(); $('sheet').scrollIntoView({ block: 'nearest' }) }, 600) }
+if (wantLight) {
+  selected = CATALOG[0]; setMode('mine'); document.querySelector('.wrap').classList.add('lighting')
+  setTimeout(() => {
+    paintSheet(); window.scrollTo(0, 0)
+    // If this device really used the tool and has not lit it yet, start the one question now.
+    const s = selected, used = store.used[s.skill + '@' + versionOf(s)], lit = litBy(s).known.some((p) => p.tie === 'me')
+    if (used && !lit && live === true) vouch(s)
+  }, 1200)
+}
 journey('light', store.used && Object.keys(store.used).length ? ['lend', 'woken'] : [])

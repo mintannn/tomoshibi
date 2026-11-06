@@ -196,3 +196,16 @@ main.stage { background: var(--night); }
 /* Connect the Ledger first, then lend. */
 .console.unlent #ledgerCard { order: -1; }
 #ledgerCard .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Lighting your light: the question comes first, the sky after. */
+.wrap { display: flex; flex-direction: column; }
+.wrap.lighting #sheet { order: -1; }
+.wrap.lighting .journey { order: -3; } .wrap.lighting .top { order: -4; }
+.worldgo { display: grid; gap: 10px; padding: 16px; border-radius: 22px; background: var(--soft); }
+.worldgo .wq { margin: 0; font-size: 20px; font-weight: 800; line-height: 1.3; }
+.worldgo .btn.big { font-size: 18px; padding: 16px; text-align: center; }
+.worldgo .code { font-size: 15px; letter-spacing: .08em; }
+.wsteps { grid-template-columns: 1fr 1fr; }
+
+.wrap.lighting #flow { order: -1; display: grid; gap: 10px; }
+#flow .mascot { margin-bottom: 4px; }
