@@ -154,6 +154,8 @@
     get how() { return t?.way || null },
     get connected() { return Boolean(t) },
     get name() { return t?.name },
+    /** For telling a person (or a log) what the connection looks like. */
+    get info() { return t ? `${t.way} · ${t.name}${t.mtu ? ' · packet ' + t.mtu : ''}${t.gone ? ' · DISCONNECTED' : ''}` : 'not connected' },
     /** `ask` true = show the browser's device chooser (needs a click). false = only a device already allowed. */
     async connect(ask, way) {
       if (!Kind) throw new Error('This browser cannot talk to a Ledger. On an iPhone, open this page in Bluefy. On a computer, use Chrome.')

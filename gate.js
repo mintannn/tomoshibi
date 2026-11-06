@@ -169,25 +169,35 @@ function keyCard(st) {
 // ── the Ledger, connected to this page (Bluetooth or USB from the browser) ──
 // The page only carries bytes between the tool and the device. It cannot sign: the device shows the
 // person what it is about to sign, and the key never leaves it.
-let dev = { on: false, app: null, how: null, error: null, piping: false }
+let dev = { on: false, app: null, how: null, error: null, piping: false, raw: null }
+const say = (msg) => { if (mode === 'live') live.post('/device/log', { msg }) }
 async function connectLedger(way) {
   dev.error = null
   try {
     if (!(await Ledger.connect(true, way))) { dev.error = 'No Ledger was chosen.'; render(); return }
     dev.on = true; dev.how = Ledger.how
+    say(`connected: ${Ledger.info}`)
     await checkApp()
-  } catch (e) { dev.on = false; dev.error = String(e.message || e) }
+  } catch (e) { dev.on = false; dev.error = String(e.message || e); say(`connect failed: ${dev.error}`) }
   render()
 }
 async function checkApp() {
   if (!dev.on || dev.piping) return
   try {
+    const raw = await Ledger.exchange('b001000000', 4000)
+    if (raw !== dev.raw) { dev.raw = raw; say(`app query answered ${raw} (${Ledger.info})`) }
     const a = await Ledger.app()
     dev.app = a.locked ? 'locked' : a.busy ? 'Tomoshibi' : a.name
+    dev.error = null
     const ready = dev.app === 'Tomoshibi'
     if (mode === 'live') live.post('/device', { ready, how: dev.how })
     if (agent && agent.device !== ready) { agent.device = ready || agent.device; }
-  } catch (e) { if (!Ledger.connected) { dev.on = false; dev.error = 'The Ledger disconnected.'; if (mode === 'live') live.post('/device', { ready: false }) } }
+  } catch (e) {
+    const m = String(e.message || e)
+    if (m !== dev.error) say(`app query failed: ${m} (${Ledger.info})`)
+    dev.error = `The Ledger did not answer: ${m}`
+    if (!Ledger.connected) { dev.on = false; dev.error = 'The Ledger disconnected.'; if (mode === 'live') live.post('/device', { ready: false }) }
+  }
 }
 setInterval(() => { if (dev.on) checkApp().then(() => { if (!dev.piping) ledgerCard(reduce()) }) }, 3000)
 let piped = null
@@ -204,6 +214,7 @@ async function pipe(a) {
     }
   } catch (e) { error = String(e.message || e) }
   dev.piping = false
+  say(`asked ${a.apdus.length} apdu(s): ${error ? 'error ' + error : 'answer ' + String(hex).slice(0, 8) + '…' + String(hex).slice(-4)}`)
   live.post('/device/answer', error ? { askId: a.askId, error } : { askId: a.askId, hex })
 }
 let noticed = new Set()
@@ -231,7 +242,7 @@ function ledgerCard(st) {
   else {
     const ways = (window.Ledger && Ledger.ways) || []
     const btn = (w, label) => `<button class="btn primary" data-way="${w}">${label}</button>`
-    const state = dev.on ? (dev.app === 'locked' ? 'Unlock your Ledger.' : `Open Tomoshibi on your Ledger${dev.app ? ` (it is showing ${esc(dev.app)})` : ''}.`) : ''
+    const state = dev.on ? (dev.app === 'locked' ? 'Unlock your Ledger.' : `Open Tomoshibi on your Ledger${dev.app ? ` (it is showing ${esc(dev.app)})` : ''}.`) + ` <small>${esc(Ledger.info)}</small>` : ''
     el.innerHTML = head + `<div class="led"><i></i>${dev.on ? 'Connected, not ready' : 'Not connected'}</div>` +
       (mode !== 'live' ? '<p class="sub">This is a replay. In the live app, approvals happen on a Ledger Flex.</p>'
         : dev.on ? `<p class="sub">${state}</p>`
