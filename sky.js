@@ -49,6 +49,8 @@ let mode = 'all'          // 'all' | 'mine'
 let live = null           // null = unknown, true = Broker answered, false = sample data
 let health = null
 let selected = null
+let flowing = false       // true while the lighting steps are on screen
+const lastNote = {}       // name -> the last message of the lighting steps, kept across redraws
 const stars = {}          // name -> { who: [], count, byVersion: {} }
 
 const versionOf = (s) => store.versions[s.name] || s.version
@@ -75,7 +77,9 @@ async function get(path) {
   return r.json()
 }
 async function post(path, body) {
-  const r = await fetch(BROKER + path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+  // Sent as plain text on purpose: a JSON content type makes the browser ask the Broker
+  // for permission first (a CORS preflight). The Broker reads the body as JSON either way.
+  const r = await fetch(BROKER + path, { method: 'POST', body: JSON.stringify(body) })
   return { status: r.status, body: await r.json() }
 }
 async function refresh() {
@@ -96,7 +100,8 @@ async function refresh() {
         : { who: [], count: 0, byVersion: {} }
     }
   }
-  paintStatus(); paintCaption(); if (selected) paintSheet()
+  // While someone is in the middle of lighting, leave the sheet alone: redrawing it would wipe the step they are on.
+  paintStatus(); paintCaption(); if (selected && !flowing) paintSheet()
 }
 function paintStatus() {
   const el = $('status')
@@ -239,7 +244,7 @@ function paintSheet() {
       <button class="btn primary" id="lightIt">Show that I use this</button>
       <button class="btn" id="changeIt">Demo: the tool changes</button>
     </div>
-    <div id="flow"></div>`
+    <div id="flow">${lastNote[s.name] || ''}</div>`
   $('lightIt').onclick = () => vouch(s)
   $('changeIt').onclick = () => bump(s)
 }
@@ -254,7 +259,7 @@ async function lend(s, flow) {
     return null
   }
   flow.innerHTML = '<p class="note"><b>Look at your Ledger.</b> Read what this tool is asking for, then hold the button. Nothing happens unless you do.</p>'
-  const r = await fetch(BRIDGE + '/permit', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
+  const r = await fetch(BRIDGE + '/permit', { method: 'POST', body: JSON.stringify({
     skill: s.skill, version: versionOf(s), keyLabel: s.key, target: s.target, scope: s.scope,
     maxCalls: 3, expiry: Math.floor(Date.now() / 1000) + 24 * 3600, nonce: Date.now() }) })
   const b = await r.json()
@@ -266,6 +271,16 @@ async function lend(s, flow) {
 /** Publishing a light: first the key is lent on the Ledger, then the Broker asks
  *  World, once, whether a real person is behind it. */
 async function vouch(s) {
+  if (flowing) return
+  flowing = true
+  try { await light(s) } catch (e) {
+    if ($('flow')) $('flow').innerHTML = `<p class="note warn">Could not reach the Broker: ${esc(e.message || e)}. Nothing was lit.</p>`
+  } finally { flowing = false }
+  // Redraw with the new state, and keep the last message where the person can read it.
+  lastNote[s.name] = $('flow') ? $('flow').innerHTML : ''
+  await refresh(); paintSheet()
+}
+async function light(s) {
   const flow = $('flow')
   if (live !== true) { flow.innerHTML = '<p class="note warn">The Broker is not reachable, so nothing can be lit from here.</p>'; return }
   const lent = await lend(s, flow)
@@ -287,7 +302,6 @@ async function vouch(s) {
     const why = { human_denied: 'You said no on your phone. Nothing was lit.', proof_expired: 'No one confirmed in time. Nothing was lit.', ALREADY_VOUCHED: 'You have already lit this version.' }[o.reason] || o.message || o.reason
     flow.innerHTML = `<p class="note warn">${esc(why)}</p>`
   }
-  await refresh()
 }
 
 /** Demo control. In the product, the version is the hash of the tool's manifest
