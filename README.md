@@ -38,3 +38,13 @@ Open `http://localhost:8790/`. To point at a Broker somewhere else, add `?broker
   here, no library). A phone can follow it only if it can reach this computer and the Broker:
   open the page by the computer's network address, or add `&lan=<address>`.
 - If the Broker cannot be reached, the sky shows sample data and says so in the header.
+
+## Hosted copy
+
+`https://mintannn.github.io/tomoshibi/` serves this folder as it is (GitHub Pages, repo `mintannn/tomoshibi`).
+It has no Broker behind it, so on its own it shows sample data and says so. Point it at one with
+`?broker=https://…`. The Broker must be HTTPS: an https page cannot call an http one.
+
+```bash
+git push https://github.com/mintannn/tomoshibi.git "$(git subtree split --prefix web HEAD)":refs/heads/main
+```
