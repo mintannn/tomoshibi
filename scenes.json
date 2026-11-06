@@ -1,0 +1,1314 @@
+{
+  "recordedAt": "2026-11-06T02:10:40.438Z",
+  "note": "本番の 0G Private Computer（TeeML）に実際に投げた応答をそのまま保存したもの。作り話ではない。",
+  "endpoint": "https://router-api.0g.ai/v1",
+  "model": "0gm-1.0-35b-a3b",
+  "simulated": false,
+  "scenes": [
+    {
+      "id": "usual",
+      "title": "範囲の中・ふだんの要求",
+      "say": "ふだんの読み取りは、そのまま通る。鍵はこのエージェントに渡っていない。",
+      "caption": "0G が「ふだん」と読んだので、立っている許可のまま通る",
+      "agent": "リサーチの手伝い",
+      "request": {
+        "method": "GET",
+        "url": "https://api.github.com/user/repos",
+        "keyRef": "0xabababababababababababababababababababababababababababababababab"
+      },
+      "permitLines": [
+        "KEY   0xabababab…",
+        "TO    api.github.com",
+        "SCOPE GET /user/repos x2",
+        "UNTIL 2026-11-06 03:10Z"
+      ],
+      "status": 200,
+      "ms": 1710,
+      "response": {
+        "at": "2026-11-06T02:10:35.891Z",
+        "thread": "0x94ba7e2a0f31c1d5e63f79df4a5b7837f65e8aa9f809900eff7d84c0d02433e1",
+        "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+        "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+        "nonce": "1793931034486",
+        "holderValid": true,
+        "skillSigner": "0x5CbDd86a2FA8Dc4bDdd8a8f69dBa48572EeC07FB",
+        "request": {
+          "method": "GET",
+          "url": "https://api.github.com/user/repos",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab"
+        },
+        "decision": "ALLOWED",
+        "zg": {
+          "model": "0gm-1.0-35b-a3b",
+          "requestId": "b36e2e95d2b37676, db4a8cf1-841d-4858-aa5f-4f0db2e117fd",
+          "ms": 1680,
+          "usage": {
+            "completion_tokens": 27,
+            "prompt_tokens": 277,
+            "prompt_tokens_details": {
+              "cached_tokens": 192
+            },
+            "reasoning_tokens": 0,
+            "total_tokens": 304
+          },
+          "sealed": "sealed",
+          "tier": "ふだん",
+          "reason": "読み取り専用で取り消し可能"
+        },
+        "remaining": 1,
+        "attestation": {
+          "status": 200,
+          "bodyHash": "0xe9c0c158f0044c7cff7c94471fe8b274a83bfedb1a189d715eb303c4371fb9e0"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.github.com",
+          "SCOPE GET /user/repos x2",
+          "UNTIL 2026-11-06 03:10Z"
+        ],
+        "result": {
+          "status": 200,
+          "body": "{\"stub\":true,\"method\":\"GET\",\"url\":\"https://api.github.com/user/repos\"}"
+        }
+      }
+    },
+    {
+      "id": "heavy",
+      "title": "範囲の中だが、中身が重い",
+      "say": "同じ範囲の中。でも中身が 4,800 ドルの送金で、宛先が知らない口座。",
+      "caption": "0G が「決定的」と読んだ。立っている許可では通さない",
+      "agent": "経理の自動化",
+      "request": {
+        "method": "POST",
+        "url": "https://api.stripe.com/v1/charges",
+        "keyRef": "0xabababababababababababababababababababababababababababababababab",
+        "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+      },
+      "permitLines": [
+        "KEY   0xabababab…",
+        "TO    api.stripe.com",
+        "SCOPE POST /v1/charges x5",
+        "UNTIL 2026-11-06 03:10Z"
+      ],
+      "status": 409,
+      "ms": 1324,
+      "response": {
+        "at": "2026-11-06T02:10:37.233Z",
+        "thread": "0x8bc396568df3721242d529245665f05d164321259f2d6bc2a5abcb866b6f23de",
+        "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+        "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+        "nonce": "1793931034564",
+        "holderValid": true,
+        "skillSigner": "0x5CbDd86a2FA8Dc4bDdd8a8f69dBa48572EeC07FB",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab"
+        },
+        "decision": "NEEDS_PRESS",
+        "reason": "ESCALATED",
+        "message": "決定的：その場の一押しが要る",
+        "zg": {
+          "model": "0gm-1.0-35b-a3b",
+          "requestId": "ced7793c67ce9de0, efd36399-a294-4989-a3dc-a26f0c369bf4",
+          "ms": 1310,
+          "usage": {
+            "completion_tokens": 28,
+            "prompt_tokens": 304,
+            "prompt_tokens_details": {
+              "cached_tokens": 192
+            },
+            "reasoning_tokens": 0,
+            "total_tokens": 332
+          },
+          "sealed": "sealed",
+          "tier": "決定的",
+          "reason": "資金移転不可逆、取り消し不可能"
+        },
+        "press": {
+          "from": "決定的",
+          "need": "maxCalls=1 の許可に、いま署名する",
+          "lines": [
+            "KEY   0xabababab…",
+            "TO    api.stripe.com",
+            "SCOPE POST /v1/charges x5",
+            "UNTIL 2026-11-06 03:10Z"
+          ]
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x5",
+          "UNTIL 2026-11-06 03:10Z"
+        ]
+      }
+    },
+    {
+      "id": "pressed",
+      "title": "その場で一押しした",
+      "say": "手元の機器に4行が出る。押して初めて、この1回だけが通る。",
+      "caption": "使い切り（maxCalls=1）の許可。押さなければ鍵は使われない",
+      "agent": "経理の自動化",
+      "request": {
+        "method": "POST",
+        "url": "https://api.stripe.com/v1/charges",
+        "keyRef": "0xabababababababababababababababababababababababababababababababab",
+        "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+      },
+      "permitLines": [
+        "KEY   0xabababab…",
+        "TO    api.stripe.com",
+        "SCOPE POST /v1/charges x1",
+        "UNTIL 2026-11-06 03:10Z"
+      ],
+      "status": 200,
+      "ms": 1318,
+      "response": {
+        "at": "2026-11-06T02:10:38.559Z",
+        "thread": "0xc81b78879977b87123b8ca4a5f997a0dca84c8f89a33b162c1d2eb520712ff20",
+        "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+        "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+        "nonce": "1793931034998",
+        "holderValid": true,
+        "skillSigner": "0x5CbDd86a2FA8Dc4bDdd8a8f69dBa48572EeC07FB",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab"
+        },
+        "decision": "ALLOWED",
+        "zg": {
+          "model": "0gm-1.0-35b-a3b",
+          "requestId": "d2fab64cf94b0438, a83e1c0a-b8bf-4499-a13a-6bad29a11964",
+          "ms": 1301,
+          "usage": {
+            "completion_tokens": 24,
+            "prompt_tokens": 304,
+            "prompt_tokens_details": {
+              "cached_tokens": 192
+            },
+            "reasoning_tokens": 0,
+            "total_tokens": 328
+          },
+          "sealed": "sealed",
+          "tier": "決定的",
+          "reason": "資金移転不可逆操作"
+        },
+        "remaining": 0,
+        "attestation": {
+          "status": 200,
+          "bodyHash": "0x800e9180f3b7cf9c2405f1d46d25560021e049959eeccfd00aadae1a51fb8abe"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-06 03:10Z"
+        ],
+        "result": {
+          "status": 200,
+          "body": "{\"stub\":true,\"method\":\"POST\",\"url\":\"https://api.stripe.com/v1/charges\"}"
+        }
+      }
+    },
+    {
+      "id": "denied-host",
+      "title": "宣言した範囲を外れた要求",
+      "say": "宛先が違う。ここで止まる。しかも、誰が要求したかが署名ごと残る。",
+      "caption": "0G には見せていない。範囲外は中身を外に出す前に止める",
+      "agent": "乗っ取られたスキル",
+      "request": {
+        "method": "POST",
+        "url": "https://evil.com/v1/charges",
+        "keyRef": "0xabababababababababababababababababababababababababababababababab"
+      },
+      "permitLines": [
+        "KEY   0xabababab…",
+        "TO    api.stripe.com",
+        "SCOPE POST /v1/charges x2",
+        "UNTIL 2026-11-06 03:10Z"
+      ],
+      "status": 403,
+      "ms": 15,
+      "response": {
+        "at": "2026-11-06T02:10:38.580Z",
+        "thread": "0xb8085a8ee7685a12eef8f5772bd5e6301a67dab4b74ef8ac84c15b03e4011931",
+        "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+        "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+        "nonce": "1793931039404",
+        "holderValid": true,
+        "skillSigner": "0x5CbDd86a2FA8Dc4bDdd8a8f69dBa48572EeC07FB",
+        "request": {
+          "method": "POST",
+          "url": "https://evil.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab"
+        },
+        "decision": "DENIED",
+        "reason": "OUT_OF_TARGET",
+        "message": "許可されていない宛先",
+        "violation": true,
+        "detail": "evil.com ≠ api.stripe.com",
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x2",
+          "UNTIL 2026-11-06 03:10Z"
+        ]
+      }
+    },
+    {
+      "id": "denied-sneak",
+      "title": "ホスト名に紛れ込ませた要求",
+      "say": "URL の途中に正しい宛先を混ぜても、通らない。",
+      "caption": "文字列ではなくホストで突き合わせている",
+      "agent": "乗っ取られたスキル",
+      "request": {
+        "method": "POST",
+        "url": "https://evil.com/api.stripe.com/v1/charges",
+        "keyRef": "0xabababababababababababababababababababababababababababababababab"
+      },
+      "permitLines": [
+        "KEY   0xabababab…",
+        "TO    api.stripe.com",
+        "SCOPE POST /v1/charges x2",
+        "UNTIL 2026-11-06 03:10Z"
+      ],
+      "status": 403,
+      "ms": 10,
+      "response": {
+        "at": "2026-11-06T02:10:38.594Z",
+        "thread": "0x2ae2e98d21c23f2910d15d46b364e28ab7120c00a5f834a65e92146ce575e780",
+        "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+        "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+        "nonce": "1793931039516",
+        "holderValid": true,
+        "skillSigner": "0x5CbDd86a2FA8Dc4bDdd8a8f69dBa48572EeC07FB",
+        "request": {
+          "method": "POST",
+          "url": "https://evil.com/api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab"
+        },
+        "decision": "DENIED",
+        "reason": "OUT_OF_TARGET",
+        "message": "許可されていない宛先",
+        "violation": true,
+        "detail": "evil.com ≠ api.stripe.com",
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x2",
+          "UNTIL 2026-11-06 03:10Z"
+        ]
+      }
+    },
+    {
+      "id": "stopped",
+      "title": "0G に届かないとき",
+      "say": "重さを決める相手に届かない。ここで既定値を作らない。止まる。",
+      "caption": "偽の判断を作るくらいなら止める。回数も減らない",
+      "agent": "経理の自動化",
+      "request": {
+        "method": "POST",
+        "url": "https://api.stripe.com/v1/charges",
+        "keyRef": "0xabababababababababababababababababababababababababababababababab",
+        "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+      },
+      "permitLines": [
+        "KEY   0xabababab…",
+        "TO    api.stripe.com",
+        "SCOPE POST /v1/charges x5",
+        "UNTIL 2026-11-06 03:10Z"
+      ],
+      "status": 503,
+      "ms": 13,
+      "response": {
+        "at": "2026-11-06T02:10:38.609Z",
+        "thread": "0x4f808fa4ffa5a902a1c83840bc840a21e7cc016c56ab1c557f10b2e068613fee",
+        "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+        "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+        "nonce": "1793931039569",
+        "holderValid": true,
+        "skillSigner": "0x5CbDd86a2FA8Dc4bDdd8a8f69dBa48572EeC07FB",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab"
+        },
+        "decision": "STOPPED",
+        "reason": "ZG_UNREACHABLE",
+        "message": "重さを決められないので止めた",
+        "zg": {
+          "model": "0gm-1.0-35b-a3b",
+          "requestId": null,
+          "ms": 4,
+          "error": "0G に届かない: fetch failed",
+          "reachable": false
+        },
+        "safeStop": true,
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x5",
+          "UNTIL 2026-11-06 03:10Z"
+        ]
+      }
+    }
+  ],
+  "live": {
+    "usual": {
+      "base": "http://127.0.0.1:8797",
+      "request": {
+        "method": "GET",
+        "url": "https://api.github.com/user/repos",
+        "keyRef": "0xabababababababababababababababababababababababababababababababab"
+      },
+      "lines": [
+        "KEY   0xabababab…",
+        "TO    api.github.com",
+        "SCOPE GET /user/repos x50",
+        "UNTIL 2026-11-07 02:10Z"
+      ],
+      "body": {
+        "permit": {
+          "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+          "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+          "version": "1.0.0",
+          "key": "0xabababababababababababababababababababababababababababababababab",
+          "target": "api.github.com",
+          "scope": "GET /user/repos",
+          "maxCalls": 50,
+          "expiry": 1794017438,
+          "nonce": 1793931039565
+        },
+        "signature": "0xbb8e080cb74e48554c5a1470eec3c600ce501f9a340dc871e0583c7e0b78ae5f5383a09ed50df83d084d4ef105b8fa4772366e856a001941ec7f12951d1e5eab1b",
+        "request": {
+          "method": "GET",
+          "url": "https://api.github.com/user/repos",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab"
+        },
+        "skillSignature": "0x7920b5e969d1d8fd2b42d820e3a7e40fe2475ac68ffeaa5d2d4e8bd27b29c1f117b0eb6636082bdf61f43741126d82e661e6197e33c09157da620fcaeb9be61a1c"
+      }
+    },
+    "heavy": {
+      "base": "http://127.0.0.1:8797",
+      "request": {
+        "method": "POST",
+        "url": "https://api.stripe.com/v1/charges",
+        "keyRef": "0xabababababababababababababababababababababababababababababababab",
+        "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+      },
+      "lines": [
+        "KEY   0xabababab…",
+        "TO    api.stripe.com",
+        "SCOPE POST /v1/charges x50",
+        "UNTIL 2026-11-07 02:10Z"
+      ],
+      "body": {
+        "permit": {
+          "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+          "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+          "version": "1.0.0",
+          "key": "0xabababababababababababababababababababababababababababababababab",
+          "target": "api.stripe.com",
+          "scope": "POST /v1/charges",
+          "maxCalls": 50,
+          "expiry": 1794017438,
+          "nonce": 1793931039221
+        },
+        "signature": "0x71ad6dab9e965d83193afaf3bdffae504790b44c8b9defe6bda19317e10113eb6c83014a95023b6a856b23e42a024b518f0c91b30595dea670ed3b85eb7d892c1b",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "skillSignature": "0xe14743132d31e29ee09626df191857a973f1cf51d54da085cbbc413b92966b6d6474391e644fd6724dfbeb4c99cfd3c2f278e31b4df419b4b68fe9ee30941cf91b"
+      }
+    },
+    "denied-host": {
+      "base": "http://127.0.0.1:8797",
+      "request": {
+        "method": "POST",
+        "url": "https://evil.com/v1/charges",
+        "keyRef": "0xabababababababababababababababababababababababababababababababab"
+      },
+      "lines": [
+        "KEY   0xabababab…",
+        "TO    api.stripe.com",
+        "SCOPE POST /v1/charges x50",
+        "UNTIL 2026-11-07 02:10Z"
+      ],
+      "body": {
+        "permit": {
+          "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+          "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+          "version": "1.0.0",
+          "key": "0xabababababababababababababababababababababababababababababababab",
+          "target": "api.stripe.com",
+          "scope": "POST /v1/charges",
+          "maxCalls": 50,
+          "expiry": 1794017438,
+          "nonce": 1793931039166
+        },
+        "signature": "0x57831efbbd77e4efd2bf245dbddb846eb26cdc714ba47eb517f5e7ea0041b762386082eba9c479fda086dea6c64ce19b24fce3993d2175c693f177c7e234fffd1c",
+        "request": {
+          "method": "POST",
+          "url": "https://evil.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab"
+        },
+        "skillSignature": "0xeda3476beaab82891fe65b2e97f49bb1ce346a1511dc76f4fc5388d35cc367123441d67cefb82643a41cd063cf84e2ad4b99dc96060adeeb2fca77ea2978d80d1c"
+      }
+    },
+    "denied-sneak": {
+      "base": "http://127.0.0.1:8797",
+      "request": {
+        "method": "POST",
+        "url": "https://evil.com/api.stripe.com/v1/charges",
+        "keyRef": "0xabababababababababababababababababababababababababababababababab"
+      },
+      "lines": [
+        "KEY   0xabababab…",
+        "TO    api.stripe.com",
+        "SCOPE POST /v1/charges x50",
+        "UNTIL 2026-11-07 02:10Z"
+      ],
+      "body": {
+        "permit": {
+          "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+          "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+          "version": "1.0.0",
+          "key": "0xabababababababababababababababababababababababababababababababab",
+          "target": "api.stripe.com",
+          "scope": "POST /v1/charges",
+          "maxCalls": 50,
+          "expiry": 1794017438,
+          "nonce": 1793931038806
+        },
+        "signature": "0x0fa1f60a7229ca3501a7fc712f04ba71bf28019141ec244a1767e499f8f2867242c43c269fcefac3b2df27f60c9bbeada42bb31a7b40bd3cb957c27d00ea763f1c",
+        "request": {
+          "method": "POST",
+          "url": "https://evil.com/api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab"
+        },
+        "skillSignature": "0x019827616b1753d29a76b9d5bd271851ee64631258335b0fe4a348e7f4b9aee33a077ee2a3e9655a69d84b7bd22859e457581871309278a103035d2a03d8508d1b"
+      }
+    },
+    "stopped": {
+      "base": "http://127.0.0.1:8798",
+      "request": {
+        "method": "POST",
+        "url": "https://api.stripe.com/v1/charges",
+        "keyRef": "0xabababababababababababababababababababababababababababababababab",
+        "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+      },
+      "lines": [
+        "KEY   0xabababab…",
+        "TO    api.stripe.com",
+        "SCOPE POST /v1/charges x50",
+        "UNTIL 2026-11-07 02:10Z"
+      ],
+      "body": {
+        "permit": {
+          "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+          "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+          "version": "1.0.0",
+          "key": "0xabababababababababababababababababababababababababababababababab",
+          "target": "api.stripe.com",
+          "scope": "POST /v1/charges",
+          "maxCalls": 50,
+          "expiry": 1794017438,
+          "nonce": 1793931039442
+        },
+        "signature": "0x083abdc29c6640e95e6d913950b00235905af1cf607bf1a0bbb7199349a3cff2219dedb0219dc2fe5d54dc5b089f10ae8ede528f9e3d2f20afff1c340641ff901c",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "skillSignature": "0x73f22ebeb4e410a3a7af12719c1baffd8cb0ad3aa49a20982c082b7d21a82ada32bcf87700a0bd111761b3b8dd5625451777e634d824911cf28aec485806d95a1c"
+      }
+    },
+    "presses": [
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048617
+          },
+          "signature": "0xfa4c788b8361590e1dccc2b8fbbc43db66ecf45d7935d596b80d8fba25260688191443a9fc2f7699a96ec0a3121c325d953c6a77694ebb8461456a7bf35701a31b",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0x29abbf2d460b66869d84b030b03b1cc2cb632d30b7763189e0604711b4e1a91a5ab17777fd1fefbb78d6bf0c58bd87ef91ea6f3d2fb7e40acc8067d476df30781b"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048619
+          },
+          "signature": "0xda312e49fd049455be369707cc4f595969a077d45d7eb4f5ab4d7ed023d6945f1ed5e634c8d25226eb113f5984cdfdcac305c2f2c92c742774634f660df85ecc1c",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0x1bfc9d4170a79ccd9d8dfac60d5cdf08305174e8ab2edd0c8f67c822479e9ba65d78214836109b3a89b77e62ad1e7e8ab89200eab1b150452bde0fb10dbed75c1c"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048621
+          },
+          "signature": "0x33550785c5117c95829d582a7700f4379cf3ce3481f8510e8723c467741cd4ee491df14e376e790e2a8ea4e5958263eef504aaf1725e10d120f62f825b939bb51c",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0xfd57c7b5ccf5287534de65aa84c48427da209e90838ef2f566d396dc1e26d41c720c28b3d33486598c8911f3abd8b6a3cc63b7f9b7c981414bfb6cc5a634e27c1b"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048623
+          },
+          "signature": "0xd20f468ade3443883701cad4564577911519b50db7a7ec01986d719ae729a25a4dd1d858737e37e0c7a9b485e12e12ebb84c0a546f7a3f7f679dc781c0f5d3361b",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0x9dd95ee0d92c883283e468ec12e539c942a1c999f0090d027fdce063ce6fe2db79844c7396bbb257be9e0948c56a731a9ec34a7bdb78e2484ed86c95ad4023521c"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048625
+          },
+          "signature": "0x5c8890a6dd15330b0384a657b0395eba0c9ab8c6aa4897efd95cd6826d1a07024e9835e7f6e1f9cfc1dd151b237ebfbc70cde7c31ecbb3ade075be03227d05fc1b",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0x2d098ec2aeecbe1c1d3f08c2f998aa3b4cb663021e885ce32f89bb4c629b63680e84abf4160e9256562dc2cd9dd53b736817153be85a1ac5b022d94f501a47841b"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048628
+          },
+          "signature": "0xe17752a769faabac0883369bfe04f454230a25fa6d11e1060fe835f4c13904735ca6a9d312b86a254f843ea78253d97303b85282bf97ac6153d24a47c4f63b761b",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0x7a1a4f0d320b793fec906e785f7107c41ddf6184c671b42faf90a88fc36752bf1e1e1e3b0fa6cd5c10cebdce7349f9e333d9ee946820f3ab745a85b918576dad1b"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048630
+          },
+          "signature": "0x3951fa00bcd3e91447895dfe1af3a9ff87714148ecfd6e20c6a31b58b560645a4a0b15949ee045cf3502b6433d9846f980ab32d26ee70b683e02f7cb5bb3c6441c",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0x3e2268c21644dcc9323a13c6bdf269d97a6d99dde9d03a4a6c195b9525b680555663c9c07266f45043f4e4633a47d3a11ec0e16585681d5b55605ac16aaaf21d1b"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048632
+          },
+          "signature": "0x1534f07601795cbe5639ccd9dbce549e8cbee36f032a84a7d030a77e3b90ec5c1fd60b23ec910d6b1bc376ddaa20712a248ac510e7dc8eac7d2afe8b3f04f41c1b",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0x2e4ed61b1a5c6321be4055a05093013fa1c26115b80aa75b35edaceec98359337de46d434e27357df8d621f7b16849e34066ea170fb44c2a2bae7c6ca0ffdd531b"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048634
+          },
+          "signature": "0x331461c543c247f9bbe92033cd4606b3f4aa581fdcb6e280aab871a3925ae3e63196fa8cd44ad04277bca37dc95cab7741b7b0b656515d8fd7a72e2c9228d39d1c",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0x732392c99298ed80e61fcca6d32a4c81b79947e45ee10b8ece07261381ab022e06563db55969abffac1af29dc327e7de5a391f93d5d842b945aafa5a548af7601c"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048636
+          },
+          "signature": "0xfdb9c4e0cc44ef284ecc41314da5087c6b8717eea9f04b574889f570576f05071838bd82023f4294b50356102e959de9a7a5a18092d519ba15051e48d045a9c21b",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0x76452505955ba54320e9902ef587643e1bf529d15de58f227624f196ad635e680d295198d03d993ad984e5a123744148a3d209732c570f2f6445f8f48c208aff1c"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048637
+          },
+          "signature": "0x28a825034e9093f8dafe2d5089a22968cb3730b528fc730f1b9e1d70c99e895234ca50df882cc73fa569786ef14bb3978255c08526e784b9a55ef8eef1cad7261c",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0x7b98e3310b73e9dd7873f2135671400bd682547ba1e6ef8ef5e5d46ba6c468aa72e97b91e7eecc76543bc5d5213ba41a493c0e7297c63ca953f999c2a2d8d0421b"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048639
+          },
+          "signature": "0x5770455e7898979b56846757ba9084953e49b50e3db4f3401b4f7584eec93edc2eed04bdee167107e4834cfb310ee022851198c6b4a93d799e9254dee7cf15891c",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0xe6dd0267dc1360448306d16cfdb5e239d8a8bc8009ee07e0678924947795086e5b4d919ca4cb880e8d0c33cbb7ada7aac796e90537d218ffb6a0d7cc55a6e5be1c"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048641
+          },
+          "signature": "0x8e6f4c8f80208a0bbb6c75079930affd543d0d7410a65f8b77704a2388a5df45173c53b96f96290c0821727c15085b0426ffd29a2f41a839e245351fc33c29d71b",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0x8a4069f992e6cedb0c44e89fbe26d5c6cc9fb6c92ded1624e6705d3c5aa1336378d8197816c113f49183df70101c10645f6267bf55903da077ea4896a6c616e71c"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048643
+          },
+          "signature": "0x71d68bceb92fdb6e002b6b0cf3cfdc21335d720ff754fd899b0ca6ae2a68b8975c651d5e9e08cc2906ce048c2ded712184a8fe87e85f948ee7e5f777d9ee14031b",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0x11595fb850aeab269c32b39882c14a4828df461a04ce39814353deb081dd260d78ffe9160803cdae77b7966232800d2d1f958ccf2c68e69860b326b2d8498bf31c"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048645
+          },
+          "signature": "0xa2ce502d9fcc3f5b84bf4533b36cdc5dd17b866f7841f33675c0f71cceeb921d54d7703fd5b54114df5753491f2249b08b65c36ad1fc8ee42610701fbee50bc71c",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0x4f7eb4f002fe338f3b44ab78c5b60c77f46e4f5c7a259b4e6945179e9116a320070b37a101756e1afb199d9abb215e902eef7b384863e8c4c8e76a536d14a7451c"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048646
+          },
+          "signature": "0x7c146a47bc3124e6b480ab5cf32664d37b024b7b8a908d77565a099cf6b544db696e9d6b7d52ca6fd12a0dde0600800f239e31637c87437519040b62395666fd1b",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0x54b7593d9322c4a39420e91254bba68884c41bd135d28a454049c34393e040fe2ff83301904a3ae1a300433df4af205867ddd720662c67b53d647000cf0dfe5b1c"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048648
+          },
+          "signature": "0x2a7e05ee03ae9da604cdc3cb475a9e7eb74df1be2d8338d566b5f90ab9c195c870cfa5880cdcb468d6e5f36e71093dec53b783a1d67fbf7ac41706441a1991fd1c",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0x815fa684d9918e5b26834324f450670c64ebdcdf676d2385dcec9efbb1e79d962585dea3b0181f1747265a2c3fdc724ddfe5f74a85d3d2869fe5dad9aa9a2e2b1b"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048650
+          },
+          "signature": "0x1a2baac965de3f65936643ee391731fce7a183cf89be74d58564153eb92bf5136a7802a6d5318e2ce4ca33cfedd61f544463c368052bf79915ee5d77d96c8f981b",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0x4fafb66b2f8c72c715864498e359268f15dced4e20e682b4d5a58f1d195da89d0adce3d8f731c508d1cfbc3176cdc2f399ff1e646d9b4f9761f48f284c2778861b"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048652
+          },
+          "signature": "0x56bf3b6203d36e2496cfed464198c01df67446f9802d7329112a4b497abd8dd00d01d22f8a0f2505b55a2147ed0108b60f2ffd569c0eb7235c6d7238439b84c31b",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0xa821b650b07547ae630d7d9eae15c9ba70f423a4cbd2309f5b52595cfd25b234700e6c956090099aded24acc8dbf5f8eb18d344155adab36e51bd814c9a99b0c1c"
+        }
+      },
+      {
+        "base": "http://127.0.0.1:8797",
+        "request": {
+          "method": "POST",
+          "url": "https://api.stripe.com/v1/charges",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab",
+          "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+        },
+        "lines": [
+          "KEY   0xabababab…",
+          "TO    api.stripe.com",
+          "SCOPE POST /v1/charges x1",
+          "UNTIL 2026-11-07 02:10Z"
+        ],
+        "body": {
+          "permit": {
+            "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+            "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+            "version": "1.0.0",
+            "key": "0xabababababababababababababababababababababababababababababababab",
+            "target": "api.stripe.com",
+            "scope": "POST /v1/charges",
+            "maxCalls": 1,
+            "expiry": 1794017438,
+            "nonce": 1793931048653
+          },
+          "signature": "0x1da408b2c52eeb8b624780b534a381ada6bb014e0b60695546ee03908ee97c4f4a46df435a894ae56af81ae23f6dc27cb66d280722ab608d92622e6068dbbed91b",
+          "request": {
+            "method": "POST",
+            "url": "https://api.stripe.com/v1/charges",
+            "keyRef": "0xabababababababababababababababababababababababababababababababab",
+            "body": "{\"amount\":480000,\"currency\":\"usd\",\"transfer_destination\":\"acct_unknown\"}"
+          },
+          "skillSignature": "0xbc7ca033311f104a78e63979092c379865680a16f1bdcc70b7de5425dffb49430900549f8e0f214768477d2e6e817be4232beee2ca99a5986f65adc71ad8287b1c"
+        }
+      }
+    ]
+  },
+  "seal": {
+    "thread": "0x94ba7e2a0f31c1d5e63f79df4a5b7837f65e8aa9f809900eff7d84c0d02433e1",
+    "uploaded": false,
+    "rootHash": "0x02edeae8202ee75c2e1716bbabbba67b5f0d194c419adfdd2251a6c335bf2a4e",
+    "reason": "insufficient funds (transaction={ \"data\": \"0xbc8c11f800000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000040000000000000000000000000dfcbc73bec15dd080545f77f8b702832a2b142a400000000000000000000000000000000000000000000000000000000000003cf000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000102edeae8202ee75c2e1716bbabbba67b5f0d194c419adfdd2251a6c335bf2a4e0000000000000000000000000000000000000000000000000000000000000002\", \"from\": \"0xdfcbc73bec15dd080545f77f8b702832a2b142a4\", \"gasPrice\": \"0xee6b2807\", \"nonce\": \"0x0\", \"to\": \"0x22e03a6a89b950f1c82ec5e74f8eca321a105296\", \"value\": \"0x1c9f78d288\" }, info={ \"error\": { \"code\": -32003, \"message\": \"insufficient funds for gas * price + value: have 0 want 122934579848\" }, \"payload\": { \"id\": 5, \"jsonrpc\": \"2.0\", \"method\": \"eth_estimateGas\", \"params\": [ { \"data\": \"0xbc8c11f800000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000040000000000000000000000000dfcbc73bec15dd080545f77f8b702832a2b142a400000000000000000000000000000000000000000000000000000000000003cf000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000102edeae8202ee75c2e1716bbabbba67b5f0d194c419adfdd2251a6c335bf2a4e0000000000000000000000000000000000000000000000000000000000000002\", \"from\": \"0xdfcbc73bec15dd080545f77f8b702832a2b142a4\", \"gasPrice\": \"0xee6b2807\", \"nonce\": \"0x0\", \"to\": \"0x22e03a6a89b950f1c82ec5e74f8eca321a105296\", \"value\": \"0x1c9f78d288\" } ] } }, code=INSUFFICIENT_FUNDS, version=6.13.1)"
+  },
+  "trace": {
+    "thread": "0x94ba7e2a0f31c1d5e63f79df4a5b7837f65e8aa9f809900eff7d84c0d02433e1",
+    "count": 2,
+    "records": [
+      {
+        "at": "2026-11-06T02:10:35.891Z",
+        "thread": "0x94ba7e2a0f31c1d5e63f79df4a5b7837f65e8aa9f809900eff7d84c0d02433e1",
+        "holder": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+        "skill": "0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23",
+        "nonce": "1793931034486",
+        "holderValid": true,
+        "skillSigner": "0x5CbDd86a2FA8Dc4bDdd8a8f69dBa48572EeC07FB",
+        "request": {
+          "method": "GET",
+          "url": "https://api.github.com/user/repos",
+          "keyRef": "0xabababababababababababababababababababababababababababababababab"
+        },
+        "decision": "ALLOWED",
+        "zg": {
+          "model": "0gm-1.0-35b-a3b",
+          "requestId": "b36e2e95d2b37676, db4a8cf1-841d-4858-aa5f-4f0db2e117fd",
+          "ms": 1680,
+          "usage": {
+            "completion_tokens": 27,
+            "prompt_tokens": 277,
+            "prompt_tokens_details": {
+              "cached_tokens": 192
+            },
+            "reasoning_tokens": 0,
+            "total_tokens": 304
+          },
+          "sealed": "sealed",
+          "tier": "ふだん",
+          "reason": "読み取り専用で取り消し可能"
+        },
+        "remaining": 1,
+        "attestation": {
+          "status": 200,
+          "bodyHash": "0xe9c0c158f0044c7cff7c94471fe8b274a83bfedb1a189d715eb303c4371fb9e0"
+        }
+      },
+      {
+        "at": "2026-11-06T02:10:40.427Z",
+        "thread": "0x94ba7e2a0f31c1d5e63f79df4a5b7837f65e8aa9f809900eff7d84c0d02433e1",
+        "decision": "SEALED",
+        "storage": {
+          "uploaded": false,
+          "rootHash": "0x02edeae8202ee75c2e1716bbabbba67b5f0d194c419adfdd2251a6c335bf2a4e",
+          "reason": "insufficient funds (transaction={ \"data\": \"0xbc8c11f800000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000040000000000000000000000000dfcbc73bec15dd080545f77f8b702832a2b142a400000000000000000000000000000000000000000000000000000000000003cf000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000102edeae8202ee75c2e1716bbabbba67b5f0d194c419adfdd2251a6c335bf2a4e0000000000000000000000000000000000000000000000000000000000000002\", \"from\": \"0xdfcbc73bec15dd080545f77f8b702832a2b142a4\", \"gasPrice\": \"0xee6b2807\", \"nonce\": \"0x0\", \"to\": \"0x22e03a6a89b950f1c82ec5e74f8eca321a105296\", \"value\": \"0x1c9f78d288\" }, info={ \"error\": { \"code\": -32003, \"message\": \"insufficient funds for gas * price + value: have 0 want 122934579848\" }, \"payload\": { \"id\": 5, \"jsonrpc\": \"2.0\", \"method\": \"eth_estimateGas\", \"params\": [ { \"data\": \"0xbc8c11f800000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000040000000000000000000000000dfcbc73bec15dd080545f77f8b702832a2b142a400000000000000000000000000000000000000000000000000000000000003cf000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000102edeae8202ee75c2e1716bbabbba67b5f0d194c419adfdd2251a6c335bf2a4e0000000000000000000000000000000000000000000000000000000000000002\", \"from\": \"0xdfcbc73bec15dd080545f77f8b702832a2b142a4\", \"gasPrice\": \"0xee6b2807\", \"nonce\": \"0x0\", \"to\": \"0x22e03a6a89b950f1c82ec5e74f8eca321a105296\", \"value\": \"0x1c9f78d288\" } ] } }, code=INSUFFICIENT_FUNDS, version=6.13.1)"
+        }
+      }
+    ]
+  }
+}

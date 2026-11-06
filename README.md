@@ -1,9 +1,10 @@
 # Tomoshibi — the screens people see
 
-Two static pages. No build step, no web fonts, no trackers, no third-party requests.
+Three static pages. No build step, no web fonts, no trackers, no third-party requests.
 
 | Page | What it is |
 |---|---|
+| `gate.html` | **The gate.** An AI tool asks to use a key it does not hold. Three checks, one verdict, and the Ledger in your hand. Ends with World: one real person, one light. Live when `broker/demo-agent.mjs` runs next to a Broker; otherwise it replays `scenes.json`, recorded from the real Broker and 0G, and says so. |
 | `index.html` | **The sky.** Every light is an AI tool. *Everyone* shows what a star count shows. *People I know* keeps only the tools that someone you know has lit. |
 | `trace.html?thread=0x…` | **The record** of one request, top to bottom, with a QR to open the same record on a phone. |
 
@@ -15,6 +16,15 @@ python3 -m http.server 8790 --directory web           # the pages
 ```
 
 Open `http://localhost:8790/`. To point at a Broker somewhere else, add `?broker=http://host:port`.
+
+## The gate, live
+
+```bash
+cd broker && node demo-agent.mjs        # the AI tool, on :8792. Add the bridge and a Ledger and it signs on the device
+```
+
+Open `http://localhost:8790/gate.html`. Space moves the story forward. `scenes.json` is a copy of
+`ui/scenes.json` so the hosted page has a recording to replay.
 
 ## Where each thing comes from
 

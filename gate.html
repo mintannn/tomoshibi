@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TOMOSHIBI — the gate</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="gate.css">
+
+<div class="wrap wide">
+  <div class="top">
+    <div class="brand">
+      <svg viewBox="0 0 120 152" aria-hidden="true"><rect x="31" y="96" width="58" height="48" rx="19" fill="#27407a"/><path d="M60 10 C62.2 10 63.8 12.2 64.8 14.8 C70.5 28 90 49 90 68 A30 30 0 1 1 30 68 C30 49 49.5 28 55.2 14.8 C56.2 12.2 57.8 10 60 10 Z" fill="#f0a73b"/><path d="M60 46 C61.3 46 62.2 47.2 62.8 48.6 C65.6 55 75 65.5 75 75 A15 15 0 1 1 45 75 C45 65.5 54.4 55 57.2 48.6 C57.8 47.2 58.7 46 60 46 Z" fill="#ffd98a"/></svg>
+      TOMOSHIBI
+    </div>
+    <nav class="tabs"><a href="gate.html" aria-current="page">The gate</a><a href="index.html" id="navSky">Whose light</a></nav>
+    <span class="spacer"></span>
+    <span class="chip" id="mode">loading…</span>
+  </div>
+
+  <header class="lede">
+    <h1>The AI uses your key. It never holds it.</h1>
+    <p id="say">You lend a range, on a device the AI cannot press. Every request then passes a gate.</p>
+  </header>
+
+  <div class="gate">
+    <section class="col ask" aria-label="What the AI tool asks for">
+      <h2><span class="n">1</span> The AI tool asks</h2>
+      <ol class="scenes" id="scenes"></ol>
+      <div class="req" id="req"></div>
+    </section>
+
+    <section class="col path" aria-label="The gate">
+      <h2><span class="n">2</span> The gate decides</h2>
+      <ol class="checks" id="checks">
+        <li id="c-range"><i></i><div><b>Is it inside the range you signed?</b><span class="s">Destination, action, key, expiry, uses left.</span><em></em></div></li>
+        <li id="c-weigh"><i></i><div><b>How heavy is it?</b><span class="s">0G reads the content inside a sealed enclave. Nobody else sees it.</span><em></em></div></li>
+        <li id="c-hand"><i></i><div><b>Does it need your hand?</b><span class="s">If it is heavy, a standing permission is not enough.</span><em></em></div></li>
+      </ol>
+      <div class="verdict" id="verdict" aria-live="polite"><strong>Ready</strong><p></p></div>
+      <div class="actions">
+        <button class="btn primary big" id="go">Lend the key</button>
+        <button class="btn" id="reset">Start over</button>
+        <span class="kbd">Space</span>
+      </div>
+    </section>
+
+    <section class="col hand" aria-label="The Ledger in your hand">
+      <h2><span class="n">3</span> In your hand</h2>
+      <div class="flex" id="flex" data-state="asleep">
+        <div class="screen" id="screen"></div>
+      </div>
+      <p class="note" id="devNote"></p>
+    </section>
+  </div>
+
+  <section class="sheet lightit" id="lightit" hidden>
+    <div>
+      <h2>You really use this tool. Let the people who know you see that.</h2>
+      <p class="sub">A light is a fact, not a recommendation: “I use this exact version, with my own key.” It cannot be bought, because all three of these have to be true.</p>
+    </div>
+    <ul class="three" id="three"></ul>
+    <div class="actions"><button class="btn primary big" id="lightBtn">Light it</button><span class="sub" id="lightHint">World checks one thing: that you are one real person. One person, one light.</span></div>
+    <div id="world" aria-live="polite"></div>
+  </section>
+
+  <section class="sheet">
+    <div class="trailhead"><h2>What is on record</h2><span class="sub">Let through, stopped, refused — all on the same line.</span></div>
+    <ol class="trail" id="trail"><li class="sub empty">Nothing yet.</li></ol>
+    <p class="note" id="where"></p>
+  </section>
+</div>
+
+<script src="qr.js"></script>
+<script src="gate.js"></script>
+</html>

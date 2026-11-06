@@ -16,8 +16,9 @@ const BRIDGE = (qs.get('bridge') || localStorage.getItem('tomoshibi.bridge') || 
 
 // The tools on show. `skill` is the id the Broker keys lights by.
 const CATALOG = [
-  { name: 'mail-digest', about: 'Reads your inbox and sends you a morning summary.',
-    skill: '0x166b4a98f5f1c72f1e05921caf802eb07395b2afee302ceaef74b29657e641c5', version: '1.0.0',
+  // The tool the gate page (gate.html) drives. Its id is keccak256 of the demo tool's address.
+  { name: 'billing-assistant', about: 'Charges your customers for you.',
+    skill: '0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23', version: '1.0.0',
     key: 'STRIPE_SECRET', target: 'api.stripe.com', scope: 'POST /v1/charges', rating: 4.6, reviews: 212, x: .36, y: .44 },
   { name: 'invoice-bot', about: 'Creates and sends invoices for you.',
     skill: '0x' + 'b1'.repeat(32), version: '2.3.0',
@@ -31,7 +32,7 @@ const CROWD = 1284
 // Shown only when the Broker cannot be reached, and labelled as sample data on screen.
 const SAMPLE = {
   people: [{ name: 'Arjun', id: '0xsample_arjun', tie: 'met' }],
-  stars: { 'mail-digest': { who: ['0xsample_arjun', '0xsample_other'], byVersion: { '1.0.0': 2 } } },
+  stars: { 'billing-assistant': { who: ['0xsample_arjun', '0xsample_other'], byVersion: { '1.0.0': 2 } } },
 }
 
 // ---------- local state (never leaves this browser) ----------
