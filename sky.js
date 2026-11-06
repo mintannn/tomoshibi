@@ -11,6 +11,8 @@
 const $ = (id) => document.getElementById(id)
 const qs = new URLSearchParams(location.search)
 const BROKER = (qs.get('broker') || localStorage.getItem('tomoshibi.broker') || 'http://127.0.0.1:8787').replace(/\/$/, '')
+// The bridge runs next to the Ledger (bridge/bridge.py). Without it, the Ledger step is skipped and said so.
+const BRIDGE = (qs.get('bridge') || localStorage.getItem('tomoshibi.bridge') || 'http://127.0.0.1:8791').replace(/\/$/, '')
 
 // The tools on show. `skill` is the id the Broker keys lights by.
 const CATALOG = [
@@ -36,6 +38,8 @@ const SAMPLE = {
 const store = {
   get people() { try { return JSON.parse(localStorage.getItem('tomoshibi.people') || '[]') } catch { return [] } },
   set people(v) { try { localStorage.setItem('tomoshibi.people', JSON.stringify(v)) } catch {} },
+  get permits() { try { return JSON.parse(localStorage.getItem('tomoshibi.permits') || '{}') } catch { return {} } },
+  set permits(v) { try { localStorage.setItem('tomoshibi.permits', JSON.stringify(v)) } catch {} },
   get versions() { try { return JSON.parse(localStorage.getItem('tomoshibi.versions') || '{}') } catch { return {} } },
   set versions(v) { try { localStorage.setItem('tomoshibi.versions', JSON.stringify(v)) } catch {} },
 }
@@ -211,6 +215,9 @@ function paintSheet() {
     ? known.map((p) => `<b>${esc(p.name)}</b> (${TIES[p.tie] || p.tie})`).join(', ') + (others ? ` and ${others} you don't know` : '')
     : st.who.length || st.count ? `${st.who.length || st.count} ${(st.who.length || st.count) === 1 ? 'person' : 'people'}, none you know` : 'No one yet'
   const human = (st.who.length || st.count) > 0
+  // A permit this browser received from the Ledger for this exact version, by someone whose light is on.
+  const mine = store.permits[s.name + '@' + v]
+  const pressedHere = Boolean(mine && known.some((p) => p.tie === 'me'))
   const sim = health?.world?.simulated
   el.hidden = false
   el.innerHTML = `
@@ -223,10 +230,10 @@ function paintSheet() {
     </dl>
     <div class="dots">
       <div class="dot ${human ? 'on' : ''}"><i></i>A real person <small>World${sim ? ' (simulated)' : ''}</small></div>
-      <div class="dot ${st.pressed ? 'on' : ''}"><i></i>Pressed by hand <small>Ledger</small></div>
+      <div class="dot ${st.pressed || pressedHere ? 'on' : ''}"><i></i>Pressed by hand <small>Ledger${pressedHere && !st.pressed ? ' · seen by this browser' : ''}</small></div>
       <div class="dot ${st.used ? 'on' : ''}"><i></i>Actually in use <small>0G record</small></div>
     </div>
-    ${human && !st.pressed ? '<p class="note">The Broker checks the first one today. It does not yet tie a light to a Ledger approval or to recorded use, so those two stay dark here rather than pretending.</p>' : ''}
+    ${human && !st.pressed ? `<p class="note">The Broker checks the first one today. It does not yet tie a light to a Ledger approval or to recorded use${pressedHere ? '; the second dot is on only because this browser itself received the signed permit from your Ledger' : ', so those two stay dark here rather than pretending'}.</p>` : ''}
     ${st.noWho ? '<p class="note warn">This Broker reports how many lights, but not whose. Update the Broker to see people you know.</p>' : ''}
     <div class="actions">
       <button class="btn primary" id="lightIt">Show that I use this</button>
@@ -237,10 +244,33 @@ function paintSheet() {
   $('changeIt').onclick = () => bump(s)
 }
 
-/** Publishing a light: the Broker asks World, once, whether a real person is behind it. */
+/** Step one of lighting: lend the key on the Ledger. The person reads the range on the
+ *  device and holds the button; the signed permit comes back through the bridge. */
+async function lend(s, flow) {
+  let ready = false
+  try { ready = (await (await fetch(BRIDGE + '/health', { cache: 'no-store' })).json()).ready } catch {}
+  if (!ready) {
+    flow.innerHTML = '<p class="note warn">No Ledger with Tomoshibi open was found on this machine, so the key was not lent from here. Going on to the person check only.</p>'
+    return null
+  }
+  flow.innerHTML = '<p class="note"><b>Look at your Ledger.</b> Read what this tool is asking for, then hold the button. Nothing happens unless you do.</p>'
+  const r = await fetch(BRIDGE + '/permit', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
+    skill: s.skill, version: versionOf(s), keyLabel: s.key, target: s.target, scope: s.scope,
+    maxCalls: 3, expiry: Math.floor(Date.now() / 1000) + 24 * 3600, nonce: Date.now() }) })
+  const b = await r.json()
+  if (r.status !== 200) { flow.innerHTML = `<p class="note warn">${esc(b.error || 'The Ledger did not sign.')}</p>`; return false }
+  store.permits = { ...store.permits, [s.name + '@' + versionOf(s)]: b }
+  return b
+}
+
+/** Publishing a light: first the key is lent on the Ledger, then the Broker asks
+ *  World, once, whether a real person is behind it. */
 async function vouch(s) {
   const flow = $('flow')
   if (live !== true) { flow.innerHTML = '<p class="note warn">The Broker is not reachable, so nothing can be lit from here.</p>'; return }
+  const lent = await lend(s, flow)
+  if (lent === false) return            // declined on the device: stop here, nothing is lit
+  await new Promise((r) => setTimeout(r, lent ? 600 : 2200))
   flow.innerHTML = '<p class="note">Asking World…</p>'
   const start = await post('/vouch/start', {})
   if (start.status !== 200) { flow.innerHTML = `<p class="note warn">World is not set up on this Broker: ${esc(start.body.error || start.status)}</p>`; return }
