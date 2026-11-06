@@ -93,6 +93,7 @@ async function load() {
 function carry() {
   if (!thread) return
   const local = (h) => h === 'localhost' || h === '127.0.0.1' || h === '[::1]'
+  const priv = (h) => /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.)/.test(h) || h.endsWith('.local')
   const lan = qs.get('lan') || (local(location.hostname) ? '' : location.hostname)
   const page = new URL(location.href), broker = new URL(BROKER)
   if (lan) { page.hostname = lan; if (local(broker.hostname)) broker.hostname = lan }
@@ -106,7 +107,7 @@ function carry() {
   $('carryNote').className = stuck ? 'note warn' : 'note'
   $('carryNote').innerHTML = stuck
     ? `This link says <code>${esc(page.hostname)}</code>, which a phone cannot reach. Open this page by this computer's network address, or add <code>&amp;lan=192.168.x.x</code> to the address bar.`
-    : `<code>${esc(link)}</code><br>The phone has to be on the same network as this computer.`
+    : `<code>${esc(link)}</code>${priv(page.hostname) || priv(broker.hostname) ? '<br>The phone has to be on the same network as this computer.' : ''}`
 }
 carry()
 
