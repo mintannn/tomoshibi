@@ -136,7 +136,7 @@ function dec(c) { const v = final(c); if (!v) return 'checking'; if (c.declined)
 const zgUsed = (st) => { let n = 0, t = 0; for (const c of st.cards) for (const v of c.verdicts) { const z = v.response?.zg; if (z && !z.simulated && z.requestId) { n += 1; t += z.usage?.total_tokens || 0 } } return n ? `0G asked ${n}× · ${t} tokens` : '' }
 const thread = (c) => c.verdicts.map((x) => x.response.thread).filter(Boolean).pop()
 const recLink = (c) => { const t = thread(c); return t && mode === 'live' ? `<a class="rec" href="trace.html?thread=${encodeURIComponent(t)}&broker=${encodeURIComponent(BROKER())}" target="_blank" rel="noopener">record →</a>` : '' }
-const zgLine = (c) => { const z = c && final(c)?.response.zg; return !z ? '' : z.simulated ? '0G is simulated on this Broker.' : `Read by a sealed model on 0G${z.requestId ? ` · request ${esc(String(z.requestId).slice(0, 16))}` : ''}${z.usage?.total_tokens ? ` · ${z.usage.total_tokens} tokens` : ''}` }
+const zgLine = (c) => { const z = c && final(c)?.response.zg; return !z ? '' : z.simulated ? '0G is simulated on this Broker.' : `0G Private Computer: <b>${esc(z.tier || 'no verdict')}</b>${z.requestId ? ` · request ${esc(String(z.requestId).slice(0, 16))}` : ''}${z.usage?.total_tokens ? ` · ${z.usage.total_tokens} tokens` : ''}${z.ms ? ` · ${(z.ms / 1000).toFixed(1)} s` : ''}` }
 function money(c) { const m = /^Refund (\S+) for (order #\d+)(?: \((.+)\))?/.exec(c.what || ''); return m ? { amount: m[1], order: m[2][0].toUpperCase() + m[2].slice(1), note: m[3] || '' } : null }
 
 // ── the Ledger, when this page is the one connected to it (USB or Bluetooth from the browser) ──
@@ -348,7 +348,7 @@ function vHome(st) {
   const d = c && ui.seenRid !== c.rid ? dec(c) : null
   const through = st.cards.filter((x) => dec(x) === 'ALLOWED')
   const ok = '<button class="ghost" data-act="seen">OK</button>'
-  const zg = (x) => { const z = zgLine(x); return z ? `<small>${z}</small>` : '' }
+  const zg = (x) => { const z = zgLine(x); return z ? `<small class="zg">${z}</small>` : '' }
   if ((a && a.why === 'press') || d === 'NEEDS') {
     cur = 'money'
     const m = money(c) || { amount: '', order: '', note: '' }, soft = a && !a.device, signed = !a && d === 'NEEDS'
@@ -402,7 +402,7 @@ function vActivity(st) {
   const k = (x) => st.cards.filter((c) => x.includes(dec(c))).length
   const T = { ALLOWED: ['ALLOWED', 'ok'], BYHAND: ['BY HAND', 'hand'], DENIED: ['DENIED', 'no'], STOPPED: ['STOPPED', 'no'], DECLINED: ['YOU SAID NO', 'no'], NEEDS: ['NEEDS_PRESS', 'hand'], checking: ['WEIGHING', 'ok'] }
   // A finished thread is put into 0G Storage by the tool. The line says whether that really happened.
-  const seal = (c) => (!c.sealed ? '' : c.sealed.uploaded ? (c.sealed.url ? `<a class="seal" href="${esc(c.sealed.url)}" target="_blank" rel="noopener">0G Storage ↗</a>` : '<span class="seal">0G Storage ✓</span>') : '<span class="seal off" title="' + esc(c.sealed.reason || '') + '">not stored</span>')
+  const seal = (c) => (!c.sealed ? '' : c.sealed.uploaded ? (c.sealed.url ? `<a class="seal" href="${esc(c.sealed.url)}" target="_blank" rel="noopener">0G Storage ${esc((c.sealed.url.split('/tx/')[1] || '').slice(0, 10))}… ↗</a>` : '<span class="seal">0G Storage ✓</span>') : '<span class="seal off" title="' + esc(c.sealed.reason || '') + '">not stored</span>')
   const rows = st.cards.slice().reverse().map((c) => { const t = T[dec(c)]; return `<div class="li">${tag(t[0], t[1])} ${esc(c.what)}${seal(c)}${recLink(c)}</div>` }).join('')
   const num = (cls, v, t) => `<div><b class="n ${cls}" data-n="${v}">${v}</b>${t}</div>`
   return frame({ tabs: 1, now: 'TRAIL', why: 'Every call, put through or refused, with its reason.',

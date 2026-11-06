@@ -247,3 +247,4 @@ pre.code{margin:0;background:var(--ink);color:#f3efe7;border-radius:14px;padding
 .notyet{background:#f3eee6;border:2.5px dashed #cfc6b6;border-radius:12px;padding:10px 12px;font-size:13.5px;color:#6b6580}.notyet b{color:var(--ink)}
 .said{display:block}.said b{color:var(--ink)}.pipe u{text-decoration:none;font-size:10px;font-weight:800;color:var(--ok);margin-left:3px}.pipe .mock{display:inline;font-size:9.5px;color:#FFF05A;margin-right:5px}.pipe .mock::after{content:none}
 .kv select#api{max-width:210px}
+.zg b{color:var(--ink)}
