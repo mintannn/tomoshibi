@@ -55,7 +55,7 @@ const replay = {
     if (this.busy) return
     this.busy = true
     try {
-      if (path === '/lend') { if (await this.ask(10, 'lend', null, ['KEY stripe-live', 'TO api.stripe.com', 'CAN POST /v1/charges, up to 10x', 'ENDS in 1 hour'])) this.standing = true; return }
+      if (path === '/lend') { if (await this.ask(10, 'lend', null, ['KEY stripe-live', 'TO api.stripe.com', 'SCOPE * /v1 x10', 'UNTIL in 1 hour'])) this.standing = true; return }
       const s = this.rec(body.id); if (!s) return
       if (!this.standing) { this.emit({ type: 'error', error: 'The key has not been lent yet.' }); return }
       const rid = 'r' + all.length
@@ -136,7 +136,7 @@ function trail(st) {
   $('trail').innerHTML = rows || '<li class="empty">Nothing yet.</li>'
 }
 function keyCard(st) {
-  const r = agent?.range || { key: 'stripe-live', target: 'api.stripe.com', scope: 'POST /v1/charges', uses: 10 }
+  const r = agent?.range || { key: 'stripe-live', target: 'api.stripe.com', scope: '* /v1', uses: 10 }
   $('keyCard').innerHTML = `<h2>Your key</h2><div class="name">${esc(r.key)}</div>` + (st.lent
     ? `<dl><dt>Lent to</dt><dd>billing-assistant <code>v1.0.0</code></dd><dt>May reach</dt><dd><code>${esc(r.target)}</code></dd><dt>May do</dt><dd><code>${esc(r.scope)}</code></dd><dt>Uses left</dt><dd>${esc(st.lent.left)} of ${esc(st.lent.uses)}</dd><dt>Signed by</dt><dd>${st.lent.device ? `your Ledger <code>${esc(short(st.lent.holder))}</code>` : '<span class="warnt">a software key (no Ledger)</span>'}</dd></dl>
        <div class="meter"><i style="width:${Math.max(0, Math.min(100, (st.lent.left / st.lent.uses) * 100))}%"></i></div>`

@@ -19,7 +19,7 @@ const CATALOG = [
   // The tool the gate page (gate.html) drives. Its id is keccak256 of the demo tool's address.
   { name: 'billing-assistant', about: 'Charges your customers for you.',
     skill: '0x7fceb9cb096b5fe6215d6c43a4e81c6bb6eb88036c1ebeee400a61d521bf5e23', version: '1.0.0',
-    key: 'STRIPE_SECRET', target: 'api.stripe.com', scope: 'POST /v1/charges', rating: 4.6, reviews: 212, x: .36, y: .44 },
+    key: 'stripe-live', target: 'api.stripe.com', scope: '* /v1', rating: 4.6, reviews: 212, x: .36, y: .44 },
   { name: 'invoice-bot', about: 'Creates and sends invoices for you.',
     skill: '0x' + 'b1'.repeat(32), version: '2.3.0',
     key: 'STRIPE_SECRET', target: 'api.stripe.com', scope: 'POST /v1/invoices', rating: 4.9, reviews: 1284, x: .68, y: .30 },
